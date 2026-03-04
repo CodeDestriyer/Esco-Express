@@ -6292,7 +6292,7 @@ function openMapLocation(type) {
 // GOOGLE SHEETS API — Єдиний бекенд EscoExpress CRM
 // ============================================
 // Один уніфікований API (CRM_Backend.gs)
-const API_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_ID/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzh73KnYm6y-qulMtoAGgodJgS6hWHrISBu7QDfGQzmstkoLTHLf5rIZKGN_fgXdeHfyQ/exec';
 
 // Зворотна сумісність — всі ведуть на один API
 const ROUTE_API_URL = API_URL;
