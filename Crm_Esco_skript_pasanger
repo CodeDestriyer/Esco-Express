@@ -458,7 +458,7 @@ function buildAddPassengerForm_(sheetName) {
     + '    weight: document.getElementById("fWeight").value'
     + '  };'
     + '  if(!data.name||!data.phone||!data.address||!data.date){'
-    + '    alert("Заповніть обов\\'язкові поля: ПіБ, Телефон, Адреса, Дата");return;'
+    + '    alert("Заповніть обов\'язкові поля: ПіБ, Телефон, Адреса, Дата");return;'
     + '  }'
     + '  google.script.run.withSuccessHandler(function(r){'
     + '    if(r.success){alert("✅ Пасажир додано: "+r.paxId);google.script.host.close();}'
