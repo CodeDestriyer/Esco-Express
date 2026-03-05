@@ -7,8 +7,8 @@
 // ── КОНФІГУРАЦІЯ ─────────────────────────────────────────────
 
 const SCRIPT_CONFIG = {
-  // URL задеплоєного CRM_Backend.gs (Web App)
-  CRM_API_URL: "https://script.google.com/macros/s/AKfycbzVSURWnNdlz6aXv8iFCfKpAhi8NdpbVHbq3-Ds8hjbcAH9jwgtItb9J3WiWBAud7z1lg/exec",
+  // Більше не потрібен зовнішній бекенд — працюємо напряму
+  // CRM_API_URL: не використовується
 
   // Назви аркушів цієї таблиці
   SHEET_UA_EU: "Україна-ЄВ",
@@ -304,50 +304,44 @@ function generatePaxId_() {
 // ══════════════════════════════════════════════════════════════
 
 /**
- * Відправляє POST запит до CRM Backend API
+ * Виконує дію напряму (замість HTTP запиту до зовнішнього бекенду)
  */
 function sendToCrmApi_(action, data) {
-  var payload = { action: action };
-  // Мержимо data в payload
-  for (var key in data) {
-    payload[key] = data[key];
+  try {
+    if (action === "createPassenger") {
+      var id = createPassengerLocal_(data.data || data, data.sheet);
+      return { success: true, id: id };
+    }
+    else if (action === "updateField") {
+      updateFieldLocal_(data.sheet, data.idColumn || "PAX_ID", data.recordId, data.field, data.value);
+      return { success: true };
+    }
+    else if (action === "archive") {
+      archivePassengersLocal_({ passengers: [{ sheet: data.sheet, rowNum: data.rowNum }], user: data.archivedBy, reason: data.reason });
+      return { success: true };
+    }
+    else {
+      Logger.log("sendToCrmApi_: невідома дія — " + action);
+      return { success: false, error: "Unknown action: " + action };
+    }
+  } catch (err) {
+    Logger.log("sendToCrmApi_ error: " + err.message);
+    return { success: false, error: err.message };
   }
-
-  var options = {
-    method: "post",
-    contentType: "application/json",
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true,
-  };
-
-  var response = UrlFetchApp.fetch(SCRIPT_CONFIG.CRM_API_URL, options);
-  var result = JSON.parse(response.getContentText());
-
-  if (!result.success) {
-    Logger.log("CRM API Error: " + (result.error || "Unknown"));
-  }
-
-  return result;
 }
 
 /**
- * Відправляє GET запит до CRM Backend API
+ * GET запит — тепер локально
  */
 function getFromCrmApi_(action, params) {
-  var url = SCRIPT_CONFIG.CRM_API_URL + "?action=" + action;
-  if (params) {
-    for (var key in params) {
-      url += "&" + encodeURIComponent(key) + "=" + encodeURIComponent(params[key]);
+  try {
+    if (action === "getPassengers") {
+      return getAllPassengers_(params.sheet || SCRIPT_CONFIG.SHEET_UA_EU);
     }
+    return { success: false, error: "Unknown action: " + action };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
-
-  var options = {
-    method: "get",
-    muteHttpExceptions: true,
-  };
-
-  var response = UrlFetchApp.fetch(url, options);
-  return JSON.parse(response.getContentText());
 }
 
 /**
@@ -1115,4 +1109,273 @@ function fillMissingMetadata() {
   }
 
   SpreadsheetApp.getUi().alert("✅ Заповнено " + filled + " порожніх полів метаданих");
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// WEB APP — doGet / doPost (працює напряму з таблицею)
+// ══════════════════════════════════════════════════════════════
+
+function doGet(e) {
+  var action = e.parameter.action;
+  var result = { success: false, error: "Unknown action" };
+
+  try {
+    if (action === "getPassengers") {
+      var sheetName = e.parameter.sheet || SCRIPT_CONFIG.SHEET_UA_EU;
+      result = getAllPassengers_(sheetName);
+    }
+  } catch (err) {
+    result = { success: false, error: err.message };
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var body;
+  try {
+    body = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Invalid JSON" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  var action = body.action;
+  var result = { success: false, error: "Unknown action" };
+
+  try {
+    if (action === "createPassenger") {
+      var id = createPassengerLocal_(body.data, body.sheet);
+      result = { success: true, id: id, sheet: body.sheet };
+    }
+    else if (action === "updateField") {
+      updateFieldLocal_(body.sheet, body.idColumn || "PAX_ID", body.recordId, body.field, body.value);
+      result = { success: true };
+    }
+    else if (action === "deletePassengersPermanently") {
+      var payload = body.payload || body;
+      deletePassengersLocal_(payload.passengers || []);
+      result = { success: true };
+    }
+    else if (action === "archivePassenger" || action === "archiveToExternal" || action === "bulkArchive") {
+      var payload = body.payload || body;
+      archivePassengersLocal_(payload);
+      result = { success: true };
+    }
+    else if (action === "restorePassengers") {
+      var payload = body.payload || body;
+      restorePassengersLocal_(payload);
+      result = { success: true };
+    }
+    else if (action === "getAvailableRoutes") {
+      result = { success: true, data: [] };
+    }
+    else if (action === "getRoutePassengers") {
+      result = { success: true, data: [] };
+    }
+    else if (action === "getMailingStatus") {
+      result = { success: true, data: [] };
+    }
+    else if (action === "createRouteSheet" || action === "deleteRouteSheet" ||
+             action === "copyToRoute" || action === "deleteRoutePassenger" ||
+             action === "addMailingRecord" || action === "checkRouteSheets") {
+      result = { success: true, message: "Route operations not yet implemented" };
+    }
+  } catch (err) {
+    result = { success: false, error: err.message };
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// ЛОКАЛЬНІ ФУНКЦІЇ ДЛЯ WEB APP
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Отримує всіх пасажирів з аркуша
+ */
+function getAllPassengers_(sheetName) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return { success: true, data: [] };
+
+  var headerRow = SCRIPT_CONFIG.HEADER_ROW;
+  var dataStartRow = SCRIPT_CONFIG.DATA_START_ROW;
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+
+  if (lastRow < dataStartRow || lastCol === 0) return { success: true, data: [] };
+
+  var headers = sheet.getRange(headerRow, 1, 1, lastCol).getValues()[0];
+  var data = sheet.getRange(dataStartRow, 1, lastRow - dataStartRow + 1, lastCol).getValues();
+
+  var records = [];
+  for (var i = 0; i < data.length; i++) {
+    if (!data[i][0] && !data[i][1]) continue;
+    var obj = {};
+    for (var j = 0; j < headers.length; j++) {
+      obj[headers[j]] = data[i][j] !== undefined ? data[i][j] : "";
+    }
+    obj._rowNum = dataStartRow + i;
+    records.push(obj);
+  }
+  return { success: true, data: records };
+}
+
+/**
+ * Створює нового пасажира
+ */
+function createPassengerLocal_(data, sheetName) {
+  sheetName = sheetName || SCRIPT_CONFIG.SHEET_UA_EU;
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+
+  var paxId = "PAX-" + Utilities.formatDate(new Date(), "UTC", "yyyyMMdd") + "-" + Math.random().toString(36).substr(2, 4).toUpperCase();
+  var entry = {};
+  var cols = SCRIPT_CONFIG.COLUMNS;
+  for (var i = 0; i < cols.length; i++) {
+    entry[cols[i]] = "";
+  }
+
+  entry["PAX_ID"] = paxId;
+  entry["Ід_смарт/CRM"] = data.smartId || "";
+  entry["Напрям"] = sheetName === SCRIPT_CONFIG.SHEET_UA_EU ? "УК → ЄВ" : "ЄВ → УК";
+  entry["SOURCE_SHEET"] = sheetName;
+  entry["Дата створення"] = new Date();
+  entry["Піб"] = data.name || "";
+  entry["Телефон пасажира"] = data.phone || "";
+  entry["Телефон реєстратора"] = data.phoneReg || "";
+  entry["Кількість місць"] = data.seats || 1;
+  entry["Адреса прибуття"] = data.address || "";
+  entry["Дата виїзду"] = data.departureDate || "";
+  entry["Таймінг"] = data.timing || "";
+  entry["Номер авто"] = data.vehicle || "";
+  entry["Місце в авто"] = data.seat || "";
+  entry["Ціна квитка"] = data.price || "";
+  entry["Завдаток"] = data.deposit || "";
+  entry["Статус оплати"] = data.payStatus || "Не оплачено";
+  entry["Форма оплати"] = data.payForm || "";
+  entry["Валюта"] = data.currency || "UAH";
+  entry["Вага багажу"] = data.weight || "";
+  entry["Ціна багажу"] = data.weightPrice || "";
+  entry["Статус ліда"] = "Новий";
+  entry["Статус CRM"] = "Активний";
+
+  var values = cols.map(function(h) { return entry[h] !== undefined ? entry[h] : ""; });
+  sheet.appendRow(values);
+
+  return paxId;
+}
+
+/**
+ * Оновлює одне поле пасажира за PAX_ID
+ */
+function updateFieldLocal_(sheetName, idColumn, recordId, field, value) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) throw new Error("Аркуш " + sheetName + " не знайдено");
+
+  var headerRow = SCRIPT_CONFIG.HEADER_ROW;
+  var dataStartRow = SCRIPT_CONFIG.DATA_START_ROW;
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+
+  var headers = sheet.getRange(headerRow, 1, 1, lastCol).getValues()[0];
+  var idCol = headers.indexOf(idColumn);
+  var fieldCol = headers.indexOf(field);
+  if (idCol === -1) throw new Error("Колонка " + idColumn + " не знайдена");
+  if (fieldCol === -1) throw new Error("Колонка " + field + " не знайдена");
+
+  if (lastRow < dataStartRow) throw new Error("Немає даних");
+
+  var ids = sheet.getRange(dataStartRow, idCol + 1, lastRow - dataStartRow + 1, 1).getValues();
+  for (var i = 0; i < ids.length; i++) {
+    if (ids[i][0] == recordId) {
+      sheet.getRange(dataStartRow + i, fieldCol + 1).setValue(value);
+      return;
+    }
+  }
+  throw new Error("Запис " + recordId + " не знайдено");
+}
+
+/**
+ * Видаляє пасажирів по sheet + rowNum
+ */
+function deletePassengersLocal_(passengersList) {
+  var grouped = {};
+  for (var i = 0; i < passengersList.length; i++) {
+    var p = passengersList[i];
+    var sn = p.sheet;
+    if (!grouped[sn]) grouped[sn] = [];
+    grouped[sn].push(p.rowNum);
+  }
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  for (var sheetName in grouped) {
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) continue;
+    var rows = grouped[sheetName].sort(function(a, b) { return b - a; });
+    for (var j = 0; j < rows.length; j++) {
+      sheet.deleteRow(rows[j]);
+    }
+  }
+}
+
+/**
+ * Архівує пасажирів (позначає як Скасовано)
+ */
+function archivePassengersLocal_(payload) {
+  var list = payload.passengers || [payload];
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  for (var i = 0; i < list.length; i++) {
+    var p = list[i];
+    var sheet = ss.getSheetByName(p.sheet);
+    if (!sheet || !p.rowNum) continue;
+
+    var headerRow = SCRIPT_CONFIG.HEADER_ROW;
+    var lastCol = sheet.getLastColumn();
+    var headers = sheet.getRange(headerRow, 1, 1, lastCol).getValues()[0];
+    var statusCol = headers.indexOf("Статус CRM");
+    var archDateCol = headers.indexOf("DATE_ARCHIVE");
+    var archByCol = headers.indexOf("ARCHIVED_BY");
+    var archReasonCol = headers.indexOf("ARCHIVE_REASON");
+
+    if (statusCol !== -1) sheet.getRange(p.rowNum, statusCol + 1).setValue("Скасовано");
+    if (archDateCol !== -1) sheet.getRange(p.rowNum, archDateCol + 1).setValue(new Date());
+    if (archByCol !== -1) sheet.getRange(p.rowNum, archByCol + 1).setValue(payload.user || "CRM");
+    if (archReasonCol !== -1) sheet.getRange(p.rowNum, archReasonCol + 1).setValue(payload.reason || "");
+  }
+}
+
+/**
+ * Відновлює пасажирів (знімає Скасовано)
+ */
+function restorePassengersLocal_(payload) {
+  var list = payload.passengers || [payload];
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  for (var i = 0; i < list.length; i++) {
+    var p = list[i];
+    var sheet = ss.getSheetByName(p.sheet);
+    if (!sheet || !p.rowNum) continue;
+
+    var headerRow = SCRIPT_CONFIG.HEADER_ROW;
+    var lastCol = sheet.getLastColumn();
+    var headers = sheet.getRange(headerRow, 1, 1, lastCol).getValues()[0];
+    var statusCol = headers.indexOf("Статус CRM");
+    var archDateCol = headers.indexOf("DATE_ARCHIVE");
+    var archByCol = headers.indexOf("ARCHIVED_BY");
+    var archReasonCol = headers.indexOf("ARCHIVE_REASON");
+
+    if (statusCol !== -1) sheet.getRange(p.rowNum, statusCol + 1).setValue("Активний");
+    if (archDateCol !== -1) sheet.getRange(p.rowNum, archDateCol + 1).setValue("");
+    if (archByCol !== -1) sheet.getRange(p.rowNum, archByCol + 1).setValue("");
+    if (archReasonCol !== -1) sheet.getRange(p.rowNum, archReasonCol + 1).setValue("");
+  }
 }
