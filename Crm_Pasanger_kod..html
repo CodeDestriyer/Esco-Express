@@ -713,6 +713,10 @@
         .detail-inline-edit { width: 100%; border: 1px solid var(--primary); border-radius: 4px; padding: 2px 4px; font-size: 12px; font-weight: 600; font-family: inherit; outline: none; }
         /* Header field visibility */
         .card-top-row > .card-field-hidden, .card-row2-wrap .card-field-hidden { display: none !important; }
+        /* Extra header fields (dynamic) */
+        .card-extra-fields { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--border); }
+        .card-extra-field { font-size: 11px; color: var(--text-primary); font-weight: 500; }
+        .card-extra-label { font-size: 9px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; }
         
         /* Actions panel - smooth slide */
         .card-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; max-height: 0; overflow: hidden; padding: 0 12px; background: white; transition: max-height 0.25s ease, padding 0.25s ease; }
@@ -3053,7 +3057,7 @@ function render() {
         const routeTo = hasSearch ? highlightSearch(p.to || '—') : (p.to || '—');
         const idDisplay = hasSearch ? highlightSearch(p.id || '—') : (p.id || '—');
         const nameDisplay = hasSearch ? highlightSearch(p.name || '—') : (p.name || '—');
-        
+
         // Vehicle badge - з dropdown для призначення авто
         const vehDropdownItems = vehicles.map(vi =>
             `<div class="vehicle-dropdown-item ${p.vehicle === vi.name || p.vehicle === vi.id ? 'active' : ''}" onclick="event.stopPropagation();quickAssignVehicle('${uniqueKey}','${vi.id}')">${vi.name}</div>`
@@ -3062,7 +3066,7 @@ function render() {
             ? `<span class="card-vehicle-badge" onclick="event.stopPropagation();toggleCardVehicle('${uniqueKey}')">${veh.name}</span>`
             : `<span class="card-vehicle-badge empty" onclick="event.stopPropagation();toggleCardVehicle('${uniqueKey}')">—</span>`;
         const vehicleDropdown = `<div class="vehicle-dropdown" id="vd_${uniqueKey}">${vehDropdownItems}<div class="vehicle-dropdown-item" onclick="event.stopPropagation();quickAssignVehicle('${uniqueKey}','')" style="color:var(--warning);">❌ Зняти авто</div></div>`;
-        
+
         // Header field visibility classes
         const hCols = colSettings.header;
         const hPhone = hCols.includes('phone') ? '' : 'card-field-hidden';
@@ -3074,6 +3078,15 @@ function render() {
         const hTo = hCols.includes('to') ? '' : 'card-field-hidden';
         const hId = hCols.includes('id') ? '' : 'card-field-hidden';
         const hName = hCols.includes('name') ? '' : 'card-field-hidden';
+
+        // Додаткові поля заголовку (ті що не входять в стандартний layout)
+        const standardHeaderKeys = ['name','phone','seats','id','from','to','date','price'];
+        const extraHeaderKeys = hCols.filter(k => !standardHeaderKeys.includes(k));
+        const extraHeaderHtml = extraHeaderKeys.length ? '<div class="card-extra-fields">' + extraHeaderKeys.map(k => {
+            let val = getFieldValue(p, k);
+            if (hasSearch && val) val = highlightSearch(val);
+            return `<span class="card-extra-field copyable" onclick="event.stopPropagation();copyField(this)" onmousedown="event.stopPropagation()"><span class="card-extra-label">${ALL_COLUMNS[k]?.label || k}:</span> ${val || '—'}</span>`;
+        }).join('') + '</div>' : '';
 
         // Details blocks з підсвічуванням + edit/copy кнопки
         const detailsHtml = detailCols.map(k => {
@@ -3122,6 +3135,7 @@ function render() {
                             ${p.isNew ? '<span class="new-tag">NEW</span>' : ''}
                         </div>
                     </div>
+                    ${extraHeaderHtml}
                 </div>
                 <div class="card-right-section">
                     <div class="card-vehicle">
