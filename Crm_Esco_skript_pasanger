@@ -8,7 +8,7 @@
 
 const SCRIPT_CONFIG = {
   // URL задеплоєного CRM_Backend.gs (Web App)
-  CRM_API_URL: "https://script.google.com/macros/s/AKfycbzh73KnYm6y-qulMtoAGgodJgS6hWHrISBu7QDfGQzmstkoLTHLf5rIZKGN_fgXdeHfyQ/exec",
+  CRM_API_URL: "https://script.google.com/macros/s/AKfycbzVSURWnNdlz6aXv8iFCfKpAhi8NdpbVHbq3-Ds8hjbcAH9jwgtItb9J3WiWBAud7z1lg/exec",
 
   // Назви аркушів цієї таблиці
   SHEET_UA_EU: "Україна-ЄВ",
