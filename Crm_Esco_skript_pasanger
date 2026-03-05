@@ -1116,78 +1116,90 @@ function fillMissingMetadata() {
 // WEB APP — doGet / doPost (працює напряму з таблицею)
 // ══════════════════════════════════════════════════════════════
 
+// ── doGet — тільки health-check ──────────────────────────────
 function doGet(e) {
-  var action = e.parameter.action;
-  var result = { success: false, error: "Unknown action" };
-
   try {
-    if (action === "getPassengers") {
-      var sheetName = e.parameter.sheet || SCRIPT_CONFIG.SHEET_UA_EU;
-      result = getAllPassengers_(sheetName);
-    }
+    return respond_({ success: true, version: "1.0", service: "CRM Passengers — EscoExpress", timestamp: new Date().toISOString() });
   } catch (err) {
-    result = { success: false, error: err.message };
+    return respond_({ success: false, error: err.toString() });
   }
-
-  return ContentService.createTextOutput(JSON.stringify(result))
-    .setMimeType(ContentService.MimeType.JSON);
 }
 
+// ── doPost — ВСЕ через POST (уникає CORS проблем) ───────────
 function doPost(e) {
-  var body;
   try {
-    body = JSON.parse(e.postData.contents);
+    var data = JSON.parse(e.postData.contents);
+    var action = data.action;
+    var payload = data.payload || data;
+
+    switch (action) {
+      // --- ЧИТАННЯ ---
+      case "getPassengers":
+        var sheetName = data.sheet || payload.sheet || SCRIPT_CONFIG.SHEET_UA_EU;
+        return respond_(getAllPassengers_(sheetName));
+
+      case "getAll":
+        var uaEu = getAllPassengers_(SCRIPT_CONFIG.SHEET_UA_EU);
+        var euUa = getAllPassengers_(SCRIPT_CONFIG.SHEET_EU_UA);
+        var all = [];
+        if (uaEu.data) all = all.concat(uaEu.data);
+        if (euUa.data) all = all.concat(euUa.data);
+        return respond_({ success: true, data: all, counts: { total: all.length, uaEu: (uaEu.data || []).length, euUa: (euUa.data || []).length } });
+
+      // --- СТВОРЕННЯ ---
+      case "createPassenger":
+        var id = createPassengerLocal_(data.data || payload, data.sheet || payload.sheet);
+        return respond_({ success: true, id: id, sheet: data.sheet || payload.sheet });
+
+      // --- ОНОВЛЕННЯ ---
+      case "updateField":
+        updateFieldLocal_(data.sheet || payload.sheet, data.idColumn || payload.idColumn || "PAX_ID", data.recordId || payload.recordId, data.field || payload.field, data.value !== undefined ? data.value : payload.value);
+        return respond_({ success: true });
+
+      // --- ВИДАЛЕННЯ ---
+      case "deletePassengersPermanently":
+        deletePassengersLocal_(payload.passengers || []);
+        return respond_({ success: true });
+
+      // --- АРХІВАЦІЯ ---
+      case "archivePassenger":
+      case "archiveToExternal":
+      case "bulkArchive":
+        archivePassengersLocal_(payload);
+        return respond_({ success: true });
+
+      // --- ВІДНОВЛЕННЯ ---
+      case "restorePassengers":
+        restorePassengersLocal_(payload);
+        return respond_({ success: true });
+
+      // --- МАРШРУТИ (заглушки) ---
+      case "getAvailableRoutes":
+        return respond_({ success: true, routes: [], count: 0 });
+      case "getRoutePassengers":
+        return respond_({ success: true, passengers: [], count: 0 });
+      case "getMailingStatus":
+        return respond_({ success: true, mailingIds: [], count: 0 });
+      case "createRouteSheet":
+      case "deleteRouteSheet":
+      case "copyToRoute":
+      case "deleteRoutePassenger":
+      case "addMailingRecord":
+      case "checkRouteSheets":
+        return respond_({ success: true, message: "Route operations — TODO" });
+
+      default:
+        return respond_({ success: false, error: "Невідома дія: " + action });
+    }
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Invalid JSON" }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return respond_({ success: false, error: err.toString() });
   }
+}
 
-  var action = body.action;
-  var result = { success: false, error: "Unknown action" };
-
-  try {
-    if (action === "createPassenger") {
-      var id = createPassengerLocal_(body.data, body.sheet);
-      result = { success: true, id: id, sheet: body.sheet };
-    }
-    else if (action === "updateField") {
-      updateFieldLocal_(body.sheet, body.idColumn || "PAX_ID", body.recordId, body.field, body.value);
-      result = { success: true };
-    }
-    else if (action === "deletePassengersPermanently") {
-      var payload = body.payload || body;
-      deletePassengersLocal_(payload.passengers || []);
-      result = { success: true };
-    }
-    else if (action === "archivePassenger" || action === "archiveToExternal" || action === "bulkArchive") {
-      var payload = body.payload || body;
-      archivePassengersLocal_(payload);
-      result = { success: true };
-    }
-    else if (action === "restorePassengers") {
-      var payload = body.payload || body;
-      restorePassengersLocal_(payload);
-      result = { success: true };
-    }
-    else if (action === "getAvailableRoutes") {
-      result = { success: true, data: [] };
-    }
-    else if (action === "getRoutePassengers") {
-      result = { success: true, data: [] };
-    }
-    else if (action === "getMailingStatus") {
-      result = { success: true, data: [] };
-    }
-    else if (action === "createRouteSheet" || action === "deleteRouteSheet" ||
-             action === "copyToRoute" || action === "deleteRoutePassenger" ||
-             action === "addMailingRecord" || action === "checkRouteSheets") {
-      result = { success: true, message: "Route operations not yet implemented" };
-    }
-  } catch (err) {
-    result = { success: false, error: err.message };
-  }
-
-  return ContentService.createTextOutput(JSON.stringify(result))
+// JSON відповідь (як у робочому скрипті)
+function respond_(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
 }
 

@@ -2297,8 +2297,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Завантажуємо дані одразу з таблиці (єдине джерело правди)
     showLoader('Завантаження пасажирів...', '');
     Promise.all([
-        fetch(API_URL + '?action=getPassengers&sheet=Україна-ЄВ').then(r => r.json()),
-        fetch(API_URL + '?action=getPassengers&sheet=Європа-УК').then(r => r.json())
+        apiPost('getPassengers', { sheet: 'Україна-ЄВ' }),
+        apiPost('getPassengers', { sheet: 'Європа-УК' })
     ])
     .then(([dataUaEu, dataEuUa]) => {
         hideLoader();
@@ -2350,8 +2350,8 @@ function silentSync() {
     if (document.getElementById('passengerModal')?.classList.contains('show')) return;
 
     Promise.all([
-        fetch(API_URL + '?action=getPassengers&sheet=Україна-ЄВ').then(r => r.json()),
-        fetch(API_URL + '?action=getPassengers&sheet=Європа-УК').then(r => r.json())
+        apiPost('getPassengers', { sheet: 'Україна-ЄВ' }),
+        apiPost('getPassengers', { sheet: 'Європа-УК' })
     ])
     .then(([dataUaEu, dataEuUa]) => {
         if (dataUaEu.success && dataEuUa.success) {
@@ -6298,6 +6298,15 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbxL6yLAhOFtl2QOVfFRy7g2
 const ROUTE_API_URL = API_URL;
 const ARCHIVE_API_URL = API_URL;
 
+// POST-обгортка для API (все через POST — уникає CORS)
+function apiPost(action, payload) {
+    return fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+    }).then(r => r.json());
+}
+
 // Нормалізація дати до формату YYYY-MM-DD
 function normalizeDate(dateStr) {
     if (!dateStr) return '';
@@ -6324,8 +6333,8 @@ function syncWithSheets() {
 
     // Завантажуємо обидва аркуші паралельно
     Promise.all([
-        fetch(API_URL + '?action=getPassengers&sheet=Україна-ЄВ').then(r => r.json()),
-        fetch(API_URL + '?action=getPassengers&sheet=Європа-УК').then(r => r.json())
+        apiPost('getPassengers', { sheet: 'Україна-ЄВ' }),
+        apiPost('getPassengers', { sheet: 'Європа-УК' })
     ])
     .then(([dataUaEu, dataEuUa]) => {
         hideLoader();
@@ -6448,7 +6457,7 @@ function savePassengerToServer(passenger) {
 
     fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(payload)
     })
     .then(r => r.json())
@@ -6514,7 +6523,7 @@ function updatePassengerOnServer(passenger) {
     const promises = Object.entries(fieldsToUpdate).map(([field, value]) => {
         return fetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({
                 action: 'updateField',
                 spreadsheetId: 'PASSENGERS',
@@ -6575,7 +6584,7 @@ function movePassengerDirection(oldPassenger, newData) {
 
     fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(addPayload)
     })
     .then(r => r.json())
@@ -6762,7 +6771,7 @@ async function startTagging() {
         try {
             const res = await fetch(TAG_PROXY_URL, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {'Content-Type': 'text/plain'},
                 body: JSON.stringify({ userId: item.userId, tagName: tagName })
             });
             const data = await res.json();
