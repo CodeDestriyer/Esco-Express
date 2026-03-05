@@ -3038,6 +3038,7 @@ function render() {
         const seatsDisplay = p.seats || 1;
         const dateDisplay = p.date ? getFieldValue(p, 'date') : '—';
         const priceDisplay = p.price ? p.price + ' ' + (p.currency || 'UAH') : '';
+        const routeFrom = hasSearch ? highlightSearch(p.from || '—') : (p.from || '—');
         const routeTo = hasSearch ? highlightSearch(p.to || '—') : (p.to || '—');
         const idDisplay = hasSearch ? highlightSearch(p.id || '—') : (p.id || '—');
         const nameDisplay = hasSearch ? highlightSearch(p.name || '—') : (p.name || '—');
