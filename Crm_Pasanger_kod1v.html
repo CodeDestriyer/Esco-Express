@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EscoExpress CRM v2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a3a5e;
+            --primary-dark: #0d1f3c;
+            --accent: #d90d0d;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --purple: #8b5cf6;
+            --orange: #f97316;
+            --pink: #ec4899;
+            --teal: #14b8a6;
+            --bg-main: #f5f7fa;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg-main); color: var(--text-primary); min-height: 100vh; }
+
+        /* HEADER */
+        .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 10px 16px; position: sticky; top: 0; z-index: 100; }
+        .header-top { display: flex; align-items: center; gap: 10px; }
+        .logo { font-size: 14px; font-weight: 800; color: white; white-space: nowrap; }
+        .logo span { color: var(--accent); }
+        .search-box { flex: 1; position: relative; max-width: 400px; }
+        .search-input { width: 100%; padding: 8px 12px 8px 32px; border: none; border-radius: 8px; background: rgba(255,255,255,0.15); color: white; font-family: inherit; font-size: 12px; outline: none; }
+        .search-input::placeholder { color: rgba(255,255,255,0.6); }
+        .search-input:focus { background: rgba(255,255,255,0.25); }
+        .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: 0.7; color: white; }
+        .header-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+        .sync-indicator { color: rgba(255,255,255,0.6); font-size: 10px; white-space: nowrap; }
+        .user-avatar { width: 30px; height: 30px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 11px; flex-shrink: 0; cursor: pointer; }
+
+        /* TABS */
+        .tabs-bar { display: flex; background: white; border-bottom: 2px solid var(--border); padding: 0 16px; }
+        .tab-btn { padding: 12px 24px; font-size: 13px; font-weight: 700; color: var(--text-secondary); border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; font-family: inherit; }
+        .tab-btn:hover { color: var(--primary); }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-btn .tab-count { background: var(--bg-main); color: var(--text-secondary); padding: 2px 8px; border-radius: 10px; font-size: 10px; margin-left: 6px; }
+        .tab-btn.active .tab-count { background: var(--primary); color: white; }
+
+        /* MAIN CONTENT */
+        .tab-content { display: none; padding: 16px; }
+        .tab-content.active { display: block; }
+
+        /* FILTERS BAR */
+        .filters-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center; }
+        .filter-group { display: flex; gap: 4px; }
+        .filter-btn { padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; background: white; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; white-space: nowrap; }
+        .filter-btn:hover { border-color: var(--primary); }
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .filter-btn.warning-active { background: var(--warning); color: white; border-color: var(--warning); }
+        .filter-select { padding: 6px 12px; border: 1px solid var(--border); border-radius: 20px; background: white; font-size: 11px; font-weight: 600; font-family: inherit; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; padding-right: 28px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+        .filter-select:focus { border-color: var(--primary); }
+        .add-btn { padding: 8px 20px; background: var(--primary); color: white; border: none; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; margin-left: auto; }
+        .add-btn:hover { background: var(--primary-dark); transform: scale(1.02); }
+
+        /* TABLE (desktop) */
+        .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+        .data-table thead th { background: var(--primary); color: white; padding: 10px 12px; font-size: 11px; font-weight: 700; text-align: left; white-space: nowrap; position: sticky; top: 0; }
+        .data-table thead th:first-child { width: 30px; text-align: center; }
+        .data-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+        .data-table tbody tr:hover { background: #f0f4ff; }
+        .data-table tbody tr.selected { background: #e0e7ff; }
+        .data-table tbody td { padding: 10px 12px; font-size: 12px; white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+        .data-table tbody td:first-child { text-align: center; }
+        .data-table .cb { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+
+        /* BADGES */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+        .badge-new { background: #dbeafe; color: #2563eb; }
+        .badge-work { background: #fef3c7; color: #d97706; }
+        .badge-confirmed { background: #d1fae5; color: #059669; }
+        .badge-refused { background: #fee2e2; color: #dc2626; }
+        .badge-paid { background: #d1fae5; color: #059669; }
+        .badge-partial { background: #fef3c7; color: #d97706; }
+        .badge-unpaid { background: #fee2e2; color: #dc2626; }
+        .badge-notrip { background: #fef3c7; color: #d97706; }
+        .badge-trip { background: #dbeafe; color: #2563eb; }
+        .badge-debt { background: #fee2e2; color: #dc2626; font-weight: 800; }
+        .badge-nodebt { color: var(--text-secondary); }
+        .badge-archive { background: #f3f4f6; color: #6b7280; }
+
+        /* ACTION BUTTONS */
+        .btn-icon { width: 28px; height: 28px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s; background: var(--bg-main); }
+        .btn-icon:hover { transform: scale(1.1); }
+        .btn-icon.danger:hover { background: #fee2e2; }
+
+        /* CARDS (mobile) */
+        .cards-list { display: none; }
+        .pax-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow); border-left: 4px solid var(--primary); cursor: pointer; transition: all 0.2s; }
+        .pax-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+        .pax-card.no-trip { border-left-color: var(--warning); }
+        .pax-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .pax-card-row:last-child { margin-bottom: 0; }
+        .pax-card-name { font-weight: 700; font-size: 13px; }
+        .pax-card-phone { font-size: 11px; color: var(--text-secondary); }
+        .pax-card-info { font-size: 11px; color: var(--text-secondary); }
+        .pax-card-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        /* DETAIL PANEL (side / fullscreen mobile) */
+        .detail-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 200; }
+        .detail-overlay.show { display: block; }
+        .detail-panel { position: fixed; top: 0; right: 0; width: 480px; height: 100vh; background: white; z-index: 201; overflow-y: auto; box-shadow: -8px 0 30px rgba(0,0,0,0.15); transform: translateX(100%); transition: transform 0.3s ease; }
+        .detail-panel.show { transform: translateX(0); }
+        .detail-header { padding: 16px 20px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 5; }
+        .detail-header-title { font-size: 14px; font-weight: 700; }
+        .detail-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 8px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .detail-close:hover { background: rgba(255,255,255,0.3); }
+        .detail-body { padding: 16px 20px; }
+        .detail-section { margin-bottom: 20px; }
+        .detail-section-title { font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; padding-bottom: 6px; border-bottom: 2px solid var(--bg-main); }
+        .detail-field { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--bg-main); cursor: pointer; }
+        .detail-field:hover { background: #fafbff; margin: 0 -8px; padding: 8px; border-radius: 6px; }
+        .detail-field-label { font-size: 11px; color: var(--text-secondary); font-weight: 600; flex-shrink: 0; margin-right: 12px; }
+        .detail-field-value { font-size: 12px; font-weight: 600; text-align: right; word-break: break-word; max-width: 60%; }
+        .detail-field-value.empty { color: var(--text-secondary); font-style: italic; }
+        .detail-field-value .badge { font-size: 11px; }
+        .detail-actions { display: flex; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--border); position: sticky; bottom: 0; background: white; }
+        .detail-actions button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .btn-call { background: var(--success); color: white; }
+        .btn-edit { background: var(--info); color: white; }
+        .btn-delete { background: var(--danger); color: white; }
+
+        /* INLINE EDIT */
+        .inline-edit-input { width: 100%; padding: 6px 10px; border: 2px solid var(--info); border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; }
+        .inline-edit-select { width: 100%; padding: 6px 10px; border: 2px solid var(--info); border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; background: white; }
+        .inline-edit-actions { display: flex; gap: 4px; margin-top: 4px; }
+        .inline-edit-actions button { padding: 4px 12px; border: none; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .inline-save { background: var(--success); color: white; }
+        .inline-cancel { background: var(--bg-main); color: var(--text-secondary); }
+
+        /* MODAL / BOTTOM SHEET */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 300; align-items: flex-end; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-sheet { background: white; width: 100%; max-width: 600px; max-height: 90vh; border-radius: 16px 16px 0 0; overflow-y: auto; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-sheet-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; z-index: 5; }
+        .modal-sheet-header h3 { font-size: 16px; font-weight: 800; }
+        .modal-sheet-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-secondary); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+        .modal-sheet-body { padding: 20px; }
+        .modal-sheet-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; position: sticky; bottom: 0; background: white; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .form-group label .required { color: var(--danger); }
+        .form-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s; }
+        .form-input:focus { border-color: var(--primary); }
+        .form-select { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; background: white; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .btn-primary { padding: 10px 24px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { padding: 10px 24px; background: var(--bg-main); color: var(--text-primary); border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .btn-secondary:hover { background: var(--border); }
+
+        /* TRIP CARDS */
+        .trips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+        .trip-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); transition: all 0.2s; border: 1px solid var(--border); }
+        .trip-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); transform: translateY(-2px); }
+        .trip-card-header { padding: 14px 16px; background: linear-gradient(135deg, var(--primary) 0%, #2a4a6e 100%); color: white; }
+        .trip-card-city { font-size: 16px; font-weight: 800; }
+        .trip-card-dir { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+        .trip-card-date { font-size: 13px; font-weight: 600; margin-top: 4px; }
+        .trip-card-body { padding: 14px 16px; }
+        .trip-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; }
+        .trip-card-row:last-child { margin-bottom: 0; }
+        .trip-card-label { color: var(--text-secondary); font-weight: 600; }
+        .trip-card-value { font-weight: 700; }
+        .progress-bar-wrap { height: 8px; background: var(--bg-main); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+        .progress-bar { height: 100%; border-radius: 4px; transition: width 0.3s; background: var(--success); }
+        .progress-bar.warning { background: var(--warning); }
+        .progress-bar.full { background: var(--danger); }
+        .trip-card-footer { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+        .trip-card-footer button { flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+        .trip-btn-edit { background: var(--bg-main); color: var(--primary); }
+        .trip-btn-edit:hover { background: var(--primary); color: white; }
+        .trip-btn-archive { background: var(--bg-main); color: var(--text-secondary); }
+        .trip-btn-archive:hover { background: #6b7280; color: white; }
+        .trip-btn-delete { background: var(--bg-main); color: var(--danger); }
+        .trip-btn-delete:hover { background: var(--danger); color: white; }
+
+        /* VEHICLE LAYOUT PREVIEW */
+        .vehicle-layout { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px; background: var(--bg-main); border-radius: 10px; margin-top: 8px; }
+        .vehicle-row { display: flex; gap: 6px; }
+        .vehicle-seat { width: 44px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; border: 2px solid var(--border); background: white; }
+        .vehicle-seat.driver { background: var(--primary-dark); color: white; border-color: var(--primary-dark); }
+        .vehicle-seat.empty-gap { visibility: hidden; }
+        .vehicle-seat.reserved { background: #fef3c7; border-color: var(--warning); color: var(--warning); }
+
+        /* VEHICLE FORM SECTION */
+        .vehicle-form-item { background: var(--bg-main); border-radius: 10px; padding: 14px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .vehicle-form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .vehicle-form-title { font-size: 13px; font-weight: 700; }
+        .vehicle-form-remove { background: none; border: none; color: var(--danger); font-size: 16px; cursor: pointer; }
+        .seats-control { display: flex; align-items: center; gap: 10px; }
+        .seats-btn { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 6px; background: white; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .seats-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .seats-count { font-size: 16px; font-weight: 800; min-width: 30px; text-align: center; }
+        .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+        .toggle-switch { width: 40px; height: 22px; background: var(--border); border-radius: 11px; position: relative; cursor: pointer; transition: background 0.2s; }
+        .toggle-switch.on { background: var(--success); }
+        .toggle-switch::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: left 0.2s; }
+        .toggle-switch.on::after { left: 20px; }
+        .toggle-label { font-size: 12px; font-weight: 600; }
+
+        /* DATE MULTI PICKER */
+        .date-picker-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
+        .date-picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .date-picker-month { font-size: 14px; font-weight: 700; }
+        .date-picker-nav { background: none; border: 1px solid var(--border); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+        .date-picker-nav:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .date-cell { padding: 8px 4px; text-align: center; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+        .date-cell:hover { background: var(--bg-main); }
+        .date-cell.selected { background: var(--primary); color: white; }
+        .date-cell.today { border: 2px solid var(--primary); }
+        .date-cell.other-month { color: var(--border); cursor: default; }
+        .date-cell.day-header { font-size: 10px; color: var(--text-secondary); cursor: default; font-weight: 700; }
+        .selected-dates-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .selected-date-tag { background: var(--primary); color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .selected-date-tag button { background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 12px; }
+
+        /* EMPTY STATE */
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+        .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+        .empty-state-text { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+        .empty-state-sub { font-size: 12px; margin-bottom: 20px; }
+
+        /* TOAST */
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--primary-dark); color: white; padding: 10px 24px; border-radius: 10px; font-size: 13px; font-weight: 600; z-index: 999; transition: transform 0.3s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* LOADER */
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 500; align-items: center; justify-content: center; flex-direction: column; }
+        .loader-overlay.show { display: flex; }
+        .loader-spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-text { margin-top: 12px; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+
+        /* CONFIRM DIALOG */
+        .confirm-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 400; align-items: center; justify-content: center; }
+        .confirm-overlay.show { display: flex; }
+        .confirm-box { background: white; border-radius: 16px; padding: 24px; max-width: 360px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        .confirm-text { font-size: 14px; font-weight: 600; margin-bottom: 20px; line-height: 1.5; }
+        .confirm-buttons { display: flex; gap: 10px; }
+        .confirm-buttons button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .confirm-cancel { background: var(--bg-main); color: var(--text-primary); }
+        .confirm-ok { background: var(--danger); color: white; }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .data-table { display: none; }
+            .cards-list { display: block; }
+            .tab-btn { padding: 10px 16px; font-size: 12px; }
+            .detail-panel { width: 100%; }
+            .filters-bar { gap: 6px; }
+            .filter-btn { padding: 5px 10px; font-size: 10px; }
+            .trips-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .form-row-3 { grid-template-columns: 1fr; }
+            .add-btn { padding: 6px 14px; font-size: 11px; }
+            .modal-sheet { max-width: 100%; border-radius: 16px 16px 0 0; }
+            .vehicle-seat { width: 36px; height: 32px; font-size: 9px; }
+        }
+        @media (min-width: 769px) {
+            .modal-sheet { border-radius: 16px; margin: auto; max-height: 85vh; }
+            .modal-overlay.show { align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-top">
+        <div class="logo">Esco<span>Express</span> CRM</div>
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" type="text" placeholder="Пошук по ПІБ або телефону..." id="globalSearch" oninput="onSearchInput()">
+        </div>
+        <div class="header-right">
+            <span class="sync-indicator" id="syncIndicator">—</span>
+            <div class="user-avatar" title="Менеджер">М</div>
+        </div>
+    </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-bar">
+    <button class="tab-btn active" onclick="switchTab('passengers')" id="tabPassengers">👥 Пасажири <span class="tab-count" id="paxCount">0</span></button>
+    <button class="tab-btn" onclick="switchTab('trips')" id="tabTrips">🚐 Рейси <span class="tab-count" id="tripCount">0</span></button>
+</div>
+
+<!-- TAB: PASSENGERS -->
+<div class="tab-content active" id="contentPassengers">
+    <!-- Filters -->
+    <div class="filters-bar">
+        <div class="filter-group" id="filterDirection">
+            <button class="filter-btn active" onclick="setFilter('dir','all')">Всі</button>
+            <button class="filter-btn" onclick="setFilter('dir','ua-eu')">🇺🇦→🇪🇺</button>
+            <button class="filter-btn" onclick="setFilter('dir','eu-ua')">🇪🇺→🇺🇦</button>
+        </div>
+        <div class="filter-group" id="filterStatus">
+            <button class="filter-btn active" onclick="setFilter('status','all')">Всі</button>
+            <button class="filter-btn" onclick="setFilter('status','Новий')">Новий</button>
+            <button class="filter-btn" onclick="setFilter('status','В роботі')">В роботі</button>
+            <button class="filter-btn" onclick="setFilter('status','Підтверджено')">Підтверджено</button>
+            <button class="filter-btn" onclick="setFilter('status','Відмова')">Відмова</button>
+        </div>
+        <select class="filter-select" id="filterPayStatus" onchange="setFilter('pay',this.value)">
+            <option value="all">💳 Оплата: Всі</option>
+            <option value="Не оплачено">Не оплачено</option>
+            <option value="Частково">Частково</option>
+            <option value="Оплачено">Оплачено</option>
+        </select>
+        <select class="filter-select" id="filterTrip" onchange="setFilter('trip',this.value)">
+            <option value="all">🚐 Рейс: Всі</option>
+            <option value="none">⚠️ Без рейсу</option>
+        </select>
+        <button class="add-btn" onclick="openNewPassengerForm()">+ Новий пасажир</button>
+    </div>
+
+    <!-- Desktop Table -->
+    <table class="data-table" id="paxTable">
+        <thead>
+            <tr>
+                <th><input type="checkbox" class="cb" onchange="toggleAllPax(this.checked)"></th>
+                <th>ПІБ</th>
+                <th>Телефон</th>
+                <th>Дата виїзду</th>
+                <th>Рейс</th>
+                <th>Місце</th>
+                <th>Сума</th>
+                <th>Борг</th>
+                <th>Оплата</th>
+                <th>Статус</th>
+                <th>Дії</th>
+            </tr>
+        </thead>
+        <tbody id="paxTableBody"></tbody>
+    </table>
+
+    <!-- Mobile Cards -->
+    <div class="cards-list" id="paxCardsList"></div>
+
+    <!-- Empty state -->
+    <div class="empty-state" id="paxEmpty" style="display:none">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-text">Немає пасажирів</div>
+        <div class="empty-state-sub">Натисніть «+ Новий пасажир» щоб додати</div>
+    </div>
+</div>
+
+<!-- TAB: TRIPS -->
+<div class="tab-content" id="contentTrips">
+    <div class="filters-bar">
+        <div class="filter-group" id="filterTripTime">
+            <button class="filter-btn active" onclick="setTripFilter('time','future')">Майбутні</button>
+            <button class="filter-btn" onclick="setTripFilter('time','past')">Минулі</button>
+            <button class="filter-btn" onclick="setTripFilter('time','all')">Всі</button>
+        </div>
+        <div class="filter-group" id="filterTripDir">
+            <button class="filter-btn active" onclick="setTripFilter('dir','all')">Всі</button>
+            <button class="filter-btn" onclick="setTripFilter('dir','ua-eu')">🇺🇦→🇪🇺</button>
+            <button class="filter-btn" onclick="setTripFilter('dir','eu-ua')">🇪🇺→🇺🇦</button>
+        </div>
+        <button class="add-btn" onclick="openNewTripForm()">+ Новий рейс</button>
+    </div>
+
+    <div class="trips-grid" id="tripsGrid"></div>
+
+    <div class="empty-state" id="tripsEmpty" style="display:none">
+        <div class="empty-state-icon">🚐</div>
+        <div class="empty-state-text">Рейсів ще немає</div>
+        <div class="empty-state-sub">Створіть перший рейс для початку роботи</div>
+        <button class="add-btn" onclick="openNewTripForm()" style="margin-top: 8px;">+ Створити перший рейс</button>
+    </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+    <div class="detail-header">
+        <span class="detail-header-title" id="detailTitle">Деталі пасажира</span>
+        <button class="detail-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+    <div class="detail-actions" id="detailActions"></div>
+</div>
+
+<!-- NEW PASSENGER MODAL -->
+<div class="modal-overlay" id="paxModal" onclick="if(event.target===this)closePaxModal()">
+    <div class="modal-sheet">
+        <div class="modal-sheet-header">
+            <h3 id="paxModalTitle">+ Новий пасажир</h3>
+            <button class="modal-sheet-close" onclick="closePaxModal()">✕</button>
+        </div>
+        <div class="modal-sheet-body">
+            <div id="duplicateWarning" style="display:none;background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:#92400e;">
+                <strong>⚠️ Можливий дублікат!</strong><br><span id="duplicateInfo"></span>
+            </div>
+            <div class="form-group">
+                <label>ПІБ <span class="required">*</span></label>
+                <input class="form-input" type="text" id="fPib" placeholder="Прізвище Ім'я По-батькові">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Телефон пасажира <span class="required">*</span></label>
+                    <input class="form-input" type="tel" id="fPhone" placeholder="+380...">
+                </div>
+                <div class="form-group">
+                    <label>Тел. реєстратора</label>
+                    <input class="form-input" type="tel" id="fPhoneReg" placeholder="+380...">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Напрямок <span class="required">*</span></label>
+                    <select class="form-select" id="fDirection">
+                        <option value="ua-eu">🇺🇦 → 🇪🇺 Україна → Європа</option>
+                        <option value="eu-ua">🇪🇺 → 🇺🇦 Європа → Україна</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Кількість місць</label>
+                    <input class="form-input" type="number" id="fSeats" value="1" min="1" max="10">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Адреса відправки</label>
+                    <input class="form-input" type="text" id="fFrom" placeholder="Місто, адреса">
+                </div>
+                <div class="form-group">
+                    <label>Адреса прибуття</label>
+                    <input class="form-input" type="text" id="fTo" placeholder="Місто, адреса">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Дата виїзду</label>
+                    <input class="form-input" type="date" id="fDate">
+                </div>
+                <div class="form-group">
+                    <label>Таймінг</label>
+                    <input class="form-input" type="text" id="fTiming" placeholder="Ранок / Вечір / 08:00">
+                </div>
+            </div>
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>Ціна квитка</label>
+                    <input class="form-input" type="text" id="fPrice" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Валюта квитка</label>
+                    <select class="form-select" id="fCurrency">
+                        <option value="UAH">UAH</option><option value="CHF">CHF</option><option value="EUR">EUR</option><option value="PLN">PLN</option><option value="CZK">CZK</option><option value="USD">USD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Завдаток</label>
+                    <input class="form-input" type="text" id="fDeposit" placeholder="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Вага багажу (кг)</label>
+                    <input class="form-input" type="text" id="fWeight" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Ціна багажу</label>
+                    <input class="form-input" type="text" id="fWeightPrice" placeholder="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Примітка</label>
+                <input class="form-input" type="text" id="fNote" placeholder="Додаткова інформація">
+            </div>
+        </div>
+        <div class="modal-sheet-footer">
+            <button class="btn-secondary" onclick="closePaxModal()">Скасувати</button>
+            <button class="btn-primary" onclick="savePassenger()" id="paxSaveBtn">💾 Зберегти</button>
+        </div>
+    </div>
+</div>
+
+<!-- NEW TRIP MODAL -->
+<div class="modal-overlay" id="tripModal" onclick="if(event.target===this)closeTripModal()">
+    <div class="modal-sheet" style="max-width:700px;">
+        <div class="modal-sheet-header">
+            <h3 id="tripModalTitle">+ Новий рейс</h3>
+            <button class="modal-sheet-close" onclick="closeTripModal()">✕</button>
+        </div>
+        <div class="modal-sheet-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Місто <span class="required">*</span></label>
+                    <input class="form-input" type="text" id="tCity" placeholder="Цюріх, Женева...">
+                </div>
+                <div class="form-group">
+                    <label>Напрямок <span class="required">*</span></label>
+                    <select class="form-select" id="tDirection">
+                        <option value="ua-eu">🇺🇦 → 🇪🇺</option>
+                        <option value="eu-ua">🇪🇺 → 🇺🇦</option>
+                        <option value="bt">↔️ Загальний (туди і назад)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="display:block;font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;">Автомобілі</label>
+                <div id="vehiclesList"></div>
+                <button class="btn-secondary" onclick="addVehicleToForm()" style="width:100%;margin-top:8px;">+ Додати авто</button>
+            </div>
+
+            <div class="form-group">
+                <label>Дати рейсу <span class="required">*</span></label>
+                <div id="tripCalendar"></div>
+                <div class="selected-dates-list" id="selectedDatesList"></div>
+            </div>
+        </div>
+        <div class="modal-sheet-footer">
+            <button class="btn-secondary" onclick="closeTripModal()">Скасувати</button>
+            <button class="btn-primary" onclick="saveTrip()" id="tripSaveBtn">💾 Зберегти рейс</button>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-box">
+        <div class="confirm-text" id="confirmText"></div>
+        <div class="confirm-buttons">
+            <button class="confirm-cancel" onclick="confirmCancel()">Скасувати</button>
+            <button class="confirm-ok" onclick="confirmOk()" id="confirmOkBtn">Видалити</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LOADER -->
+<div class="loader-overlay" id="loader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text" id="loaderText">Завантаження...</div>
+</div>
+
+<script>
+// ================================================================
+// CONFIG & STATE
+// ================================================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbwfostl9_QtTAibYGFPG6TJIEAlxPGKSrrzq1Je4cFnVZALW_XnEqKzLLxIJAS3rJrpRA/exec';
+
+let passengers = [];
+let trips = []; // calendar records
+let vehicles = []; // autopark records
+let selectedPaxIds = new Set();
+
+let filters = { dir: 'all', status: 'all', pay: 'all', trip: 'all', search: '' };
+let tripFilters = { time: 'future', dir: 'all' };
+let currentDetailPax = null;
+let editingPaxId = null; // null = new, string = editing
+let editingTripCalId = null;
+let confirmCallback = null;
+
+// Seat layouts
+const LAYOUTS = {
+    '1-3-3': { rows: [['V1'], ['A1','A2','A3'], ['B1','B2','B3']], total: 7 },
+    '2-2-3': { rows: [['A1','A2'], ['B1','B2'], ['C1','C2','C3']], total: 7 },
+    '2-2-2': { rows: [['A1','A2'], ['B1','B2'], ['C1','C2']], total: 6 },
+};
+
+// Column mapping: internal key → spreadsheet column name
+const COL_MAP = {
+    pax_id: 'PAX_ID', smartId: 'Ід_смарт', direction: 'Напрям', sourceSheet: 'SOURCE_SHEET',
+    dateCreated: 'Дата створення', name: 'Піб', phone: 'Телефон пасажира',
+    phoneReg: 'Телефон реєстратора', seats: 'Кількість місць', from: 'Адреса відправки',
+    to: 'Адреса прибуття', date: 'Дата виїзду', timing: 'Таймінг', vehicle: 'Номер авто',
+    seatInCar: 'Місце в авто', rteId: 'RTE_ID', price: 'Ціна квитка', currency: 'Валюта квитка',
+    deposit: 'Завдаток', currencyDeposit: 'Валюта завдатку', weight: 'Вага багажу',
+    weightPrice: 'Ціна багажу', currencyWeight: 'Валюта багажу', debt: 'Борг',
+    payStatus: 'Статус оплати', leadStatus: 'Статус ліда', crmStatus: 'Статус CRM',
+    tag: 'Тег', note: 'Примітка', noteSms: 'Примітка СМС', cliId: 'CLI_ID',
+    bookingId: 'BOOKING_ID', dateArchive: 'DATE_ARCHIVE', archivedBy: 'ARCHIVED_BY',
+    archiveReason: 'ARCHIVE_REASON', archiveId: 'ARCHIVE_ID', calId: 'CAL_ID'
+};
+
+// Detail sections for passenger card
+const DETAIL_SECTIONS = [
+    { title: '👤 Основне', icon: '👤', fields: [
+        { key: 'name', label: 'ПІБ' },
+        { key: 'phone', label: 'Телефон пасажира' },
+        { key: 'phoneReg', label: 'Тел. реєстратора' },
+        { key: 'direction', label: 'Напрямок', format: 'direction' },
+        { key: 'date', label: 'Дата виїзду', format: 'date' },
+        { key: 'seats', label: 'Кількість місць' },
+    ]},
+    { title: '🗺️ Маршрут', icon: '🗺️', fields: [
+        { key: 'from', label: 'Адреса відправки' },
+        { key: 'to', label: 'Адреса прибуття' },
+        { key: 'timing', label: 'Таймінг' },
+        { key: 'vehicle', label: 'Номер авто' },
+        { key: 'seatInCar', label: 'Місце в авто' },
+        { key: 'calId', label: 'CAL_ID рейсу', format: 'trip' },
+    ]},
+    { title: '💰 Фінанси', icon: '💰', fields: [
+        { key: 'price', label: 'Ціна квитка' },
+        { key: 'currency', label: 'Валюта квитка', options: ['UAH','CHF','EUR','PLN','CZK','USD'] },
+        { key: 'deposit', label: 'Завдаток' },
+        { key: 'currencyDeposit', label: 'Валюта завдатку', options: ['UAH','CHF','EUR','PLN','CZK','USD'] },
+        { key: 'weight', label: 'Вага багажу' },
+        { key: 'weightPrice', label: 'Ціна багажу' },
+        { key: 'currencyWeight', label: 'Валюта багажу', options: ['UAH','CHF','EUR','PLN','CZK','USD'] },
+        { key: '_debt', label: 'Борг', readonly: true, format: 'debt' },
+    ]},
+    { title: '📊 Статуси', icon: '📊', fields: [
+        { key: 'payStatus', label: 'Статус оплати', options: ['Не оплачено','Частково','Оплачено'] },
+        { key: 'leadStatus', label: 'Статус ліда', options: ['Новий','В роботі','Підтверджено','Відмова'] },
+        { key: 'crmStatus', label: 'Статус CRM', options: ['Активний','Архів'] },
+        { key: 'tag', label: 'Тег' },
+    ]},
+    { title: '📝 Примітки', icon: '📝', fields: [
+        { key: 'note', label: 'Примітка' },
+        { key: 'noteSms', label: 'Примітка СМС' },
+    ]},
+    { title: '🔧 Системні', icon: '🔧', fields: [
+        { key: 'pax_id', label: 'PAX_ID', readonly: true },
+        { key: 'smartId', label: 'Ід_смарт', readonly: true },
+        { key: 'dateCreated', label: 'Дата створення', readonly: true },
+        { key: 'cliId', label: 'CLI_ID', readonly: true },
+        { key: 'bookingId', label: 'BOOKING_ID', readonly: true },
+    ]},
+];
+
+// ================================================================
+// API LAYER
+// ================================================================
+function apiPost(action, payload) {
+    return fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(Object.assign({ action }, payload || {}))
+    }).then(r => r.json());
+}
+
+// ================================================================
+// DATA LOADING
+// ================================================================
+async function loadAll() {
+    showLoader('Завантаження даних...');
+    try {
+        const [paxUe, paxEu, tripsData] = await Promise.all([
+            apiPost('getAll', { sheet: 'ue' }),
+            apiPost('getAll', { sheet: 'eu' }),
+            apiPost('getTrips', {})
+        ]);
+        if (paxUe.ok) {
+            const ue = (paxUe.data || []).map(p => mapPax(p, 'ua-eu'));
+            const eu = (paxEu.ok ? paxEu.data || [] : []).map(p => mapPax(p, 'eu-ua'));
+            passengers = [...ue, ...eu];
+        }
+        if (tripsData.ok) {
+            trips = tripsData.data || [];
+        }
+        updateTripFilterDropdown();
+        renderPassengers();
+        renderTrips();
+        updateCounts();
+        updateSyncTime();
+    } catch(e) {
+        console.error('Load error:', e);
+        showToast('❌ Помилка завантаження');
+    }
+    hideLoader();
+}
+
+function mapPax(p, dirHint) {
+    const rawDir = (p['Напрям'] || '').toString().toLowerCase();
+    let dir = dirHint || 'ua-eu';
+    if (rawDir.includes('єв') || rawDir.includes('eu') || rawDir.includes('європа')) dir = 'eu-ua';
+    else if (rawDir.includes('ук') || rawDir.includes('ua') || rawDir.includes('україна')) dir = 'ua-eu';
+
+    const price = parseFloat(p['Ціна квитка']) || 0;
+    const weightPrice = parseFloat(p['Ціна багажу']) || 0;
+    const deposit = parseFloat(p['Завдаток']) || 0;
+    const debt = Math.max(0, price + weightPrice - deposit);
+
+    return {
+        pax_id: p['PAX_ID'] || '',
+        smartId: p['Ід_смарт'] || '',
+        direction: dir,
+        sourceSheet: p['SOURCE_SHEET'] || '',
+        dateCreated: p['Дата створення'] || '',
+        name: p['Піб'] || '',
+        phone: p['Телефон пасажира'] || '',
+        phoneReg: p['Телефон реєстратора'] || '',
+        seats: p['Кількість місць'] || 1,
+        from: p['Адреса відправки'] || '',
+        to: p['Адреса прибуття'] || '',
+        date: normalizeDate(p['Дата виїзду']),
+        timing: p['Таймінг'] || '',
+        vehicle: p['Номер авто'] || '',
+        seatInCar: p['Місце в авто'] || '',
+        rteId: p['RTE_ID'] || '',
+        price: p['Ціна квитка'] || '',
+        currency: p['Валюта квитка'] || 'UAH',
+        deposit: p['Завдаток'] || '',
+        currencyDeposit: p['Валюта завдатку'] || 'UAH',
+        weight: p['Вага багажу'] || '',
+        weightPrice: p['Ціна багажу'] || '',
+        currencyWeight: p['Валюта багажу'] || 'UAH',
+        debt: debt,
+        payStatus: p['Статус оплати'] || 'Не оплачено',
+        leadStatus: p['Статус ліда'] || 'Новий',
+        crmStatus: p['Статус CRM'] || 'Активний',
+        tag: p['Тег'] || '',
+        note: p['Примітка'] || '',
+        noteSms: p['Примітка СМС'] || '',
+        cliId: p['CLI_ID'] || '',
+        bookingId: p['BOOKING_ID'] || '',
+        dateArchive: p['DATE_ARCHIVE'] || '',
+        archivedBy: p['ARCHIVED_BY'] || '',
+        archiveReason: p['ARCHIVE_REASON'] || '',
+        archiveId: p['ARCHIVE_ID'] || '',
+        calId: p['CAL_ID'] || '',
+        _sheet: p['SOURCE_SHEET'] || (dir === 'ua-eu' ? 'Україна-ЄВ' : 'Європа-УК'),
+        _rowNum: p._rowNum || ''
+    };
+}
+
+function normalizeDate(d) {
+    if (!d) return '';
+    if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.substring(0, 10);
+    if (/^\d{2}\.\d{2}\.\d{4}$/.test(d)) { const [dd,mm,yy] = d.split('.'); return `${yy}-${mm}-${dd}`; }
+    try { const dt = new Date(d); if (!isNaN(dt)) return dt.toISOString().substring(0, 10); } catch(e) {}
+    return '';
+}
+
+function formatDateDisplay(d) {
+    if (!d) return '—';
+    const nd = normalizeDate(d);
+    if (!nd) return d;
+    const [y,m,dd] = nd.split('-');
+    return `${dd}.${m}.${y}`;
+}
+
+// ================================================================
+// FILTERS
+// ================================================================
+function getFilteredPassengers() {
+    return passengers.filter(p => {
+        if (filters.dir !== 'all' && p.direction !== filters.dir) return false;
+        if (filters.status !== 'all' && p.leadStatus !== filters.status) return false;
+        if (filters.pay !== 'all' && p.payStatus !== filters.pay) return false;
+        if (filters.trip === 'none' && p.calId) return false;
+        if (filters.trip !== 'all' && filters.trip !== 'none' && p.calId !== filters.trip) return false;
+        if (filters.search) {
+            const s = filters.search.toLowerCase();
+            if (!(p.name || '').toLowerCase().includes(s) && !(p.phone || '').includes(s)) return false;
+        }
+        return true;
+    });
+}
+
+function setFilter(type, value) {
+    filters[type] = value;
+    // Update button states
+    if (type === 'dir') updateFilterBtns('filterDirection', value);
+    if (type === 'status') updateFilterBtns('filterStatus', value);
+    renderPassengers();
+}
+
+function updateFilterBtns(groupId, active) {
+    const btns = document.getElementById(groupId).querySelectorAll('.filter-btn');
+    btns.forEach(b => {
+        const val = b.getAttribute('onclick').match(/'([^']+)'\)$/)?.[1];
+        b.classList.toggle('active', val === active);
+    });
+}
+
+function onSearchInput() {
+    filters.search = document.getElementById('globalSearch').value.trim();
+    renderPassengers();
+}
+
+function setTripFilter(type, value) {
+    tripFilters[type] = value;
+    if (type === 'time') updateFilterBtns('filterTripTime', value);
+    if (type === 'dir') updateFilterBtns('filterTripDir', value);
+    renderTrips();
+}
+
+function updateTripFilterDropdown() {
+    const sel = document.getElementById('filterTrip');
+    // Keep first two options, add trips
+    while (sel.options.length > 2) sel.remove(2);
+    trips.forEach(t => {
+        if (t.status === 'Архів') return;
+        const opt = document.createElement('option');
+        opt.value = t.cal_id;
+        opt.textContent = `${t.city} ${formatDateDisplay(t.date)} (${t.auto_name || ''})`;
+        sel.appendChild(opt);
+    });
+}
+
+// ================================================================
+// RENDER PASSENGERS
+// ================================================================
+function renderPassengers() {
+    const data = getFilteredPassengers();
+    const tbody = document.getElementById('paxTableBody');
+    const cards = document.getElementById('paxCardsList');
+    const empty = document.getElementById('paxEmpty');
+
+    if (!data.length) {
+        tbody.innerHTML = '';
+        cards.innerHTML = '';
+        empty.style.display = '';
+        return;
+    }
+    empty.style.display = 'none';
+
+    // Desktop table
+    tbody.innerHTML = data.map(p => {
+        const sel = selectedPaxIds.has(p.pax_id);
+        const tripInfo = getTripInfo(p.calId);
+        const debt = calcDebt(p);
+        return `<tr class="${sel ? 'selected' : ''}" onclick="openDetail('${p.pax_id}')">
+            <td><input type="checkbox" class="cb" ${sel?'checked':''} onclick="event.stopPropagation();togglePaxSelect('${p.pax_id}')"></td>
+            <td title="${esc(p.name)}">${esc(p.name) || '—'}</td>
+            <td>${esc(p.phone) || '—'}</td>
+            <td>${formatDateDisplay(p.date)}</td>
+            <td>${tripInfo}</td>
+            <td>${esc(p.seatInCar) || '—'}</td>
+            <td>${p.price ? esc(p.price) + ' ' + esc(p.currency || '') : '—'}</td>
+            <td>${debt > 0 ? '<span class="badge badge-debt">' + debt + '</span>' : '<span class="badge-nodebt">0</span>'}</td>
+            <td>${payBadge(p.payStatus)}</td>
+            <td>${statusBadge(p.leadStatus)}</td>
+            <td><button class="btn-icon danger" onclick="event.stopPropagation();deletePax('${p.pax_id}')" title="Видалити">🗑</button></td>
+        </tr>`;
+    }).join('');
+
+    // Mobile cards
+    cards.innerHTML = data.map(p => {
+        const tripInfo = getTripInfo(p.calId);
+        const debt = calcDebt(p);
+        return `<div class="pax-card ${!p.calId ? 'no-trip' : ''}" onclick="openDetail('${p.pax_id}')">
+            <div class="pax-card-row">
+                <span class="pax-card-name">${esc(p.name) || '—'}</span>
+                ${statusBadge(p.leadStatus)}
+            </div>
+            <div class="pax-card-row">
+                <span class="pax-card-phone">${esc(p.phone)}</span>
+                <span class="pax-card-info">${formatDateDisplay(p.date)}</span>
+            </div>
+            <div class="pax-card-badges">
+                ${tripInfo}
+                ${p.seatInCar ? '<span class="badge badge-trip">💺 '+esc(p.seatInCar)+'</span>' : ''}
+                ${p.price ? '<span class="badge">'+esc(p.price)+' '+esc(p.currency||'')+'</span>' : ''}
+                ${debt > 0 ? '<span class="badge badge-debt">Борг: '+debt+'</span>' : ''}
+                ${payBadge(p.payStatus)}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function calcDebt(p) {
+    const price = parseFloat(p.price) || 0;
+    const wp = parseFloat(p.weightPrice) || 0;
+    const dep = parseFloat(p.deposit) || 0;
+    return Math.max(0, Math.round((price + wp - dep) * 100) / 100);
+}
+
+function getTripInfo(calId) {
+    if (!calId) return '<span class="badge badge-notrip">⚠️ Без рейсу</span>';
+    const t = trips.find(tr => tr.cal_id === calId);
+    if (t) return `<span class="badge badge-trip">🚐 ${esc(t.city)} ${formatDateDisplay(t.date)}</span>`;
+    return `<span class="badge badge-trip">${esc(calId)}</span>`;
+}
+
+function statusBadge(s) {
+    const map = { 'Новий': 'badge-new', 'В роботі': 'badge-work', 'Підтверджено': 'badge-confirmed', 'Відмова': 'badge-refused' };
+    return `<span class="badge ${map[s] || 'badge-new'}">${esc(s || 'Новий')}</span>`;
+}
+
+function payBadge(s) {
+    const map = { 'Оплачено': 'badge-paid', 'Частково': 'badge-partial', 'Не оплачено': 'badge-unpaid' };
+    return `<span class="badge ${map[s] || 'badge-unpaid'}">${esc(s || 'Не оплачено')}</span>`;
+}
+
+function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function togglePaxSelect(id) { selectedPaxIds.has(id) ? selectedPaxIds.delete(id) : selectedPaxIds.add(id); renderPassengers(); }
+function toggleAllPax(checked) { const data = getFilteredPassengers(); if (checked) data.forEach(p => selectedPaxIds.add(p.pax_id)); else selectedPaxIds.clear(); renderPassengers(); }
+
+function updateCounts() {
+    document.getElementById('paxCount').textContent = passengers.length;
+    document.getElementById('tripCount').textContent = trips.filter(t => t.status !== 'Архів').length;
+}
+
+// ================================================================
+// DETAIL PANEL
+// ================================================================
+function openDetail(paxId) {
+    const p = passengers.find(x => x.pax_id === paxId);
+    if (!p) return;
+    currentDetailPax = p;
+
+    document.getElementById('detailTitle').textContent = p.name || 'Деталі пасажира';
+
+    const body = document.getElementById('detailBody');
+    body.innerHTML = DETAIL_SECTIONS.map(sec => {
+        const fieldsHtml = sec.fields.map(f => {
+            let val = f.key === '_debt' ? calcDebt(p) : (p[f.key] ?? '');
+            let displayVal = val;
+
+            if (f.format === 'direction') displayVal = val === 'ua-eu' ? '🇺🇦 → 🇪🇺' : '🇪🇺 → 🇺🇦';
+            else if (f.format === 'date') displayVal = formatDateDisplay(val);
+            else if (f.format === 'trip') displayVal = val ? getTripInfo(val) : '<span class="badge badge-notrip">Без рейсу</span>';
+            else if (f.format === 'debt') displayVal = val > 0 ? `<span class="badge badge-debt">${val}</span>` : '0';
+            else if (f.key === 'payStatus') displayVal = payBadge(val);
+            else if (f.key === 'leadStatus') displayVal = statusBadge(val);
+
+            const editable = !f.readonly;
+            const editClick = editable ? `onclick="startInlineEdit('${f.key}', this, ${f.options ? "'" + f.options.join(',') + "'" : 'null'})"` : '';
+
+            return `<div class="detail-field" ${editClick} data-field="${f.key}">
+                <span class="detail-field-label">${f.label}</span>
+                <span class="detail-field-value ${!val && val !== 0 ? 'empty' : ''}">${displayVal || '—'}</span>
+            </div>`;
+        }).join('');
+        return `<div class="detail-section">
+            <div class="detail-section-title">${sec.title}</div>
+            ${fieldsHtml}
+        </div>`;
+    }).join('');
+
+    document.getElementById('detailActions').innerHTML = `
+        <button class="btn-call" onclick="location.href='tel:${p.phone}'">📞 Дзвонити</button>
+        <button class="btn-edit" onclick="editPax('${p.pax_id}')">✏️ Редагувати</button>
+        <button class="btn-delete" onclick="deletePax('${p.pax_id}')">🗑 Видалити</button>
+    `;
+
+    document.getElementById('detailOverlay').classList.add('show');
+    document.getElementById('detailPanel').classList.add('show');
+}
+
+function closeDetail() {
+    document.getElementById('detailOverlay').classList.remove('show');
+    document.getElementById('detailPanel').classList.remove('show');
+    currentDetailPax = null;
+}
+
+// ================================================================
+// INLINE EDIT
+// ================================================================
+function startInlineEdit(fieldKey, el, optionsStr) {
+    const p = currentDetailPax;
+    if (!p) return;
+
+    const valueEl = el.querySelector('.detail-field-value');
+    if (!valueEl || valueEl.querySelector('.inline-edit-input, .inline-edit-select')) return;
+
+    const currentVal = p[fieldKey] || '';
+    const origHtml = valueEl.innerHTML;
+
+    if (optionsStr) {
+        const options = optionsStr.split(',');
+        valueEl.innerHTML = `<select class="inline-edit-select">${options.map(o =>
+            `<option value="${esc(o)}" ${o === currentVal ? 'selected' : ''}>${esc(o)}</option>`
+        ).join('')}</select>
+        <div class="inline-edit-actions">
+            <button class="inline-save" onclick="event.stopPropagation();saveInline('${fieldKey}', this)">✓</button>
+            <button class="inline-cancel" onclick="event.stopPropagation();cancelInline(this, '${btoa(encodeURIComponent(origHtml))}')">✕</button>
+        </div>`;
+        valueEl.querySelector('select').focus();
+    } else if (fieldKey === 'date') {
+        valueEl.innerHTML = `<input class="inline-edit-input" type="date" value="${currentVal}">
+        <div class="inline-edit-actions">
+            <button class="inline-save" onclick="event.stopPropagation();saveInline('${fieldKey}', this)">✓</button>
+            <button class="inline-cancel" onclick="event.stopPropagation();cancelInline(this, '${btoa(encodeURIComponent(origHtml))}')">✕</button>
+        </div>`;
+        valueEl.querySelector('input').focus();
+    } else {
+        valueEl.innerHTML = `<input class="inline-edit-input" type="text" value="${esc(currentVal)}">
+        <div class="inline-edit-actions">
+            <button class="inline-save" onclick="event.stopPropagation();saveInline('${fieldKey}', this)">✓</button>
+            <button class="inline-cancel" onclick="event.stopPropagation();cancelInline(this, '${btoa(encodeURIComponent(origHtml))}')">✕</button>
+        </div>`;
+        const inp = valueEl.querySelector('input');
+        inp.focus();
+        inp.select();
+    }
+}
+
+function saveInline(fieldKey, btn) {
+    const p = currentDetailPax;
+    if (!p) return;
+
+    const fieldEl = btn.closest('.detail-field');
+    const valueEl = fieldEl.querySelector('.detail-field-value');
+    const input = valueEl.querySelector('input, select');
+    if (!input) return;
+
+    const newVal = input.value;
+    const oldVal = p[fieldKey];
+    if (newVal === oldVal) { openDetail(p.pax_id); return; }
+
+    p[fieldKey] = newVal;
+    // Recalc debt
+    if (['price','weightPrice','deposit'].includes(fieldKey)) p.debt = calcDebt(p);
+
+    // Save to server
+    const apiCol = COL_MAP[fieldKey];
+    if (apiCol && p.pax_id) {
+        apiPost('updateField', {
+            sheet: p._sheet === 'Європа-УК' ? 'eu' : 'ue',
+            pax_id: p.pax_id,
+            col: apiCol,
+            value: newVal
+        }).then(r => {
+            if (r.ok) showToast('✅ Збережено');
+            else showToast('⚠️ ' + (r.error || 'Помилка'));
+        }).catch(() => showToast('⚠️ Збережено локально'));
+    }
+
+    openDetail(p.pax_id);
+    renderPassengers();
+}
+
+function cancelInline(btn, origB64) {
+    const valueEl = btn.closest('.detail-field-value');
+    valueEl.innerHTML = decodeURIComponent(atob(origB64));
+}
+
+// ================================================================
+// NEW / EDIT PASSENGER
+// ================================================================
+function openNewPassengerForm() {
+    editingPaxId = null;
+    document.getElementById('paxModalTitle').textContent = '+ Новий пасажир';
+    document.getElementById('paxSaveBtn').textContent = '💾 Зберегти';
+    // Clear form
+    ['fPib','fPhone','fPhoneReg','fFrom','fTo','fDate','fTiming','fPrice','fDeposit','fWeight','fWeightPrice','fNote'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fSeats').value = '1';
+    document.getElementById('fDirection').value = 'ua-eu';
+    document.getElementById('fCurrency').value = 'UAH';
+    document.getElementById('duplicateWarning').style.display = 'none';
+    document.getElementById('paxModal').classList.add('show');
+}
+
+function editPax(paxId) {
+    const p = passengers.find(x => x.pax_id === paxId);
+    if (!p) return;
+    editingPaxId = paxId;
+    document.getElementById('paxModalTitle').textContent = '✏️ Редагувати пасажира';
+    document.getElementById('paxSaveBtn').textContent = '💾 Оновити';
+
+    document.getElementById('fPib').value = p.name || '';
+    document.getElementById('fPhone').value = p.phone || '';
+    document.getElementById('fPhoneReg').value = p.phoneReg || '';
+    document.getElementById('fDirection').value = p.direction || 'ua-eu';
+    document.getElementById('fSeats').value = p.seats || 1;
+    document.getElementById('fFrom').value = p.from || '';
+    document.getElementById('fTo').value = p.to || '';
+    document.getElementById('fDate').value = p.date || '';
+    document.getElementById('fTiming').value = p.timing || '';
+    document.getElementById('fPrice').value = p.price || '';
+    document.getElementById('fCurrency').value = p.currency || 'UAH';
+    document.getElementById('fDeposit').value = p.deposit || '';
+    document.getElementById('fWeight').value = p.weight || '';
+    document.getElementById('fWeightPrice').value = p.weightPrice || '';
+    document.getElementById('fNote').value = p.note || '';
+    document.getElementById('duplicateWarning').style.display = 'none';
+
+    closeDetail();
+    document.getElementById('paxModal').classList.add('show');
+}
+
+function closePaxModal() { document.getElementById('paxModal').classList.remove('show'); }
+
+async function savePassenger() {
+    const name = document.getElementById('fPib').value.trim();
+    const phone = document.getElementById('fPhone').value.trim();
+    const dir = document.getElementById('fDirection').value;
+
+    if (!name) { showToast('⚠️ Вкажіть ПІБ'); return; }
+    if (!phone) { showToast('⚠️ Вкажіть телефон'); return; }
+
+    const date = document.getElementById('fDate').value;
+
+    // Duplicate check (only for new)
+    if (!editingPaxId) {
+        try {
+            const dupCheck = await apiPost('checkDuplicates', { sheet: dir === 'eu-ua' ? 'eu' : 'ue', pib: name, phone: phone, date: date });
+            if (dupCheck.exact) {
+                document.getElementById('duplicateWarning').style.display = '';
+                document.getElementById('duplicateInfo').innerHTML = `Точний збіг: <b>${dupCheck.match?.pib || name}</b>, ${dupCheck.match?.phone || phone}, ${dupCheck.match?.pax_id || ''}. Запис заблоковано.`;
+                showToast('❌ Точний дублікат — запис заблоковано');
+                return;
+            }
+            if (dupCheck.soft) {
+                document.getElementById('duplicateWarning').style.display = '';
+                document.getElementById('duplicateInfo').innerHTML = `Схожий запис: <b>${dupCheck.match?.pib || name}</b>, ${dupCheck.match?.phone || phone}. Можна зберегти.`;
+            }
+        } catch(e) { /* continue without check */ }
+    }
+
+    const data = {
+        name, phone,
+        phoneReg: document.getElementById('fPhoneReg').value.trim(),
+        direction: dir,
+        seats: document.getElementById('fSeats').value || 1,
+        from: document.getElementById('fFrom').value.trim(),
+        to: document.getElementById('fTo').value.trim(),
+        date: date,
+        timing: document.getElementById('fTiming').value.trim(),
+        price: document.getElementById('fPrice').value.trim(),
+        currency: document.getElementById('fCurrency').value,
+        deposit: document.getElementById('fDeposit').value.trim(),
+        weight: document.getElementById('fWeight').value.trim(),
+        weightPrice: document.getElementById('fWeightPrice').value.trim(),
+        note: document.getElementById('fNote').value.trim()
+    };
+
+    showLoader('Збереження...');
+
+    try {
+        if (editingPaxId) {
+            // Update existing — field by field
+            const p = passengers.find(x => x.pax_id === editingPaxId);
+            if (!p) { hideLoader(); return; }
+            const sheet = p._sheet === 'Європа-УК' ? 'eu' : 'ue';
+            const updates = [];
+            const fieldMap = {
+                name: 'Піб', phone: 'Телефон пасажира', phoneReg: 'Телефон реєстратора',
+                seats: 'Кількість місць', from: 'Адреса відправки', to: 'Адреса прибуття',
+                date: 'Дата виїзду', timing: 'Таймінг', price: 'Ціна квитка',
+                currency: 'Валюта квитка', deposit: 'Завдаток', weight: 'Вага багажу',
+                weightPrice: 'Ціна багажу', note: 'Примітка'
+            };
+            for (const [k, col] of Object.entries(fieldMap)) {
+                if (data[k] !== (p[k] || '')) {
+                    updates.push(apiPost('updateField', { sheet, pax_id: editingPaxId, col, value: data[k] }));
+                    p[k] = data[k];
+                }
+            }
+            if (updates.length) await Promise.all(updates);
+            p.debt = calcDebt(p);
+            renderPassengers();
+            showToast('✅ Оновлено');
+        } else {
+            // Create new
+            const sheet = dir === 'eu-ua' ? 'eu' : 'ue';
+            const res = await apiPost('addPassenger', { sheet, data });
+            if (res.ok) {
+                const newPax = mapPax({
+                    'PAX_ID': res.pax_id,
+                    'Піб': data.name, 'Телефон пасажира': data.phone,
+                    'Телефон реєстратора': data.phoneReg, 'Напрям': dir === 'ua-eu' ? 'Україна-ЄВ' : 'Європа-УК',
+                    'Кількість місць': data.seats, 'Адреса відправки': data.from, 'Адреса прибуття': data.to,
+                    'Дата виїзду': data.date, 'Таймінг': data.timing, 'Ціна квитка': data.price,
+                    'Валюта квитка': data.currency, 'Завдаток': data.deposit, 'Вага багажу': data.weight,
+                    'Ціна багажу': data.weightPrice, 'Примітка': data.note,
+                    'Статус ліда': 'Новий', 'Статус CRM': 'Активний', 'Статус оплати': 'Не оплачено',
+                    'Дата створення': new Date().toISOString().substring(0,10),
+                    'SOURCE_SHEET': dir === 'ua-eu' ? 'Україна-ЄВ' : 'Європа-УК'
+                }, dir);
+                passengers.unshift(newPax);
+                renderPassengers();
+                updateCounts();
+                showToast('✅ Створено: ' + res.pax_id);
+            } else {
+                showToast('❌ ' + (res.error || 'Помилка'));
+            }
+        }
+    } catch(e) {
+        console.error('Save error:', e);
+        showToast('❌ Помилка збереження');
+    }
+    hideLoader();
+    closePaxModal();
+}
+
+// ================================================================
+// DELETE PASSENGER
+// ================================================================
+function deletePax(paxId) {
+    const p = passengers.find(x => x.pax_id === paxId);
+    if (!p) return;
+    showConfirm(`Видалити пасажира <b>${esc(p.name)}</b>?`, async () => {
+        showLoader('Видалення...');
+        try {
+            const sheet = p._sheet === 'Європа-УК' ? 'eu' : 'ue';
+            const res = await apiPost('deletePassenger', { sheet, pax_id: paxId });
+            if (res.ok) {
+                passengers = passengers.filter(x => x.pax_id !== paxId);
+                closeDetail();
+                renderPassengers();
+                updateCounts();
+                showToast('🗑 Видалено');
+            } else {
+                showToast('❌ ' + (res.error || 'Помилка'));
+            }
+        } catch(e) {
+            showToast('❌ Помилка видалення');
+        }
+        hideLoader();
+    });
+}
+
+// ================================================================
+// RENDER TRIPS
+// ================================================================
+function renderTrips() {
+    const grid = document.getElementById('tripsGrid');
+    const empty = document.getElementById('tripsEmpty');
+    const today = new Date().toISOString().substring(0, 10);
+
+    let filtered = trips.filter(t => {
+        if (tripFilters.dir !== 'all') {
+            const tDir = (t.direction || '').toLowerCase();
+            if (tripFilters.dir === 'ua-eu' && !tDir.includes('ук') && !tDir.includes('ua')) return false;
+            if (tripFilters.dir === 'eu-ua' && !tDir.includes('єв') && !tDir.includes('eu')) return false;
+        }
+        if (tripFilters.time === 'future') {
+            if (t.status === 'Архів') return false;
+            const td = normalizeDate(t.date);
+            if (td && td < today) return false;
+        }
+        if (tripFilters.time === 'past') {
+            const td = normalizeDate(t.date);
+            if (td && td >= today && t.status !== 'Архів') return false;
+        }
+        return true;
+    });
+
+    if (!filtered.length) {
+        grid.innerHTML = '';
+        empty.style.display = '';
+        return;
+    }
+    empty.style.display = 'none';
+
+    grid.innerHTML = filtered.map(t => {
+        const maxSeats = parseInt(t.max_seats) || 0;
+        const occupied = parseInt(t.occupied) || 0;
+        const free = maxSeats - occupied;
+        const pct = maxSeats > 0 ? Math.round((occupied / maxSeats) * 100) : 0;
+        const barClass = pct >= 100 ? 'full' : pct >= 70 ? 'warning' : '';
+
+        const dirDisplay = (t.direction || '').includes('ЄВ') || (t.direction || '').toLowerCase().includes('eu')
+            ? '🇪🇺 → 🇺🇦' : '🇺🇦 → 🇪🇺';
+
+        const statusBadgeHtml = t.status === 'Архів'
+            ? '<span class="badge badge-archive">Архів</span>'
+            : pct >= 100 ? '<span class="badge badge-refused">Повний</span>'
+            : '<span class="badge badge-confirmed">Відкритий</span>';
+
+        return `<div class="trip-card">
+            <div class="trip-card-header">
+                <div class="trip-card-city">${esc(t.city || '—')}</div>
+                <div class="trip-card-dir">${dirDisplay}</div>
+                <div class="trip-card-date">📅 ${formatDateDisplay(t.date)}</div>
+            </div>
+            <div class="trip-card-body">
+                <div class="trip-card-row">
+                    <span class="trip-card-label">🚐 Авто</span>
+                    <span class="trip-card-value">${esc(t.auto_name || '—')} ${esc(t.layout || '')}</span>
+                </div>
+                <div class="trip-card-row">
+                    <span class="trip-card-label">Заповненість</span>
+                    <span class="trip-card-value">${occupied} з ${maxSeats} місць</span>
+                </div>
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar ${barClass}" style="width:${pct}%"></div>
+                </div>
+                <div class="trip-card-row" style="margin-top:8px;">
+                    <span class="trip-card-label">Статус</span>
+                    ${statusBadgeHtml}
+                </div>
+            </div>
+            <div class="trip-card-footer">
+                <button class="trip-btn-edit" onclick="editTrip('${t.cal_id}')">✏️ Редагувати</button>
+                <button class="trip-btn-archive" onclick="archiveTrip('${t.cal_id}')">📦 Архів</button>
+                <button class="trip-btn-delete" onclick="deleteTrip('${t.cal_id}')">🗑</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ================================================================
+// TRIP FORM — CREATE / EDIT
+// ================================================================
+let tripFormVehicles = [];
+let tripSelectedDates = [];
+let tripCalMonth = new Date();
+
+function openNewTripForm() {
+    editingTripCalId = null;
+    document.getElementById('tripModalTitle').textContent = '+ Новий рейс';
+    document.getElementById('tripSaveBtn').textContent = '💾 Зберегти рейс';
+    document.getElementById('tCity').value = '';
+    document.getElementById('tDirection').value = 'ua-eu';
+    tripFormVehicles = [];
+    tripSelectedDates = [];
+    tripCalMonth = new Date();
+    addVehicleToForm();
+    renderTripCalendar();
+    renderSelectedDates();
+    document.getElementById('tripModal').classList.add('show');
+}
+
+function editTrip(calId) {
+    const t = trips.find(x => x.cal_id === calId);
+    if (!t) return;
+    editingTripCalId = calId;
+    document.getElementById('tripModalTitle').textContent = '✏️ Редагувати рейс';
+    document.getElementById('tripSaveBtn').textContent = '💾 Оновити';
+    document.getElementById('tCity').value = t.city || '';
+
+    const tDir = (t.direction || '').toLowerCase();
+    if (tDir.includes('загальн') || tDir.includes('bt')) document.getElementById('tDirection').value = 'bt';
+    else if (tDir.includes('єв') || tDir.includes('eu')) document.getElementById('tDirection').value = 'eu-ua';
+    else document.getElementById('tDirection').value = 'ua-eu';
+
+    tripFormVehicles = [{ name: t.auto_name || '', plate: '', layout: t.layout || '1-3-3', seats: parseInt(t.max_seats) || 7, reserve: false }];
+    tripSelectedDates = t.date ? [normalizeDate(t.date)] : [];
+    tripCalMonth = t.date ? new Date(normalizeDate(t.date)) : new Date();
+
+    renderVehiclesForms();
+    renderTripCalendar();
+    renderSelectedDates();
+    document.getElementById('tripModal').classList.add('show');
+}
+
+function closeTripModal() { document.getElementById('tripModal').classList.remove('show'); }
+
+function addVehicleToForm() {
+    tripFormVehicles.push({ name: '', plate: '', layout: '1-3-3', seats: 7, reserve: false });
+    renderVehiclesForms();
+}
+
+function removeVehicle(idx) {
+    tripFormVehicles.splice(idx, 1);
+    if (!tripFormVehicles.length) addVehicleToForm();
+    else renderVehiclesForms();
+}
+
+function renderVehiclesForms() {
+    const container = document.getElementById('vehiclesList');
+    container.innerHTML = tripFormVehicles.map((v, i) => {
+        const layoutSeats = LAYOUTS[v.layout]?.total || v.seats;
+        return `<div class="vehicle-form-item">
+            <div class="vehicle-form-header">
+                <span class="vehicle-form-title">🚐 Авто ${i + 1}</span>
+                <button class="vehicle-form-remove" onclick="removeVehicle(${i})">✕</button>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Назва / Держ. номер</label>
+                    <input class="form-input" type="text" value="${esc(v.name)}" placeholder="Mercedes Sprinter"
+                        onchange="tripFormVehicles[${i}].name=this.value">
+                </div>
+                <div class="form-group">
+                    <label>Тип розкладки</label>
+                    <select class="form-select" onchange="changeLayout(${i}, this.value)">
+                        <option value="1-3-3" ${v.layout==='1-3-3'?'selected':''}>1-3-3 (7 місць)</option>
+                        <option value="2-2-3" ${v.layout==='2-2-3'?'selected':''}>2-2-3 (7 місць)</option>
+                        <option value="2-2-2" ${v.layout==='2-2-2'?'selected':''}>2-2-2 (6 місць)</option>
+                        <option value="bus" ${v.layout==='bus'?'selected':''}>Автобус</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+                <div class="seats-control">
+                    <label style="font-size:11px;font-weight:700;color:var(--text-secondary);">Місць:</label>
+                    <button class="seats-btn" onclick="changeSeats(${i}, -1)">−</button>
+                    <span class="seats-count">${v.seats}</span>
+                    <button class="seats-btn" onclick="changeSeats(${i}, 1)">+</button>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-switch ${v.reserve ? 'on' : ''}" onclick="toggleReserve(${i})"></div>
+                    <span class="toggle-label">+ R1 резерв</span>
+                </div>
+            </div>
+            ${renderVehicleLayout(v)}
+        </div>`;
+    }).join('');
+}
+
+function changeLayout(idx, layout) {
+    tripFormVehicles[idx].layout = layout;
+    if (LAYOUTS[layout]) tripFormVehicles[idx].seats = LAYOUTS[layout].total;
+    else tripFormVehicles[idx].seats = tripFormVehicles[idx].seats || 20;
+    renderVehiclesForms();
+}
+
+function changeSeats(idx, delta) {
+    const v = tripFormVehicles[idx];
+    v.seats = Math.max(1, v.seats + delta);
+    renderVehiclesForms();
+}
+
+function toggleReserve(idx) {
+    tripFormVehicles[idx].reserve = !tripFormVehicles[idx].reserve;
+    renderVehiclesForms();
+}
+
+function renderVehicleLayout(v) {
+    if (v.layout === 'bus') {
+        // Simple grid for bus
+        const seats = [];
+        for (let i = 1; i <= v.seats; i++) seats.push(i);
+        if (v.reserve) seats.push('R1');
+        return `<div class="vehicle-layout">
+            <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;">
+                ${seats.map(s => `<div class="vehicle-seat${s === 'R1' ? ' reserved' : ''}">${s}</div>`).join('')}
+            </div>
+        </div>`;
+    }
+
+    const layoutDef = LAYOUTS[v.layout];
+    if (!layoutDef) return '';
+
+    let html = '<div class="vehicle-layout">';
+    layoutDef.rows.forEach(row => {
+        html += '<div class="vehicle-row">';
+        // Pad to 3 seats per row for alignment
+        const padded = row.length < 3 ? [...row, ...Array(3 - row.length).fill(null)] : row;
+        padded.forEach(seat => {
+            if (seat === null) html += '<div class="vehicle-seat empty-gap"></div>';
+            else if (seat === 'V1') html += '<div class="vehicle-seat driver">V1</div>';
+            else html += `<div class="vehicle-seat">${seat}</div>`;
+        });
+        html += '</div>';
+    });
+    if (v.reserve) {
+        html += '<div class="vehicle-row"><div class="vehicle-seat reserved">R1</div></div>';
+    }
+    html += '</div>';
+    return html;
+}
+
+// ================================================================
+// TRIP CALENDAR (multi-date picker)
+// ================================================================
+function renderTripCalendar() {
+    const container = document.getElementById('tripCalendar');
+    const year = tripCalMonth.getFullYear();
+    const month = tripCalMonth.getMonth();
+    const monthNames = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+    const dayNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+
+    const firstDay = new Date(year, month, 1);
+    let startDay = firstDay.getDay() - 1;
+    if (startDay < 0) startDay = 6;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date().toISOString().substring(0, 10);
+
+    let html = `<div class="date-picker-header">
+        <button class="date-picker-nav" onclick="tripCalNav(-1)">◀</button>
+        <span class="date-picker-month">${monthNames[month]} ${year}</span>
+        <button class="date-picker-nav" onclick="tripCalNav(1)">▶</button>
+    </div>`;
+
+    html += '<div class="date-picker-grid">';
+    dayNames.forEach(d => html += `<div class="date-cell day-header">${d}</div>`);
+
+    // Empty cells before first day
+    for (let i = 0; i < startDay; i++) html += '<div class="date-cell other-month"></div>';
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isToday = dateStr === today;
+        const isSelected = tripSelectedDates.includes(dateStr);
+        html += `<div class="date-cell ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" onclick="toggleTripDate('${dateStr}')">${d}</div>`;
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function tripCalNav(delta) {
+    tripCalMonth.setMonth(tripCalMonth.getMonth() + delta);
+    renderTripCalendar();
+}
+
+function toggleTripDate(dateStr) {
+    const idx = tripSelectedDates.indexOf(dateStr);
+    if (idx !== -1) tripSelectedDates.splice(idx, 1);
+    else tripSelectedDates.push(dateStr);
+    tripSelectedDates.sort();
+    renderTripCalendar();
+    renderSelectedDates();
+}
+
+function renderSelectedDates() {
+    const container = document.getElementById('selectedDatesList');
+    container.innerHTML = tripSelectedDates.map(d =>
+        `<span class="selected-date-tag">${formatDateDisplay(d)} <button onclick="removeTripDate('${d}')">✕</button></span>`
+    ).join('');
+}
+
+function removeTripDate(d) {
+    tripSelectedDates = tripSelectedDates.filter(x => x !== d);
+    renderTripCalendar();
+    renderSelectedDates();
+}
+
+// ================================================================
+// SAVE TRIP
+// ================================================================
+async function saveTrip() {
+    const city = document.getElementById('tCity').value.trim();
+    const dir = document.getElementById('tDirection').value;
+
+    if (!city) { showToast('⚠️ Вкажіть місто'); return; }
+    if (!tripSelectedDates.length) { showToast('⚠️ Виберіть дати'); return; }
+    if (!tripFormVehicles.length || !tripFormVehicles[0].name) { showToast('⚠️ Додайте авто'); return; }
+
+    showLoader('Створення рейсу...');
+    try {
+        if (editingTripCalId) {
+            const res = await apiPost('updateTrip', {
+                cal_id: editingTripCalId,
+                city, dir,
+                vehicles: tripFormVehicles,
+                dates: tripSelectedDates
+            });
+            if (res.ok) {
+                showToast('✅ Рейс оновлено');
+                await loadTripsOnly();
+            } else {
+                showToast('❌ ' + (res.error || 'Помилка'));
+            }
+        } else {
+            const payload = { city, dir, vehicles: tripFormVehicles, dates: tripSelectedDates };
+            if (dir === 'bt') {
+                payload.dates_ue = tripSelectedDates;
+                payload.dates_eu = tripSelectedDates;
+            }
+            const res = await apiPost('createTrip', payload);
+            if (res.ok) {
+                showToast('✅ Рейс створено');
+                await loadTripsOnly();
+            } else {
+                showToast('❌ ' + (res.error || 'Помилка'));
+            }
+        }
+    } catch(e) {
+        console.error('Trip save error:', e);
+        showToast('❌ Помилка збереження');
+    }
+    hideLoader();
+    closeTripModal();
+}
+
+async function loadTripsOnly() {
+    try {
+        const res = await apiPost('getTrips', {});
+        if (res.ok) {
+            trips = res.data || [];
+            updateTripFilterDropdown();
+            renderTrips();
+            updateCounts();
+        }
+    } catch(e) {}
+}
+
+// ================================================================
+// ARCHIVE / DELETE TRIP
+// ================================================================
+function archiveTrip(calId) {
+    const t = trips.find(x => x.cal_id === calId);
+    if (!t) return;
+    showConfirm(`Архівувати рейс <b>${esc(t.city)} ${formatDateDisplay(t.date)}</b>?`, async () => {
+        showLoader('Архівування...');
+        try {
+            const res = await apiPost('archiveTrip', { cal_id: calId });
+            if (res.ok) {
+                t.status = 'Архів';
+                renderTrips();
+                updateCounts();
+                showToast('📦 Рейс архівовано');
+            } else showToast('❌ ' + (res.error || 'Помилка'));
+        } catch(e) { showToast('❌ Помилка'); }
+        hideLoader();
+    }, '📦 Архівувати');
+}
+
+function deleteTrip(calId) {
+    const t = trips.find(x => x.cal_id === calId);
+    if (!t) return;
+    showConfirm(`Видалити рейс <b>${esc(t.city)} ${formatDateDisplay(t.date)}</b>?<br><br>Пасажири залишаться без рейсу.`, async () => {
+        showLoader('Видалення...');
+        try {
+            const res = await apiPost('deleteTrip', { cal_id: calId });
+            if (res.ok) {
+                trips = trips.filter(x => x.cal_id !== calId);
+                // Clear calId in passengers
+                passengers.forEach(p => { if (p.calId === calId) p.calId = ''; });
+                renderTrips();
+                renderPassengers();
+                updateCounts();
+                showToast('🗑 Рейс видалено');
+            } else showToast('❌ ' + (res.error || 'Помилка'));
+        } catch(e) { showToast('❌ Помилка'); }
+        hideLoader();
+    });
+}
+
+// ================================================================
+// UI HELPERS
+// ================================================================
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    if (tab === 'passengers') {
+        document.getElementById('tabPassengers').classList.add('active');
+        document.getElementById('contentPassengers').classList.add('active');
+    } else {
+        document.getElementById('tabTrips').classList.add('active');
+        document.getElementById('contentTrips').classList.add('active');
+    }
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function showLoader(msg) {
+    document.getElementById('loaderText').textContent = msg || 'Завантаження...';
+    document.getElementById('loader').classList.add('show');
+}
+function hideLoader() { document.getElementById('loader').classList.remove('show'); }
+
+function showConfirm(text, callback, okText) {
+    document.getElementById('confirmText').innerHTML = text;
+    document.getElementById('confirmOkBtn').textContent = okText || 'Видалити';
+    confirmCallback = callback;
+    document.getElementById('confirmOverlay').classList.add('show');
+}
+function confirmOk() {
+    document.getElementById('confirmOverlay').classList.remove('show');
+    if (confirmCallback) confirmCallback();
+    confirmCallback = null;
+}
+function confirmCancel() {
+    document.getElementById('confirmOverlay').classList.remove('show');
+    confirmCallback = null;
+}
+
+function updateSyncTime() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('syncIndicator').textContent = `🔄 ${h}:${m}`;
+}
+
+// ================================================================
+// SILENT SYNC (every 60s)
+// ================================================================
+setInterval(async () => {
+    try {
+        const [paxUe, paxEu, tripsData] = await Promise.all([
+            apiPost('getAll', { sheet: 'ue' }),
+            apiPost('getAll', { sheet: 'eu' }),
+            apiPost('getTrips', {})
+        ]);
+        if (paxUe.ok) {
+            const ue = (paxUe.data || []).map(p => mapPax(p, 'ua-eu'));
+            const eu = (paxEu.ok ? paxEu.data || [] : []).map(p => mapPax(p, 'eu-ua'));
+            passengers = [...ue, ...eu];
+        }
+        if (tripsData.ok) {
+            trips = tripsData.data || [];
+            updateTripFilterDropdown();
+        }
+        renderPassengers();
+        renderTrips();
+        updateCounts();
+        updateSyncTime();
+    } catch(e) {}
+}, 60000);
+
+// ================================================================
+// INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    loadAll();
+});
+</script>
+</body>
+</html>
