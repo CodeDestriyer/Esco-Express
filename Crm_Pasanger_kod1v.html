@@ -371,6 +371,43 @@
         .nav-item.active { color: var(--accent); }
         .nav-item span:first-child { font-size: 18px; }
 
+        /* TRIP ASSIGN DROPDOWN (on lead card) */
+        .trip-assign-wrap { position: relative; width: 100%; }
+        .card-trip-badge { cursor: pointer; transition: all 0.15s; }
+        .card-trip-badge:hover { opacity: 0.85; transform: scale(1.05); }
+        .trip-assign-dd { position: absolute; top: 100%; right: 0; z-index: 50; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 220px; max-height: 260px; overflow-y: auto; display: none; }
+        .trip-assign-dd.show { display: block; }
+        .trip-dd-header { padding: 8px 10px; font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; border-bottom: 1px solid var(--border); background: var(--bg-main); border-radius: 8px 8px 0 0; }
+        .trip-dd-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; font-size: 12px; font-weight: 600; border-bottom: 1px solid #f1f5f9; transition: background 0.15s; }
+        .trip-dd-item:last-child { border-bottom: none; }
+        .trip-dd-item:hover { background: #f0f7ff; }
+        .trip-dd-item.active { background: #dbeafe; }
+        .trip-dd-dir { font-size: 13px; flex-shrink: 0; }
+        .trip-dd-info { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+        .trip-dd-date { font-size: 11px; font-weight: 700; color: var(--text-primary); }
+        .trip-dd-city { font-size: 10px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .trip-dd-seats { font-size: 10px; font-weight: 700; color: var(--success); flex-shrink: 0; }
+        .trip-dd-seats.full { color: var(--danger); }
+        .trip-dd-unassign { display: flex; align-items: center; gap: 6px; padding: 10px 12px; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--danger); border-bottom: 1px solid var(--border); transition: background 0.15s; }
+        .trip-dd-unassign:hover { background: #fee2e2; }
+        .trip-dd-empty { padding: 16px; text-align: center; font-size: 11px; color: var(--text-secondary); }
+
+        /* BULK TOOLBAR (sticky bottom bar when checkboxes selected) */
+        .bulk-toolbar { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 10px 16px; border-radius: 12px; z-index: 90; display: none; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-size: 12px; font-weight: 600; max-width: 95vw; }
+        .bulk-toolbar.show { display: flex; }
+        .bulk-toolbar-count { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .bulk-toolbar-btn { padding: 8px 14px; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.2s; }
+        .bulk-toolbar-btn.assign { background: var(--orange); color: white; }
+        .bulk-toolbar-btn.assign:hover { background: #ea580c; }
+        .bulk-toolbar-btn.cancel { background: rgba(255,255,255,0.15); color: white; }
+        .bulk-toolbar-btn.cancel:hover { background: rgba(255,255,255,0.25); }
+        .bulk-trip-dd { position: absolute; bottom: 100%; left: 0; margin-bottom: 6px; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 240px; max-height: 280px; overflow-y: auto; display: none; color: var(--text-primary); }
+        .bulk-trip-dd.show { display: block; }
+
+        @media (min-width: 901px) {
+            .bulk-toolbar { bottom: 20px; }
+        }
+
         /* RESPONSIVE */
         @media (max-width: 900px) {
             .burger-btn { display: flex; }
@@ -663,6 +700,14 @@
             <button class="confirm-btn yes" onclick="confirmResult(true)">Підтвердити</button>
         </div>
     </div>
+</div>
+
+<!-- BULK TOOLBAR -->
+<div class="bulk-toolbar" id="bulkToolbar">
+    <span class="bulk-toolbar-count" id="bulkCount">0 обрано</span>
+    <button class="bulk-toolbar-btn assign" onclick="openBulkTripDropdown(event)">🚐 Призначити рейс</button>
+    <button class="bulk-toolbar-btn cancel" onclick="clearSelection()">✕ Скасувати</button>
+    <div class="bulk-trip-dd" id="bulkTripDd"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -961,14 +1006,16 @@ function renderCard(p) {
     const isOpen = openDetailsId === id;
     const isActionsOpen = openActionsId === id;
 
-    // Trip badge
-    let tripBadge = '';
+    // Trip badge (clickable — opens assign dropdown)
+    let tripBadgeText = '';
     if (calId) {
         const trip = trips.find(t => t.cal_id === calId);
-        tripBadge = `<div class="card-trip-badge">${trip ? (trip.city||'Рейс') : calId.substring(0,8)}</div>`;
-    } else {
-        tripBadge = `<div class="card-trip-badge empty">⚠️ Без рейсу</div>`;
+        tripBadgeText = trip ? (trip.date + ' ' + (trip.city||'')) : calId.substring(0,10);
     }
+    const tripBadge = `<div class="trip-assign-wrap">
+        <div class="card-trip-badge ${calId?'':'empty'}" onclick="event.stopPropagation(); toggleTripAssignDD('${id}')">${calId ? tripBadgeText : '⚠️ Без рейсу'}</div>
+        <div class="trip-assign-dd" id="tripDD-${id}"></div>
+    </div>`;
 
     // Lead status badge
     const lsBadge = leadStatus === 'Новий' ? '<span class="badge badge-new">Новий</span>' :
@@ -1562,6 +1609,26 @@ function deleteTrip(calId, city, date) {
 // ================================================================
 function toggleSelect(id, checked) {
     if (checked) selectedIds.add(id); else selectedIds.delete(id);
+    updateBulkToolbar();
+}
+
+function clearSelection() {
+    selectedIds.clear();
+    updateBulkToolbar();
+    closeBulkTripDd();
+    render();
+}
+
+function updateBulkToolbar() {
+    const tb = document.getElementById('bulkToolbar');
+    const ct = document.getElementById('bulkCount');
+    if (selectedIds.size > 0) {
+        tb.classList.add('show');
+        ct.textContent = selectedIds.size + ' обрано';
+    } else {
+        tb.classList.remove('show');
+        closeBulkTripDd();
+    }
 }
 
 function openSideMenu() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('sideMenuOverlay').classList.add('show'); }
@@ -1609,9 +1676,234 @@ function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => showToast('📋 Скопійовано')).catch(() => {});
 }
 
+// ================================================================
+// TRIP ASSIGN — Single lead dropdown
+// ================================================================
+let openTripDDId = null;
+
+function toggleTripAssignDD(paxId) {
+    // Close any other open dropdown
+    if (openTripDDId && openTripDDId !== paxId) {
+        const prev = document.getElementById('tripDD-' + openTripDDId);
+        if (prev) prev.classList.remove('show');
+    }
+
+    const dd = document.getElementById('tripDD-' + paxId);
+    if (!dd) return;
+
+    if (dd.classList.contains('show')) {
+        dd.classList.remove('show');
+        openTripDDId = null;
+        return;
+    }
+
+    const p = passengers.find(x => x['PAX_ID'] === paxId);
+    if (!p) return;
+
+    const pDir = String(p['Напрям'] || '').toLowerCase();
+    const isPaxUE = pDir.includes('ук') || pDir.includes('ua') || pDir.includes('україна');
+    const isPaxEU = pDir.includes('єв') || pDir.includes('eu') || pDir.includes('європа');
+
+    // Filter trips matching direction + open status
+    const matchTrips = trips.filter(t => {
+        if (t.status === 'Архів' || t.status === 'Виконано') return false;
+        const tDir = String(t.direction || '').toLowerCase();
+        if (isPaxUE && (tDir.includes('ук') || tDir.includes('ua') || tDir.includes('україна'))) return true;
+        if (isPaxEU && (tDir.includes('єв') || tDir.includes('eu') || tDir.includes('європа'))) return true;
+        return false;
+    });
+
+    let html = '<div class="trip-dd-header">Призначити рейс</div>';
+
+    // If already assigned — option to unassign
+    if (p['CAL_ID']) {
+        html += `<div class="trip-dd-unassign" onclick="event.stopPropagation(); unassignTrip('${paxId}')">✕ Зняти з рейсу</div>`;
+    }
+
+    if (matchTrips.length === 0) {
+        html += '<div class="trip-dd-empty">Немає доступних рейсів для цього напряму</div>';
+    } else {
+        matchTrips.forEach(t => {
+            const dirIcon = String(t.direction||'').includes('Україна') ? '🇺🇦→🇪🇺' : '🇪🇺→🇺🇦';
+            const free = parseInt(t.free_seats) || 0;
+            const isFull = free <= 0;
+            const isActive = p['CAL_ID'] === t.cal_id;
+            html += `<div class="trip-dd-item ${isActive?'active':''}" onclick="event.stopPropagation(); assignSingleTrip('${paxId}','${t.cal_id}')">
+                <span class="trip-dd-dir">${dirIcon}</span>
+                <div class="trip-dd-info">
+                    <span class="trip-dd-date">${t.date || '—'}</span>
+                    <span class="trip-dd-city">${t.city || '—'} — ${t.auto_name || ''}</span>
+                </div>
+                <span class="trip-dd-seats ${isFull?'full':''}">${free} вільн.</span>
+            </div>`;
+        });
+    }
+
+    dd.innerHTML = html;
+    dd.classList.add('show');
+    openTripDDId = paxId;
+}
+
+async function assignSingleTrip(paxId, calId) {
+    // Close dropdown
+    const dd = document.getElementById('tripDD-' + paxId);
+    if (dd) dd.classList.remove('show');
+    openTripDDId = null;
+
+    const p = passengers.find(x => x['PAX_ID'] === paxId);
+    if (!p) return;
+
+    showLoader('Призначаю рейс...');
+    const res = await apiPost('assignTrip', { cal_id: calId, pax_ids: [paxId] });
+
+    if (res.ok) {
+        // Update local state
+        p['CAL_ID'] = calId;
+        if (p['Статус ліда'] === 'Новий') {
+            p['Статус ліда'] = 'В роботі';
+            await apiPost('updateField', { sheet: p._sheet || '', pax_id: paxId, col: 'Статус ліда', value: 'В роботі' });
+        }
+        hideLoader();
+        showToast('✅ Рейс призначено');
+        silentSync();
+    } else {
+        hideLoader();
+        showToast('❌ ' + (res.error || 'Помилка'));
+    }
+}
+
+async function unassignTrip(paxId) {
+    const dd = document.getElementById('tripDD-' + paxId);
+    if (dd) dd.classList.remove('show');
+    openTripDDId = null;
+
+    const p = passengers.find(x => x['PAX_ID'] === paxId);
+    if (!p) return;
+    const oldCalId = p['CAL_ID'];
+
+    showLoader('Знімаю з рейсу...');
+
+    // Clear CAL_ID
+    const res = await apiPost('updateField', { sheet: p._sheet || '', pax_id: paxId, col: 'CAL_ID', value: '' });
+    if (res.ok) {
+        p['CAL_ID'] = '';
+        hideLoader();
+        showToast('✅ Знято з рейсу');
+        silentSync();
+    } else {
+        hideLoader();
+        showToast('❌ ' + (res.error || 'Помилка'));
+    }
+}
+
+// ================================================================
+// BULK TRIP ASSIGN
+// ================================================================
+function openBulkTripDropdown(e) {
+    e.stopPropagation();
+    const dd = document.getElementById('bulkTripDd');
+    if (dd.classList.contains('show')) { dd.classList.remove('show'); return; }
+
+    // Get directions of selected passengers
+    const selPax = passengers.filter(p => selectedIds.has(p['PAX_ID']));
+    const dirs = new Set();
+    selPax.forEach(p => {
+        const d = String(p['Напрям'] || '').toLowerCase();
+        if (d.includes('ук') || d.includes('ua') || d.includes('україна')) dirs.add('ue');
+        if (d.includes('єв') || d.includes('eu') || d.includes('європа')) dirs.add('eu');
+    });
+
+    // Filter matching trips
+    const matchTrips = trips.filter(t => {
+        if (t.status === 'Архів' || t.status === 'Виконано') return false;
+        const tDir = String(t.direction || '').toLowerCase();
+        if (dirs.has('ue') && (tDir.includes('ук') || tDir.includes('ua') || tDir.includes('україна'))) return true;
+        if (dirs.has('eu') && (tDir.includes('єв') || tDir.includes('eu') || tDir.includes('європа'))) return true;
+        return false;
+    });
+
+    let html = '<div class="trip-dd-header">Призначити рейс для ' + selectedIds.size + ' лідів</div>';
+
+    if (matchTrips.length === 0) {
+        html += '<div class="trip-dd-empty">Немає доступних рейсів</div>';
+    } else {
+        matchTrips.forEach(t => {
+            const dirIcon = String(t.direction||'').includes('Україна') ? '🇺🇦→🇪🇺' : '🇪🇺→🇺🇦';
+            const free = parseInt(t.free_seats) || 0;
+            const isFull = free <= 0;
+            html += `<div class="trip-dd-item" onclick="event.stopPropagation(); bulkAssignTrip('${t.cal_id}')">
+                <span class="trip-dd-dir">${dirIcon}</span>
+                <div class="trip-dd-info">
+                    <span class="trip-dd-date">${t.date || '—'}</span>
+                    <span class="trip-dd-city">${t.city || '—'} — ${t.auto_name || ''}</span>
+                </div>
+                <span class="trip-dd-seats ${isFull?'full':''}">${free} вільн.</span>
+            </div>`;
+        });
+    }
+
+    dd.innerHTML = html;
+    dd.classList.add('show');
+}
+
+function closeBulkTripDd() {
+    const dd = document.getElementById('bulkTripDd');
+    if (dd) dd.classList.remove('show');
+}
+
+async function bulkAssignTrip(calId) {
+    closeBulkTripDd();
+    const paxIds = Array.from(selectedIds);
+    if (paxIds.length === 0) return;
+
+    const trip = trips.find(t => t.cal_id === calId);
+    const tripLabel = trip ? (trip.date + ' ' + trip.city) : calId;
+
+    showLoader('Призначаю ' + paxIds.length + ' лідів на рейс...');
+    const res = await apiPost('assignTrip', { cal_id: calId, pax_ids: paxIds });
+
+    if (res.ok) {
+        // Update local
+        paxIds.forEach(id => {
+            const p = passengers.find(x => x['PAX_ID'] === id);
+            if (p) {
+                p['CAL_ID'] = calId;
+                if (p['Статус ліда'] === 'Новий') p['Статус ліда'] = 'В роботі';
+            }
+        });
+
+        // Bulk update lead status for "Новий" leads
+        const newLeads = paxIds.filter(id => {
+            const p = passengers.find(x => x['PAX_ID'] === id);
+            return p && p['Статус ліда'] === 'В роботі';
+        });
+        if (newLeads.length > 0) {
+            await apiPost('bulkUpdateField', { sheet: 'ue', col: 'Статус ліда', value: 'В роботі', pax_ids: newLeads });
+            await apiPost('bulkUpdateField', { sheet: 'eu', col: 'Статус ліда', value: 'В роботі', pax_ids: newLeads });
+        }
+
+        hideLoader();
+        showToast('✅ ' + paxIds.length + ' лідів → ' + tripLabel);
+        clearSelection();
+        silentSync();
+    } else {
+        hideLoader();
+        showToast('❌ ' + (res.error || 'Помилка'));
+    }
+}
+
 // Close dropdowns on outside click
 document.addEventListener('click', (e) => {
-    if (!e.target.closest('.confirm-overlay') && !e.target.closest('.confirm-btn')) return;
+    // Close trip assign dropdown
+    if (openTripDDId && !e.target.closest('.trip-assign-wrap')) {
+        const dd = document.getElementById('tripDD-' + openTripDDId);
+        if (dd) dd.classList.remove('show');
+        openTripDDId = null;
+    }
+    // Close bulk dropdown
+    if (!e.target.closest('.bulk-toolbar')) {
+        closeBulkTripDd();
+    }
 });
 </script>
 </body>

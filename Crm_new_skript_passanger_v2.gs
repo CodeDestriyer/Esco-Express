@@ -307,6 +307,18 @@ function apiAssignTrip(params) {
   var paxIds = params.pax_ids || [];
   if (!calId || paxIds.length === 0) return { ok: false, error: 'Не вказано cal_id або pax_ids' };
 
+  // Перевіряємо чи рейс існує і чи є місця
+  var calSheet = getSheet(SHEETS.CALENDAR);
+  if (calSheet) {
+    var calRow = findRow(calSheet, 'CAL_ID', calId);
+    if (!calRow) return { ok: false, error: 'Рейс не знайдено: ' + calId };
+    var calObj = rowToObj(calRow.headers, calRow.data);
+    var freeSeats = parseInt(calObj['Вільні місця']);
+    if (!isNaN(freeSeats) && freeSeats < paxIds.length) {
+      return { ok: false, error: 'Недостатньо місць! Вільних: ' + freeSeats + ', потрібно: ' + paxIds.length };
+    }
+  }
+
   var updated = 0;
 
   // Оновлюємо в обох аркушах
@@ -316,11 +328,16 @@ function apiAssignTrip(params) {
     var info = getAllData(sh);
     var idIdx = info.headers.indexOf('PAX_ID');
     var calIdx = info.headers.indexOf('CAL_ID');
+    var statusIdx = info.headers.indexOf('Статус ліда');
     if (idIdx === -1 || calIdx === -1) return;
 
     for (var i = 0; i < info.data.length; i++) {
       if (paxIds.indexOf(String(info.data[i][idIdx])) !== -1) {
         sh.getRange(DATA_START + i, calIdx + 1).setValue(calId);
+        // Автоматично міняємо статус "Новий" → "В роботі"
+        if (statusIdx !== -1 && String(info.data[i][statusIdx]) === 'Новий') {
+          sh.getRange(DATA_START + i, statusIdx + 1).setValue('В роботі');
+        }
         updated++;
       }
     }
