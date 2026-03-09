@@ -369,53 +369,72 @@
         .seat-counter span { font-size: 14px; font-weight: 700; min-width: 20px; text-align: center; }
 
         /* Visual Seat Picker */
-        .seat-picker-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s; }
-        .seat-picker-modal { background: white; border-radius: 16px; padding: 0; max-width: 380px; width: 92%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .seat-picker-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .seat-picker-header h3 { margin: 0; font-size: 15px; font-weight: 800; color: var(--text-primary); }
-        .seat-picker-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); padding: 4px 8px; border-radius: 6px; }
-        .seat-picker-close:hover { background: #f3f4f6; }
-        .seat-picker-body { padding: 16px 20px; }
-        .seat-picker-info { font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-        .seat-picker-no-trip { text-align: center; padding: 32px 20px; }
-        .seat-picker-no-trip .icon { font-size: 40px; margin-bottom: 12px; }
-        .seat-picker-no-trip .msg { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+        .seat-picker-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 9999; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s; }
+        @media (min-width: 500px) { .seat-picker-overlay { align-items: center; } }
+        .seat-picker-modal { background: white; border-radius: 20px 20px 0 0; padding: 0; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 -4px 30px rgba(0,0,0,0.15); }
+        @media (min-width: 500px) { .seat-picker-modal { border-radius: 20px; max-width: 400px; width: 94%; } }
+        .seat-picker-header { padding: 18px 20px 14px; display: flex; justify-content: space-between; align-items: center; }
+        .seat-picker-header h3 { margin: 0; font-size: 17px; font-weight: 800; color: #1e293b; }
+        .seat-picker-close { background: #f1f5f9; border: none; font-size: 18px; cursor: pointer; color: #64748b; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .seat-picker-body { padding: 0 20px 16px; }
+        .seat-picker-trip-info { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f0f9ff; border-radius: 10px; margin-bottom: 16px; }
+        .seat-picker-trip-info .sp-auto-icon { font-size: 22px; }
+        .seat-picker-trip-info .sp-auto-details { font-size: 12px; color: #334155; line-height: 1.4; }
+        .seat-picker-trip-info .sp-auto-name { font-weight: 700; color: #0f172a; }
+        .seat-picker-no-trip { text-align: center; padding: 40px 20px; }
+        .seat-picker-no-trip .sp-nt-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+        .seat-picker-no-trip .sp-nt-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+        .seat-picker-no-trip .sp-nt-msg { font-size: 13px; color: #64748b; line-height: 1.5; }
 
-        .seat-picker-car { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 16px 12px; position: relative; margin-top: 8px; }
-        .seat-picker-car-top { width: 60%; height: 18px; background: #e2e8f0; border-radius: 12px 12px 0 0; margin: 0 auto -2px; position: relative; }
-        .seat-picker-car-top::after { content: ''; position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 30px; height: 6px; background: #cbd5e1; border-radius: 3px; }
-        .seat-picker-car-body { border: 2px solid #cbd5e1; border-radius: 12px; padding: 12px 10px; background: white; }
-        .seat-picker-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; }
-        .seat-picker-row:last-child { margin-bottom: 0; }
-        .seat-picker-aisle { width: 20px; flex-shrink: 0; }
+        /* Car shape */
+        .sp-car-wrap { position: relative; padding: 0 8px; }
+        .sp-car-shape { position: relative; border: 2.5px solid #cbd5e1; border-radius: 20px; background: #f8fafc; overflow: hidden; }
+        .sp-car-front { height: 28px; background: linear-gradient(180deg, #e2e8f0, #f1f5f9); border-bottom: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: center; position: relative; }
+        .sp-car-front::before { content: ''; width: 50px; height: 10px; background: linear-gradient(180deg, #bfdbfe, #93c5fd); border-radius: 0 0 8px 8px; }
+        .sp-car-front::after { content: ''; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 20px; height: 12px; background: #94a3b8; border-radius: 3px; opacity: 0.4; }
+        .sp-car-seats { padding: 14px 10px; }
+        .sp-car-row { display: flex; justify-content: center; align-items: center; gap: 6px; margin-bottom: 10px; }
+        .sp-car-row:last-child { margin-bottom: 0; }
+        .sp-car-aisle { width: 16px; flex-shrink: 0; position: relative; }
+        .sp-car-aisle::after { content: ''; position: absolute; top: -4px; bottom: -4px; left: 50%; width: 1px; border-left: 1.5px dashed #e2e8f0; }
 
-        .seat-btn { width: 52px; height: 48px; border-radius: 10px; border: 2px solid #cbd5e1; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s; position: relative; }
-        .seat-btn:hover:not(.occupied):not(.driver) { border-color: var(--primary); background: #eff6ff; transform: scale(1.05); }
-        .seat-btn.selected { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.3); }
-        .seat-btn.occupied { background: #fee2e2; border-color: #fca5a5; cursor: not-allowed; opacity: 0.85; }
-        .seat-btn.driver { background: #fef3c7; border-color: #fbbf24; cursor: default; }
-        .seat-btn.reserve { background: #e0e7ff; border-color: #818cf8; cursor: not-allowed; opacity: 0.7; }
-        .seat-btn .seat-icon { font-size: 16px; line-height: 1; }
-        .seat-btn .seat-label { font-size: 9px; font-weight: 700; margin-top: 2px; }
-        .seat-btn.occupied .seat-occupant { font-size: 7px; color: #dc2626; font-weight: 600; max-width: 46px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .seat-btn.driver .seat-label { color: #d97706; }
+        /* Seat buttons */
+        .sp-seat { width: 60px; height: 56px; border-radius: 12px; border: 2.5px solid #d1d5db; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.15s; position: relative; -webkit-tap-highlight-color: transparent; user-select: none; }
+        .sp-seat:active:not(.sp-occupied):not(.sp-driver) { transform: scale(0.95); }
+        .sp-seat:hover:not(.sp-occupied):not(.sp-driver) { border-color: #3b82f6; background: #eff6ff; }
+        .sp-seat .sp-seat-num { font-size: 13px; font-weight: 800; color: #475569; }
+        .sp-seat .sp-seat-ico { font-size: 18px; line-height: 1; margin-bottom: 1px; }
+        .sp-seat.sp-free { background: white; border-color: #d1d5db; }
+        .sp-seat.sp-free .sp-seat-ico::before { content: ''; display: block; width: 22px; height: 20px; background: #e2e8f0; border-radius: 6px 6px 4px 4px; margin: 0 auto; }
+        .sp-seat.sp-selected { border-color: #2563eb; background: #2563eb; box-shadow: 0 4px 12px rgba(37,99,235,0.35); }
+        .sp-seat.sp-selected .sp-seat-num { color: white; }
+        .sp-seat.sp-selected .sp-seat-check { display: block; }
+        .sp-seat .sp-seat-check { display: none; position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; background: #16a34a; border-radius: 50%; color: white; font-size: 10px; font-weight: 900; line-height: 18px; text-align: center; border: 2px solid white; }
+        .sp-seat.sp-occupied { background: #fef2f2; border-color: #fca5a5; cursor: not-allowed; }
+        .sp-seat.sp-occupied .sp-seat-num { color: #dc2626; font-size: 11px; }
+        .sp-seat.sp-occupied .sp-occ-name { font-size: 8px; color: #b91c1c; font-weight: 600; max-width: 52px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+        .sp-seat.sp-driver { background: #fefce8; border-color: #fbbf24; cursor: default; }
+        .sp-seat.sp-driver .sp-seat-num { color: #a16207; font-size: 10px; }
+        .sp-seat.sp-empty { border: none; background: transparent; cursor: default; }
+        .sp-seat.sp-reserve { background: #ede9fe; border-color: #a78bfa; border-style: dashed; }
+        .sp-seat.sp-reserve .sp-seat-num { color: #6d28d9; }
 
-        .seat-picker-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
-        .seat-legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); }
-        .seat-legend-dot { width: 12px; height: 12px; border-radius: 4px; border: 1.5px solid; }
-        .seat-legend-dot.free { background: white; border-color: #cbd5e1; }
-        .seat-legend-dot.occ { background: #fee2e2; border-color: #fca5a5; }
-        .seat-legend-dot.sel { background: var(--primary); border-color: var(--primary); }
-        .seat-legend-dot.drv { background: #fef3c7; border-color: #fbbf24; }
+        /* Legend */
+        .sp-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 16px; justify-content: center; }
+        .sp-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #64748b; font-weight: 500; }
+        .sp-legend-dot { width: 14px; height: 14px; border-radius: 5px; border: 2px solid; }
+        .sp-legend-dot.l-free { background: white; border-color: #d1d5db; }
+        .sp-legend-dot.l-sel { background: #2563eb; border-color: #2563eb; }
+        .sp-legend-dot.l-occ { background: #fef2f2; border-color: #fca5a5; }
+        .sp-legend-dot.l-drv { background: #fefce8; border-color: #fbbf24; }
 
-        .seat-picker-footer { padding: 12px 20px 16px; display: flex; gap: 8px; }
-        .seat-picker-footer button { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: all 0.2s; }
-        .seat-picker-footer .btn-cancel { background: #f3f4f6; color: var(--text-secondary); }
-        .seat-picker-footer .btn-cancel:hover { background: #e5e7eb; }
-        .seat-picker-footer .btn-save { background: var(--primary); color: white; }
-        .seat-picker-footer .btn-save:hover { background: #1d4ed8; }
-        .seat-picker-footer .btn-clear { background: #fef2f2; color: #dc2626; }
-        .seat-picker-footer .btn-clear:hover { background: #fee2e2; }
+        /* Footer */
+        .seat-picker-footer { padding: 14px 20px 20px; display: flex; gap: 8px; }
+        .seat-picker-footer button { flex: 1; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+        .seat-picker-footer .btn-cancel { background: #f1f5f9; color: #64748b; }
+        .seat-picker-footer .btn-save { background: #2563eb; color: white; }
+        .seat-picker-footer .btn-save:active { background: #1d4ed8; }
+        .seat-picker-footer .btn-clear { background: #fef2f2; color: #dc2626; flex: 0.6; }
 
         /* Trip calendar picker */
         .trip-calendar { background: white; border-radius: 8px; padding: 12px; border: 1px solid var(--border); }
@@ -2165,6 +2184,20 @@ let seatPickerPaxId = null;
 let seatPickerSheet = null;
 let seatPickerSelected = '';
 
+function detectLayout(trip) {
+    // Try trip.layout first — but only if it's a valid layout name
+    const validLayouts = ['1-3-3', '2-2-3', '2-2-2', 'bus'];
+    const raw = String(trip.layout || '').trim();
+    if (validLayouts.includes(raw)) return raw;
+
+    // Fallback: guess from max_seats
+    const ms = parseInt(trip.max_seats) || 7;
+    if (ms >= 20) return 'bus';
+    if (ms === 6) return '2-2-2';
+    if (ms === 7) return '1-3-3';
+    return '1-3-3';
+}
+
 function openSeatPicker(paxId, sheet) {
     const p = passengers.find(x => x['PAX_ID'] === paxId);
     if (!p) return;
@@ -2173,42 +2206,24 @@ function openSeatPicker(paxId, sheet) {
     seatPickerSelected = p['Місце в авто'] || '';
 
     const calId = p['CAL_ID'] || '';
-
-    // If no trip assigned — show message
-    if (!calId) {
-        renderSeatPickerNoTrip();
-        return;
-    }
+    if (!calId) { renderSeatPickerNoTrip(); return; }
 
     const trip = trips.find(t => t.cal_id === calId);
-    if (!trip) {
-        renderSeatPickerNoTrip();
-        return;
-    }
+    if (!trip) { renderSeatPickerNoTrip(); return; }
 
-    // Get occupied seats for this trip
     const occupiedMap = getOccupiedSeats(calId, paxId);
-
-    // Build seat layout
-    const layout = trip.layout || '1-3-3';
-    const maxSeats = parseInt(trip.max_seats) || 7;
-    const autoName = trip.auto_name || 'Авто';
-
-    renderSeatPickerModal(layout, maxSeats, autoName, occupiedMap, trip);
+    renderSeatPickerModal(trip, occupiedMap);
 }
 
 function getOccupiedSeats(calId, excludePaxId) {
-    // Find all passengers on the same trip, get their seat assignments
-    const map = {}; // seatName -> passengerName
+    const map = {};
     passengers.forEach(p => {
         if (p['CAL_ID'] === calId && p['PAX_ID'] !== excludePaxId) {
             const seat = (p['Місце в авто'] || '').trim();
             if (seat) {
                 const name = p['Піб'] || 'Пасажир';
-                // Short name: first name + initial of last
                 const parts = name.split(' ');
-                const shortName = parts.length > 1 ? parts[0] + ' ' + parts[1].charAt(0) + '.' : parts[0];
-                map[seat] = shortName;
+                map[seat] = parts.length > 1 ? parts[0] + ' ' + parts[1].charAt(0) + '.' : parts[0];
             }
         }
     });
@@ -2217,68 +2232,93 @@ function getOccupiedSeats(calId, excludePaxId) {
 
 function getSeatRows(layout, maxSeats) {
     if (layout === 'bus') {
-        // Bus layout: 2+2 rows
         const rows = [];
         for (let i = 1; i <= maxSeats; i += 4) {
             const row = [];
-            for (let j = i; j < i + 4 && j <= maxSeats; j++) {
-                row.push({ name: String(j), type: 'seat' });
-                if (j === i + 1) row.push({ name: '', type: 'aisle' });
-            }
+            row.push({ name: String(i), type: 'seat' });
+            if (i + 1 <= maxSeats) row.push({ name: String(i+1), type: 'seat' });
+            row.push({ type: 'aisle' });
+            if (i + 2 <= maxSeats) row.push({ name: String(i+2), type: 'seat' });
+            if (i + 3 <= maxSeats) row.push({ name: String(i+3), type: 'seat' });
             rows.push(row);
         }
         return rows;
     }
-
     if (layout === '1-3-3') {
-        // Row 1: driver (V1) + empty + empty + empty
-        // Row 2: A1 + A2 + aisle + A3
-        // Row 3: B1 + B2 + aisle + B3
-        const rows = [
-            [{ name: 'V1', type: 'driver' }, { name: '', type: 'empty' }, { name: '', type: 'aisle' }, { name: '', type: 'empty' }],
-            [{ name: 'A1', type: 'seat' }, { name: 'A2', type: 'seat' }, { name: '', type: 'aisle' }, { name: 'A3', type: 'seat' }],
-            [{ name: 'B1', type: 'seat' }, { name: 'B2', type: 'seat' }, { name: '', type: 'aisle' }, { name: 'B3', type: 'seat' }]
+        return [
+            [{ name: 'V1', type: 'driver' }, { type: 'empty' }, { type: 'aisle' }, { type: 'empty' }],
+            [{ name: 'A1', type: 'seat' }, { name: 'A2', type: 'seat' }, { type: 'aisle' }, { name: 'A3', type: 'seat' }],
+            [{ name: 'B1', type: 'seat' }, { name: 'B2', type: 'seat' }, { type: 'aisle' }, { name: 'B3', type: 'seat' }]
         ];
-        return rows;
     }
-
     if (layout === '2-2-3') {
-        const rows = [
-            [{ name: 'A1', type: 'seat' }, { name: '', type: 'aisle' }, { name: 'A2', type: 'seat' }],
-            [{ name: 'B1', type: 'seat' }, { name: '', type: 'aisle' }, { name: 'B2', type: 'seat' }],
+        return [
+            [{ name: 'A1', type: 'seat' }, { type: 'aisle' }, { name: 'A2', type: 'seat' }],
+            [{ name: 'B1', type: 'seat' }, { type: 'aisle' }, { name: 'B2', type: 'seat' }],
             [{ name: 'C1', type: 'seat' }, { name: 'C2', type: 'seat' }, { name: 'C3', type: 'seat' }]
         ];
-        return rows;
     }
-
     if (layout === '2-2-2') {
-        const rows = [
-            [{ name: 'A1', type: 'seat' }, { name: '', type: 'aisle' }, { name: 'A2', type: 'seat' }],
-            [{ name: 'B1', type: 'seat' }, { name: '', type: 'aisle' }, { name: 'B2', type: 'seat' }],
-            [{ name: 'C1', type: 'seat' }, { name: '', type: 'aisle' }, { name: 'C2', type: 'seat' }]
+        return [
+            [{ name: 'A1', type: 'seat' }, { type: 'aisle' }, { name: 'A2', type: 'seat' }],
+            [{ name: 'B1', type: 'seat' }, { type: 'aisle' }, { name: 'B2', type: 'seat' }],
+            [{ name: 'C1', type: 'seat' }, { type: 'aisle' }, { name: 'C2', type: 'seat' }]
         ];
-        return rows;
     }
-
-    // Fallback
+    // Generic fallback
+    const names = (LAYOUTS[layout] || []).slice(0, maxSeats);
     const rows = [];
-    const allSeats = (LAYOUTS[layout] || []).slice(0, maxSeats);
-    for (let i = 0; i < allSeats.length; i += 3) {
-        rows.push(allSeats.slice(i, i + 3).map(s => ({ name: s, type: s === 'V1' ? 'driver' : 'seat' })));
+    for (let i = 0; i < names.length; i += 3) {
+        rows.push(names.slice(i, i + 3).map(s => ({ name: s, type: s === 'V1' ? 'driver' : 'seat' })));
     }
     return rows;
+}
+
+function buildSeatHtml(seatObj, occupiedMap) {
+    const s = seatObj;
+    if (s.type === 'aisle') return '<div class="sp-car-aisle"></div>';
+    if (s.type === 'empty') return '<div class="sp-seat sp-empty"></div>';
+    if (s.type === 'driver') {
+        return `<div class="sp-seat sp-driver"><div class="sp-seat-num">${s.name}</div><div style="font-size:10px;color:#a16207;">Водій</div></div>`;
+    }
+    const isOcc = occupiedMap[s.name];
+    const isSel = seatPickerSelected === s.name;
+    if (isOcc) {
+        return `<div class="sp-seat sp-occupied"><div class="sp-seat-num">${s.name}</div><div class="sp-occ-name">${isOcc}</div></div>`;
+    }
+    if (isSel) {
+        return `<div class="sp-seat sp-selected" onclick="seatPickerSelect('${s.name}')"><div class="sp-seat-check">✓</div><div class="sp-seat-num">${s.name}</div></div>`;
+    }
+    return `<div class="sp-seat sp-free" onclick="seatPickerSelect('${s.name}')"><div class="sp-seat-ico"></div><div class="sp-seat-num">${s.name}</div></div>`;
+}
+
+function renderSeatsGrid(rows, occupiedMap, hasReserve) {
+    let html = '';
+    rows.forEach(row => {
+        html += '<div class="sp-car-row">';
+        row.forEach(s => { html += buildSeatHtml(s, occupiedMap); });
+        html += '</div>';
+    });
+    if (hasReserve) {
+        html += '<div class="sp-car-row" style="margin-top:4px;padding-top:8px;border-top:1.5px dashed #e2e8f0;">';
+        html += buildSeatHtml({ name: 'R1', type: 'seat' }, occupiedMap);
+        html += '<div style="flex:1;font-size:10px;color:#6d28d9;font-weight:600;display:flex;align-items:center;padding-left:8px;">Резерв</div>';
+        html += '</div>';
+    }
+    return html;
 }
 
 function renderSeatPickerNoTrip() {
     const html = `<div class="seat-picker-overlay" id="seatPickerOverlay" onclick="if(event.target===this)closeSeatPicker()">
         <div class="seat-picker-modal">
             <div class="seat-picker-header">
-                <h3>🪑 Вибір місця</h3>
-                <button class="seat-picker-close" onclick="closeSeatPicker()">×</button>
+                <h3>Вибір місця</h3>
+                <button class="seat-picker-close" onclick="closeSeatPicker()">✕</button>
             </div>
             <div class="seat-picker-no-trip">
-                <div class="icon">🚐</div>
-                <div class="msg">Спочатку призначте рейс пасажиру,<br>тоді можна буде обрати місце в авто</div>
+                <span class="sp-nt-icon">🚐</span>
+                <div class="sp-nt-title">Рейс не призначено</div>
+                <div class="sp-nt-msg">Спочатку призначте рейс пасажиру, тоді можна буде обрати місце в авто</div>
             </div>
             <div class="seat-picker-footer">
                 <button class="btn-cancel" onclick="closeSeatPicker()">Закрити</button>
@@ -2288,84 +2328,45 @@ function renderSeatPickerNoTrip() {
     document.body.insertAdjacentHTML('beforeend', html);
 }
 
-function renderSeatPickerModal(layout, maxSeats, autoName, occupiedMap, trip) {
+function renderSeatPickerModal(trip, occupiedMap) {
+    const layout = detectLayout(trip);
+    const maxSeats = parseInt(trip.max_seats) || 7;
+    const autoName = cleanAutoName(trip.auto_name) || 'Авто';
+    const hasReserve = trip.reserve === true || trip.reserve === 'true';
     const rows = getSeatRows(layout, maxSeats);
-    const hasReserve = trip.reserve || false;
-
-    let seatsHtml = '';
-    rows.forEach(row => {
-        seatsHtml += '<div class="seat-picker-row">';
-        row.forEach(s => {
-            if (s.type === 'aisle') {
-                seatsHtml += '<div class="seat-picker-aisle"></div>';
-            } else if (s.type === 'empty') {
-                seatsHtml += '<div style="width:52px;height:48px;"></div>';
-            } else if (s.type === 'driver') {
-                seatsHtml += `<div class="seat-btn driver">
-                    <span class="seat-icon">🏎️</span>
-                    <span class="seat-label">${s.name}</span>
-                </div>`;
-            } else {
-                const isOccupied = occupiedMap[s.name];
-                const isSelected = seatPickerSelected === s.name;
-                let cls = '';
-                let onclick = '';
-                let content = '';
-
-                if (isOccupied) {
-                    cls = 'occupied';
-                    content = `<span class="seat-icon">🧑</span><span class="seat-label">${s.name}</span><span class="seat-occupant">${isOccupied}</span>`;
-                } else if (isSelected) {
-                    cls = 'selected';
-                    onclick = `onclick="seatPickerSelect('${s.name}')"`;
-                    content = `<span class="seat-icon">✅</span><span class="seat-label">${s.name}</span>`;
-                } else {
-                    onclick = `onclick="seatPickerSelect('${s.name}')"`;
-                    content = `<span class="seat-icon">💺</span><span class="seat-label">${s.name}</span>`;
-                }
-                seatsHtml += `<div class="seat-btn ${cls}" ${onclick}>${content}</div>`;
-            }
-        });
-        seatsHtml += '</div>';
-    });
-
-    // Add reserve seat if exists
-    if (hasReserve) {
-        const isOccR = occupiedMap['R1'];
-        const isSelR = seatPickerSelected === 'R1';
-        seatsHtml += '<div class="seat-picker-row">';
-        if (isOccR) {
-            seatsHtml += `<div class="seat-btn occupied"><span class="seat-icon">🧑</span><span class="seat-label">R1</span><span class="seat-occupant">${isOccR}</span></div>`;
-        } else if (isSelR) {
-            seatsHtml += `<div class="seat-btn selected" onclick="seatPickerSelect('R1')"><span class="seat-icon">✅</span><span class="seat-label">R1</span></div>`;
-        } else {
-            seatsHtml += `<div class="seat-btn reserve" onclick="seatPickerSelect('R1')"><span class="seat-icon">💺</span><span class="seat-label">R1</span></div>`;
-        }
-        seatsHtml += '</div>';
-    }
-
+    const seatsHtml = renderSeatsGrid(rows, occupiedMap, hasReserve);
     const tripDate = formatTripDate(trip.date);
     const tripCity = trip.city || '';
+    const occ = Object.keys(occupiedMap).length;
+    const free = maxSeats - occ;
 
     const html = `<div class="seat-picker-overlay" id="seatPickerOverlay" onclick="if(event.target===this)closeSeatPicker()">
         <div class="seat-picker-modal">
             <div class="seat-picker-header">
-                <h3>🪑 Вибір місця</h3>
-                <button class="seat-picker-close" onclick="closeSeatPicker()">×</button>
+                <h3>Вибір місця</h3>
+                <button class="seat-picker-close" onclick="closeSeatPicker()">✕</button>
             </div>
             <div class="seat-picker-body">
-                <div class="seat-picker-info">🚐 <strong>${autoName}</strong> · ${tripDate} · ${tripCity} · Схема: ${layout}</div>
-                <div class="seat-picker-car">
-                    <div class="seat-picker-car-top"></div>
-                    <div class="seat-picker-car-body" id="seatPickerGrid">
-                        ${seatsHtml}
+                <div class="seat-picker-trip-info">
+                    <span class="sp-auto-icon">🚐</span>
+                    <div class="sp-auto-details">
+                        <div class="sp-auto-name">${autoName}</div>
+                        <div>${tripDate} · ${tripCity} · <span style="color:#16a34a;font-weight:700;">${free} вільн.</span> / ${maxSeats} місць</div>
                     </div>
                 </div>
-                <div class="seat-picker-legend">
-                    <div class="seat-legend-item"><div class="seat-legend-dot free"></div>Вільне</div>
-                    <div class="seat-legend-item"><div class="seat-legend-dot occ"></div>Зайняте</div>
-                    <div class="seat-legend-item"><div class="seat-legend-dot sel"></div>Ваш вибір</div>
-                    <div class="seat-legend-item"><div class="seat-legend-dot drv"></div>Водій</div>
+                <div class="sp-car-wrap">
+                    <div class="sp-car-shape">
+                        <div class="sp-car-front"></div>
+                        <div class="sp-car-seats" id="seatPickerGrid">
+                            ${seatsHtml}
+                        </div>
+                    </div>
+                </div>
+                <div class="sp-legend">
+                    <div class="sp-legend-item"><div class="sp-legend-dot l-free"></div>Вільне</div>
+                    <div class="sp-legend-item"><div class="sp-legend-dot l-sel"></div>Обрано</div>
+                    <div class="sp-legend-item"><div class="sp-legend-dot l-occ"></div>Зайняте</div>
+                    <div class="sp-legend-item"><div class="sp-legend-dot l-drv"></div>Водій</div>
                 </div>
             </div>
             <div class="seat-picker-footer">
@@ -2379,69 +2380,19 @@ function renderSeatPickerModal(layout, maxSeats, autoName, occupiedMap, trip) {
 }
 
 function seatPickerSelect(seatName) {
-    // Toggle: if already selected, deselect
-    if (seatPickerSelected === seatName) {
-        seatPickerSelected = '';
-    } else {
-        seatPickerSelected = seatName;
-    }
-    // Re-render seats inside the grid
+    seatPickerSelected = (seatPickerSelected === seatName) ? '' : seatName;
+    // Re-render grid
     const p = passengers.find(x => x['PAX_ID'] === seatPickerPaxId);
     if (!p) return;
     const calId = p['CAL_ID'] || '';
     const trip = trips.find(t => t.cal_id === calId);
     if (!trip) return;
     const occupiedMap = getOccupiedSeats(calId, seatPickerPaxId);
-    const rows = getSeatRows(trip.layout || '1-3-3', parseInt(trip.max_seats) || 7);
-    const hasReserve = trip.reserve || false;
-
-    let seatsHtml = '';
-    rows.forEach(row => {
-        seatsHtml += '<div class="seat-picker-row">';
-        row.forEach(s => {
-            if (s.type === 'aisle') {
-                seatsHtml += '<div class="seat-picker-aisle"></div>';
-            } else if (s.type === 'empty') {
-                seatsHtml += '<div style="width:52px;height:48px;"></div>';
-            } else if (s.type === 'driver') {
-                seatsHtml += `<div class="seat-btn driver"><span class="seat-icon">🏎️</span><span class="seat-label">${s.name}</span></div>`;
-            } else {
-                const isOccupied = occupiedMap[s.name];
-                const isSelected = seatPickerSelected === s.name;
-                let cls = '', onclick = '', content = '';
-                if (isOccupied) {
-                    cls = 'occupied';
-                    content = `<span class="seat-icon">🧑</span><span class="seat-label">${s.name}</span><span class="seat-occupant">${isOccupied}</span>`;
-                } else if (isSelected) {
-                    cls = 'selected';
-                    onclick = `onclick="seatPickerSelect('${s.name}')"`;
-                    content = `<span class="seat-icon">✅</span><span class="seat-label">${s.name}</span>`;
-                } else {
-                    onclick = `onclick="seatPickerSelect('${s.name}')"`;
-                    content = `<span class="seat-icon">💺</span><span class="seat-label">${s.name}</span>`;
-                }
-                seatsHtml += `<div class="seat-btn ${cls}" ${onclick}>${content}</div>`;
-            }
-        });
-        seatsHtml += '</div>';
-    });
-
-    if (hasReserve) {
-        const isOccR = occupiedMap['R1'];
-        const isSelR = seatPickerSelected === 'R1';
-        seatsHtml += '<div class="seat-picker-row">';
-        if (isOccR) {
-            seatsHtml += `<div class="seat-btn occupied"><span class="seat-icon">🧑</span><span class="seat-label">R1</span><span class="seat-occupant">${isOccR}</span></div>`;
-        } else if (isSelR) {
-            seatsHtml += `<div class="seat-btn selected" onclick="seatPickerSelect('R1')"><span class="seat-icon">✅</span><span class="seat-label">R1</span></div>`;
-        } else {
-            seatsHtml += `<div class="seat-btn reserve" onclick="seatPickerSelect('R1')"><span class="seat-icon">💺</span><span class="seat-label">R1</span></div>`;
-        }
-        seatsHtml += '</div>';
-    }
-
+    const layout = detectLayout(trip);
+    const rows = getSeatRows(layout, parseInt(trip.max_seats) || 7);
+    const hasReserve = trip.reserve === true || trip.reserve === 'true';
     const grid = document.getElementById('seatPickerGrid');
-    if (grid) grid.innerHTML = seatsHtml;
+    if (grid) grid.innerHTML = renderSeatsGrid(rows, occupiedMap, hasReserve);
 }
 
 async function saveSeatPicker() {
@@ -2452,13 +2403,11 @@ async function saveSeatPicker() {
     const colName = 'Місце в авто';
     const oldVal = p[colName] || '';
     const newVal = seatPickerSelected;
-
     if (newVal === oldVal) { closeSeatPicker(); return; }
 
     p[colName] = newVal;
     closeSeatPicker();
 
-    // Update display
     const el = document.getElementById('dv-' + seatPickerPaxId + '-seatInCar');
     if (el) el.textContent = newVal || '—';
 
