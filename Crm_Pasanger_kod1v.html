@@ -649,41 +649,35 @@
                     <span><span class="item-icon"><span class="card-direction dir-badge-eu-ua" style="font-size:9px;padding:2px 6px;">EU→UA</span></span><span class="item-text">Європа-Україна</span></span>
                     <span class="item-count" id="pcCountEuUa">0</span>
                 </div>
-            </div>
-        </div>
 
-        <!-- Фільтри -->
-        <div class="pc-sidebar-section">
-            <div class="pc-sidebar-header" onclick="togglePcSection('filters')">
-                <span class="pc-sidebar-title">🔍 Фільтри</span>
-                <span class="pc-sidebar-toggle" id="pcToggleFilters">▼</span>
-            </div>
-            <div class="pc-sidebar-content" id="pcSectionFilters">
-                <div style="margin-bottom:8px;">
-                    <label style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">Статус ліда</label>
-                    <select id="filterLeadStatus" onchange="applyFilters()" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;margin-top:4px;">
-                        <option value="all">Всі</option>
-                        <option value="Новий">Новий</option>
-                        <option value="В роботі">В роботі</option>
-                        <option value="Підтверджено">Підтверджено</option>
-                        <option value="Відмова">Відмова</option>
-                    </select>
-                </div>
-                <div style="margin-bottom:8px;">
-                    <label style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">Статус оплати</label>
-                    <select id="filterPayStatus" onchange="applyFilters()" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;margin-top:4px;">
-                        <option value="all">Всі</option>
-                        <option value="Не оплачено">Не оплачено</option>
-                        <option value="Частково">Частково</option>
-                        <option value="Оплачено">Оплачено</option>
-                    </select>
-                </div>
-                <div>
-                    <label style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">Рейс</label>
-                    <select id="filterTrip" onchange="applyFilters()" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;margin-top:4px;">
-                        <option value="all">Всі</option>
-                        <option value="none">⚠️ Без рейсу</option>
-                    </select>
+                <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+                    <div style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;margin-bottom:8px;letter-spacing:0.5px;">🔍 Фільтри</div>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">Статус ліда</label>
+                        <select id="filterLeadStatus" onchange="applyFilters()" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;margin-top:4px;">
+                            <option value="all">Всі</option>
+                            <option value="Новий">Новий</option>
+                            <option value="В роботі">В роботі</option>
+                            <option value="Підтверджено">Підтверджено</option>
+                            <option value="Відмова">Відмова</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">Статус оплати</label>
+                        <select id="filterPayStatus" onchange="applyFilters()" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;margin-top:4px;">
+                            <option value="all">Всі</option>
+                            <option value="Не оплачено">Не оплачено</option>
+                            <option value="Частково">Частково</option>
+                            <option value="Оплачено">Оплачено</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">Рейс</label>
+                        <select id="filterTrip" onchange="applyFilters()" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;margin-top:4px;">
+                            <option value="all">Всі</option>
+                            <option value="none">⚠️ Без рейсу</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
