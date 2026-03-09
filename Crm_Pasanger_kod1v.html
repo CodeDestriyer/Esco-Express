@@ -178,8 +178,10 @@
         .card-info-row { display: flex; align-items: center; gap: 6px; min-height: 18px; flex-wrap: wrap; }
         .card-id { font-size: 10px; color: var(--text-secondary); font-weight: 500; background: var(--bg-main); padding: 1px 4px; border-radius: 3px; flex-shrink: 0; }
         .card-name { font-size: 11px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        /* === КАРТКА ЛІДА: Маршрут (адреса від → до) === */
         .card-route { font-size: 10px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
         .card-route-icon { color: var(--orange); font-weight: 700; }
+        /* === КАРТКА ЛІДА: Мета-рядок (дата рейсу, дата реєстрації, SmartSender ID) === */
         .card-meta-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .card-meta-tag { font-size: 9px; color: var(--text-secondary); background: var(--bg-main); padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
         .card-smart-id { font-size: 9px; color: #7c3aed; background: #f3e8ff; padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
@@ -195,6 +197,7 @@
         .card-trip-text.empty { color: var(--warning); font-weight: 600; }
         .card-trip-detail { font-size: 10px; color: var(--text-secondary); }
         .card-trip-arrow { color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        /* === СТРІЛОЧКА РОЗГОРТКИ МЕНЮ ДІЙ: ▼ крутиться на 180° при відкритті === */
         .card-actions-toggle { width: 28px; height: 28px; border: none; border-radius: 6px; background: var(--bg-main); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; margin-top: auto; color: var(--text-secondary); }
         .card-actions-toggle:hover { background: var(--primary); color: white; }
         .card-actions-toggle.open { transform: rotate(180deg); background: var(--primary); color: white; }
@@ -227,14 +230,19 @@
         .detail-inline-edit { width: 100%; border: 1px solid var(--primary); border-radius: 4px; padding: 2px 4px; font-size: 12px; font-weight: 600; font-family: inherit; outline: none; background: white; }
         select.detail-inline-edit { padding: 3px 4px; cursor: pointer; appearance: auto; }
 
-        /* Card actions */
+        /* === ПАНЕЛЬ ДІЙ ЛІДА: 4 кнопки в ряд (Дзвінок, Писати, Редагувати, Видалити) ===
+           Показується при натисканні стрілочки ▼. display:none/flex для чистого show/hide */
         .card-actions { display: none; gap: 6px; padding: 0 12px; background: white; }
         .card-actions.show { display: flex; padding: 10px 12px; border-top: 1px solid var(--border); }
         .card-actions .btn-card-action { flex: 1; min-width: 0; }
+        /* Кнопка "Писати" — відкриває popup з месенджерами */
         .btn-card-action.btn-write { background: #dbeafe; color: #1d4ed8; }
         .btn-card-action.btn-write:hover { background: #1d4ed8; color: white; }
+        /* Кнопка "Редагувати" — відкриває форму ліда з заповненими даними */
         .btn-card-action.btn-edit { background: #fef3c7; color: #92400e; }
         .btn-card-action.btn-edit:hover { background: #f59e0b; color: white; }
+        /* === POPUP ВИБОРУ МЕСЕНДЖЕРА: Viber, Telegram, WhatsApp, SmartSender ===
+           Повноекранний overlay з popup по центру. Відкривається кнопкою "Писати" */
         .messenger-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 200; align-items: center; justify-content: center; }
         .messenger-overlay.show { display: flex; }
         .messenger-popup { background: white; border-radius: 14px; padding: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); min-width: 240px; max-width: 300px; }
@@ -619,7 +627,9 @@
             .trip-modal { border-radius: 16px; max-height: 70vh; }
         }
 
-        /* BULK TOOLBAR — mobile: bottom bar, PC: left sidebar panel */
+        /* === BULK TOOLBAR: панель масових дій при виборі галочок ===
+           Мобільна: плаваюча панель внизу екрану
+           ПК (>901px): лівий сайдбар на всю висоту, 300px шириною */
         .bulk-toolbar { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 10px 16px; border-radius: 12px; z-index: 90; display: none; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-size: 12px; font-weight: 600; max-width: 95vw; flex-direction: row; }
         .bulk-toolbar.show { display: flex; }
         .bulk-toolbar-count { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; }
@@ -1234,6 +1244,10 @@ function updateAllCounts() {
 }
 
 function setCount(id, n) { const el = document.getElementById(id); if (el) el.textContent = n; }
+
+// Перевірка напрямку пасажира.
+// ВАЖЛИВО: використовуємо startsWith замість includes, бо "Україна-Європа"
+// містить і "Ук" і "Євр" — includes рахувало б лід в обидва напрямки!
 function isDir(p, dir) {
     const d = String(p['Напрям'] || '').toLowerCase().trim();
     // "Україна-Європа" = ua-eu, "Європа-Україна" = eu-ua
@@ -1324,10 +1338,11 @@ function renderCard(p) {
     const seatInCar = p['Місце в авто'] || '';
     const leadStatus = p['Статус ліда'] || '';
     const payStatus = p['Статус оплати'] || '';
-    const fromAddr = p['Адреса відправки'] || '';
-    const toAddr = p['Адреса прибуття'] || '';
-    const smartId = p['Ід_смарт'] || '';
-    const dateCreated = formatTripDate(p['Дата створення'] || '');
+    // --- Додаткові поля на картці ліда ---
+    const fromAddr = p['Адреса відправки'] || '';   // Маршрут: адреса відправки
+    const toAddr = p['Адреса прибуття'] || '';       // Маршрут: адреса прибуття
+    const smartId = p['Ід_смарт'] || '';             // SmartSender ID (якщо є)
+    const dateCreated = formatTripDate(p['Дата створення'] || ''); // Дата реєстрації (без часу)
 
     // Борг
     const priceN = parseFloat(p['Ціна квитка']) || 0;
@@ -1339,7 +1354,7 @@ function renderCard(p) {
     const isOpen = openDetailsId === id;
     const isActionsOpen = openActionsId === id;
 
-    // Route line
+    // --- Маршрут: рядок "📍 Львів → Bratislava..." на картці ---
     const routeHtml = (fromAddr || toAddr)
         ? `<div class="card-route"><span class="card-route-icon">📍</span> ${fromAddr || '?'} → ${toAddr || '?'}</div>`
         : '';
@@ -1412,7 +1427,8 @@ function renderCard(p) {
                             ${lsBadge} ${payBadge}
                             ${debt > 0 ? '<span class="badge badge-debt">Борг: '+debt+'</span>' : ''}
                         </div>
-                        ${routeHtml}
+                        ${routeHtml} <!-- Маршрут: від → до -->
+                        <!-- Мета-рядок: дата рейсу, дата реєстрації, SmartSender ID -->
                         <div class="card-meta-row">
                             ${tripDateStr ? '<span class="card-meta-tag">🗓 Рейс: '+tripDateStr+'</span>' : ''}
                             ${dateCreated && dateCreated !== '—' ? '<span class="card-meta-tag">📅 Реєстр: '+dateCreated+'</span>' : ''}
@@ -1420,6 +1436,7 @@ function renderCard(p) {
                         </div>
                     </div>
                 </div>
+                <!-- Стрілочка ▼ розгортки меню дій (крутиться 180° при open) -->
                 <div class="card-right-section">
                     <button class="card-actions-toggle ${isActionsOpen?'open':''}" onclick="event.stopPropagation(); toggleCardActions('${id}')" title="Дії">▼</button>
                 </div>
@@ -1427,6 +1444,7 @@ function renderCard(p) {
             ${tripStrip}
         </div>
         <div class="card-details ${isOpen?'show':''}" id="details-${id}">${isOpen ? renderDetails(p) : ''}</div>
+        <!-- === ПАНЕЛЬ ДІЙ ЛІДА: 4 кнопки в ряд (flex). Показується при ▼ === -->
         <div class="card-actions ${isActionsOpen?'show':''}" id="actions-${id}">
             <button class="btn-card-action btn-call" onclick="window.open('tel:${phone}')">📞 Дзвінок</button>
             <button class="btn-card-action btn-write" onclick="event.stopPropagation(); openMessengerPopup('${phone}','${smartId}')">✉️ Писати</button>
@@ -1554,11 +1572,16 @@ function toggleCardActions(id) {
 }
 
 // ================================================================
-// MESSENGER POPUP
+// POPUP МЕСЕНДЖЕРІВ: Viber, Telegram, WhatsApp, SmartSender
+// Відкривається кнопкою "Писати" з панелі дій ліда
+// Popup = окремий overlay (#messengerOverlay) по центру екрану
 // ================================================================
+
+// Відкрити popup з кнопками месенджерів
+// phone — телефон пасажира, smartId — ID SmartSender (може бути пустий)
 function openMessengerPopup(phone, smartId) {
     const grid = document.getElementById('messengerGrid');
-    const cleanPhone = (phone || '').replace(/[^+\d]/g, '');
+    const cleanPhone = (phone || '').replace(/[^+\d]/g, ''); // Залишаємо тільки +цифри
     grid.innerHTML = `
         <button class="messenger-popup-item" onclick="openMessenger('viber','${cleanPhone}')">💬 Viber</button>
         <button class="messenger-popup-item" onclick="openMessenger('telegram','${cleanPhone}')">✈️ Telegram</button>
@@ -1568,10 +1591,14 @@ function openMessengerPopup(phone, smartId) {
     document.getElementById('messengerOverlay').classList.add('show');
 }
 
+// Закрити popup месенджерів
 function closeMessengerPopup() {
     document.getElementById('messengerOverlay').classList.remove('show');
 }
 
+// Відкрити конкретний месенджер з контактом
+// type = 'viber' | 'telegram' | 'whatsapp' | 'smartsender'
+// contact = телефон або smartsender ID
 function openMessenger(type, contact) {
     closeMessengerPopup();
     if (!contact) { showToast('⚠️ Контакт не вказаний'); return; }
@@ -1592,20 +1619,25 @@ function openMessenger(type, contact) {
 }
 
 // ================================================================
-// EDIT PASSENGER (prefilled form)
+// РЕДАГУВАННЯ ПАСАЖИРА: відкриває ту саму форму що й "Додати",
+// але всі поля заповнені існуючими даними ліда.
+// Кнопка зберегти показує "Оновити" замість "Зберегти".
+// При збереженні викликає apiPost('updatePassenger') замість addPassenger.
+// editingPaxId = null → режим створення, інакше → режим редагування
 // ================================================================
 let editingPaxId = null;
 
+// Відкрити форму редагування ліда з передзаповненими полями
 function openEditPax(id) {
     const p = passengers.find(x => x['PAX_ID'] === id);
     if (!p) return;
-    editingPaxId = id;
+    editingPaxId = id; // Запам'ятовуємо який лід редагуємо
 
     document.getElementById('paxModalTitle').textContent = '✏️ Редагувати пасажира';
     document.getElementById('duplicateWarning').className = 'duplicate-warning';
     document.getElementById('duplicateWarning').textContent = '';
 
-    // Prefill all fields
+    // Заповнюємо всі поля форми існуючими даними ліда
     const dir = String(p['Напрям'] || '').toLowerCase().trim();
     const isEuUa = dir.startsWith('єв') || dir.startsWith('eu') || dir.startsWith('європа');
     document.getElementById('fDirection').value = isEuUa ? 'eu-ua' : 'ua-eu';
@@ -1833,7 +1865,8 @@ async function savePassenger() {
         note: document.getElementById('fNote').value.trim()
     };
 
-    // EDIT MODE
+    // === РЕЖИМ РЕДАГУВАННЯ: оновлюємо існуючого пасажира через updatePassenger API ===
+    // Пропускає перевірку дублікатів, оновлює локальні дані після успіху
     if (editingPaxId) {
         showLoader('Збереження...');
         const p = passengers.find(x => x['PAX_ID'] === editingPaxId);
