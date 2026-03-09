@@ -175,9 +175,14 @@
         .card-price { font-size: 14px; font-weight: 700; color: var(--success); flex-shrink: 0; margin-left: auto; }
 
         .card-row2-wrap { display: flex; flex-direction: column; gap: 3px; }
-        .card-info-row { display: flex; align-items: center; gap: 6px; min-height: 18px; }
+        .card-info-row { display: flex; align-items: center; gap: 6px; min-height: 18px; flex-wrap: wrap; }
         .card-id { font-size: 10px; color: var(--text-secondary); font-weight: 500; background: var(--bg-main); padding: 1px 4px; border-radius: 3px; flex-shrink: 0; }
         .card-name { font-size: 11px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        .card-route { font-size: 10px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        .card-route-icon { color: var(--orange); font-weight: 700; }
+        .card-meta-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .card-meta-tag { font-size: 9px; color: var(--text-secondary); background: var(--bg-main); padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+        .card-smart-id { font-size: 9px; color: #7c3aed; background: #f3e8ff; padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
 
         .card-right-section { display: flex; align-items: center; justify-content: center; padding: 6px 8px; border-left: 1px solid var(--border); flex-shrink: 0; }
         /* Trip strip — повна ширина внизу картки */
@@ -190,8 +195,9 @@
         .card-trip-text.empty { color: var(--warning); font-weight: 600; }
         .card-trip-detail { font-size: 10px; color: var(--text-secondary); }
         .card-trip-arrow { color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
-        .card-actions-toggle { width: 28px; height: 28px; border: none; border-radius: 6px; background: var(--bg-main); cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; margin-top: auto; }
+        .card-actions-toggle { width: 28px; height: 28px; border: none; border-radius: 6px; background: var(--bg-main); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; margin-top: auto; color: var(--text-secondary); }
         .card-actions-toggle:hover { background: var(--primary); color: white; }
+        .card-actions-toggle.open { transform: rotate(180deg); background: var(--primary); color: white; }
 
         /* Details panel */
         .card-details { display: none; padding: 0; background: #f8fafc; border-top: 1px solid var(--border); }
@@ -222,8 +228,16 @@
         select.detail-inline-edit { padding: 3px 4px; cursor: pointer; appearance: auto; }
 
         /* Card actions */
-        .card-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; max-height: 0; overflow: hidden; padding: 0 12px; background: white; transition: max-height 0.25s ease, padding 0.25s ease; }
-        .card-actions.show { max-height: 200px; padding: 10px 12px; border-top: 1px solid var(--border); }
+        .card-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 0; overflow: hidden; padding: 0 12px; background: white; transition: max-height 0.25s ease, padding 0.25s ease; }
+        .card-actions.show { max-height: 300px; padding: 10px 12px; border-top: 1px solid var(--border); }
+        .btn-card-action.btn-write { background: #dbeafe; color: #1d4ed8; position: relative; }
+        .btn-card-action.btn-write:hover { background: #1d4ed8; color: white; }
+        .btn-card-action.btn-edit { background: #fef3c7; color: #92400e; }
+        .btn-card-action.btn-edit:hover { background: #f59e0b; color: white; }
+        .messenger-menu { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 6px; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); padding: 4px; z-index: 50; min-width: 140px; }
+        .messenger-menu.show { display: block; }
+        .messenger-menu-item { display: block; width: 100%; padding: 8px 12px; border: none; background: none; cursor: pointer; font-size: 11px; font-weight: 600; font-family: inherit; text-align: left; border-radius: 6px; transition: background 0.15s; white-space: nowrap; }
+        .messenger-menu-item:hover { background: var(--bg-main); }
         .btn-card-action { padding: 10px 6px; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 4px; }
         .btn-card-action.btn-call { background: var(--primary); color: white; }
         .btn-card-action.btn-delete { background: #fee2e2; color: #dc2626; }
@@ -913,7 +927,7 @@
             </div>
             <div class="form-group"><label>Примітка</label><input type="text" id="fNote"></div>
         </div>
-        <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('passengerModal')">Скасувати</button><button class="btn-save" onclick="savePassenger()">💾 Зберегти</button></div>
+        <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('passengerModal')">Скасувати</button><button class="btn-save" id="paxSaveBtn" onclick="savePassenger()">💾 Зберегти</button></div>
     </div>
 </div>
 
@@ -1295,6 +1309,10 @@ function renderCard(p) {
     const seatInCar = p['Місце в авто'] || '';
     const leadStatus = p['Статус ліда'] || '';
     const payStatus = p['Статус оплати'] || '';
+    const fromAddr = p['Адреса відправки'] || '';
+    const toAddr = p['Адреса прибуття'] || '';
+    const smartId = p['Ід_смарт'] || '';
+    const dateCreated = formatTripDate(p['Дата створення'] || '');
 
     // Борг
     const priceN = parseFloat(p['Ціна квитка']) || 0;
@@ -1305,6 +1323,11 @@ function renderCard(p) {
     const statusClass = leadStatus === 'Новий' ? 'status-new' : leadStatus === 'В роботі' ? 'status-work' : leadStatus === 'Підтверджено' ? 'status-confirmed' : leadStatus === 'Відмова' ? 'status-refused' : '';
     const isOpen = openDetailsId === id;
     const isActionsOpen = openActionsId === id;
+
+    // Route line
+    const routeHtml = (fromAddr || toAddr)
+        ? `<div class="card-route"><span class="card-route-icon">📍</span> ${fromAddr || '?'} → ${toAddr || '?'}</div>`
+        : '';
 
     // Trip strip — повна ширина внизу картки
     let tripStrip = '';
@@ -1346,6 +1369,13 @@ function renderCard(p) {
         payStatus === 'Частково' ? '<span class="badge badge-partial">Частково</span>' :
         '<span class="badge badge-unpaid">Не оплачено</span>';
 
+    // Trip date from assigned trip
+    let tripDateStr = '';
+    if (calId) {
+        const trip = trips.find(t => t.cal_id === calId);
+        if (trip) tripDateStr = formatTripDate(trip.date);
+    }
+
     return `<div class="lead-card ${statusClass} ${selectedIds.has(id)?'selected':''}">
         <div class="card-header" onclick="toggleDetails('${id}')">
             <div class="card-header-top">
@@ -1367,10 +1397,16 @@ function renderCard(p) {
                             ${lsBadge} ${payBadge}
                             ${debt > 0 ? '<span class="badge badge-debt">Борг: '+debt+'</span>' : ''}
                         </div>
+                        ${routeHtml}
+                        <div class="card-meta-row">
+                            ${tripDateStr ? '<span class="card-meta-tag">🗓 Рейс: '+tripDateStr+'</span>' : ''}
+                            ${dateCreated && dateCreated !== '—' ? '<span class="card-meta-tag">📅 Реєстр: '+dateCreated+'</span>' : ''}
+                            ${smartId ? '<span class="card-smart-id">SS: '+smartId+'</span>' : ''}
+                        </div>
                     </div>
                 </div>
                 <div class="card-right-section">
-                    <button class="card-actions-toggle" onclick="event.stopPropagation(); toggleCardActions('${id}')" title="Дії">⋯</button>
+                    <button class="card-actions-toggle ${isActionsOpen?'open':''}" onclick="event.stopPropagation(); toggleCardActions('${id}')" title="Дії">▼</button>
                 </div>
             </div>
             ${tripStrip}
@@ -1378,6 +1414,16 @@ function renderCard(p) {
         <div class="card-details ${isOpen?'show':''}" id="details-${id}">${isOpen ? renderDetails(p) : ''}</div>
         <div class="card-actions ${isActionsOpen?'show':''}" id="actions-${id}">
             <button class="btn-card-action btn-call" onclick="window.open('tel:${phone}')">📞 Дзвінок</button>
+            <button class="btn-card-action btn-write" onclick="event.stopPropagation(); toggleMessengerMenu('${id}')">
+                ✉️ Писати
+                <div class="messenger-menu" id="msgMenu-${id}">
+                    <button class="messenger-menu-item" onclick="event.stopPropagation(); openMessenger('viber','${phone}')">💬 Viber</button>
+                    <button class="messenger-menu-item" onclick="event.stopPropagation(); openMessenger('telegram','${phone}')">✈️ Telegram</button>
+                    <button class="messenger-menu-item" onclick="event.stopPropagation(); openMessenger('whatsapp','${phone}')">📱 WhatsApp</button>
+                    <button class="messenger-menu-item" onclick="event.stopPropagation(); openMessenger('smartsender','${smartId}')">🤖 SmartSender</button>
+                </div>
+            </button>
+            <button class="btn-card-action btn-edit" onclick="event.stopPropagation(); openEditPax('${id}')">✏️ Редагувати</button>
             <button class="btn-card-action btn-delete" onclick="deletePax('${id}','${p._sheet||''}','${name}')">🗑️ Видалити</button>
         </div>
     </div>`;
@@ -1501,6 +1547,90 @@ function toggleCardActions(id) {
 }
 
 // ================================================================
+// MESSENGER MENU
+// ================================================================
+function toggleMessengerMenu(id) {
+    const menu = document.getElementById('msgMenu-' + id);
+    if (menu) menu.classList.toggle('show');
+}
+
+function openMessenger(type, contact) {
+    if (!contact) { showToast('⚠️ Контакт не вказаний'); return; }
+    const cleanPhone = contact.replace(/[^+\d]/g, '');
+    switch (type) {
+        case 'viber':
+            window.open('viber://chat?number=' + encodeURIComponent(cleanPhone), '_blank');
+            break;
+        case 'telegram':
+            window.open('https://t.me/' + cleanPhone, '_blank');
+            break;
+        case 'whatsapp':
+            window.open('https://wa.me/' + cleanPhone.replace('+', ''), '_blank');
+            break;
+        case 'smartsender':
+            if (contact) window.open('https://smartsender.com/contacts/' + encodeURIComponent(contact), '_blank');
+            break;
+    }
+}
+
+// ================================================================
+// EDIT PASSENGER (prefilled form)
+// ================================================================
+let editingPaxId = null;
+
+function openEditPax(id) {
+    const p = passengers.find(x => x['PAX_ID'] === id);
+    if (!p) return;
+    editingPaxId = id;
+
+    document.getElementById('paxModalTitle').textContent = '✏️ Редагувати пасажира';
+    document.getElementById('duplicateWarning').className = 'duplicate-warning';
+    document.getElementById('duplicateWarning').textContent = '';
+
+    // Prefill all fields
+    const dir = String(p['Напрям'] || '').toLowerCase().trim();
+    const isEuUa = dir.startsWith('єв') || dir.startsWith('eu') || dir.startsWith('європа');
+    document.getElementById('fDirection').value = isEuUa ? 'eu-ua' : 'ua-eu';
+    document.getElementById('fName').value = p['Піб'] || '';
+    document.getElementById('fPhone').value = p['Телефон пасажира'] || '';
+    document.getElementById('fPhoneReg').value = p['Телефон реєстратора'] || '';
+    document.getElementById('fSeats').value = p['Кількість місць'] || 1;
+    document.getElementById('fFrom').value = p['Адреса відправки'] || '';
+    document.getElementById('fTo').value = p['Адреса прибуття'] || '';
+    document.getElementById('fPrice').value = p['Ціна квитка'] || '';
+    document.getElementById('fDeposit').value = p['Завдаток'] || '';
+    document.getElementById('fTiming').value = p['Таймінг'] || '';
+    document.getElementById('fWeight').value = p['Вага багажу'] || '';
+    document.getElementById('fWeightPrice').value = p['Ціна багажу'] || '';
+    document.getElementById('fNote').value = p['Примітка'] || '';
+
+    // Date — convert from various formats to YYYY-MM-DD for input[type=date]
+    const rawDate = p['Дата виїзду'] || '';
+    let dateVal = '';
+    if (rawDate) {
+        const s = String(rawDate);
+        if (s.includes('T')) {
+            dateVal = s.split('T')[0];
+        } else if (s.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            dateVal = s;
+        } else if (s.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
+            const parts = s.split('.');
+            dateVal = parts[2] + '-' + parts[1] + '-' + parts[0];
+        }
+    }
+    document.getElementById('fDate').value = dateVal;
+
+    // Currency
+    const currVal = p['Валюта квитка'] || 'UAH';
+    const currEl = document.getElementById('fCurrency');
+    if (currEl) currEl.value = currVal;
+
+    const saveBtn = document.getElementById('paxSaveBtn');
+    if (saveBtn) saveBtn.textContent = '💾 Оновити';
+    openModal('passengerModal');
+}
+
+// ================================================================
 // INLINE EDIT
 // ================================================================
 function startInlineEdit(paxId, key, sheet) {
@@ -1590,6 +1720,7 @@ function cancelInline(paxId, key) {
 // ADD / DELETE PASSENGER
 // ================================================================
 function openAddModal() {
+    editingPaxId = null;
     document.getElementById('paxModalTitle').textContent = '➕ Новий пасажир';
     document.getElementById('duplicateWarning').className = 'duplicate-warning';
     document.getElementById('duplicateWarning').textContent = '';
@@ -1599,6 +1730,8 @@ function openAddModal() {
     document.getElementById('fSeats').value = '1';
     document.getElementById('fDate').value = '';
     document.getElementById('fDirection').value = currentDir === 'eu-ua' ? 'eu-ua' : 'ua-eu';
+    const saveBtn = document.getElementById('paxSaveBtn');
+    if (saveBtn) saveBtn.textContent = '💾 Зберегти';
     openModal('passengerModal');
 }
 
@@ -1666,7 +1799,60 @@ async function savePassenger() {
     if (!name || !phone) { showToast('⚠️ ПІБ та Телефон обов\'язкові'); return; }
 
     const date = document.getElementById('fDate').value || '';
-    // Duplicate check
+    const formData = {
+        name, phone,
+        phoneReg: document.getElementById('fPhoneReg').value.trim(),
+        seats: document.getElementById('fSeats').value || 1,
+        from: document.getElementById('fFrom').value.trim(),
+        to: document.getElementById('fTo').value.trim(),
+        date,
+        timing: document.getElementById('fTiming').value.trim(),
+        price: document.getElementById('fPrice').value.trim(),
+        currency: document.getElementById('fCurrency').value,
+        deposit: document.getElementById('fDeposit').value.trim(),
+        weight: document.getElementById('fWeight').value.trim(),
+        weightPrice: document.getElementById('fWeightPrice').value.trim(),
+        note: document.getElementById('fNote').value.trim()
+    };
+
+    // EDIT MODE
+    if (editingPaxId) {
+        showLoader('Збереження...');
+        const p = passengers.find(x => x['PAX_ID'] === editingPaxId);
+        const sheet = p ? (p._sheet || (dir === 'eu-ua' ? 'eu' : 'ue')) : (dir === 'eu-ua' ? 'eu' : 'ue');
+        const res = await apiPost('updatePassenger', { pax_id: editingPaxId, sheet, data: formData });
+        if (res.ok) {
+            // Update local data
+            if (p) {
+                p['Піб'] = name;
+                p['Телефон пасажира'] = phone;
+                p['Телефон реєстратора'] = formData.phoneReg;
+                p['Кількість місць'] = formData.seats;
+                p['Адреса відправки'] = formData.from;
+                p['Адреса прибуття'] = formData.to;
+                p['Дата виїзду'] = date;
+                p['Таймінг'] = formData.timing;
+                p['Ціна квитка'] = formData.price;
+                p['Валюта квитка'] = formData.currency;
+                p['Завдаток'] = formData.deposit;
+                p['Вага багажу'] = formData.weight;
+                p['Ціна багажу'] = formData.weightPrice;
+                p['Примітка'] = formData.note;
+            }
+            hideLoader();
+            showToast('✅ Пасажира оновлено');
+            editingPaxId = null;
+            closeModal('passengerModal');
+            render();
+            silentSync();
+        } else {
+            hideLoader();
+            showToast('❌ ' + (res.error || 'Помилка збереження'));
+        }
+        return;
+    }
+
+    // CREATE MODE — duplicate check
     const dupRes = await apiPost('checkDuplicates', { sheet: dir === 'eu-ua' ? 'eu' : 'ue', pib: name, phone, date });
     if (dupRes.exact) {
         const w = document.getElementById('duplicateWarning');
@@ -1685,21 +1871,7 @@ async function savePassenger() {
     showLoader('Збереження...');
     const res = await apiPost('addPassenger', {
         sheet: dir === 'eu-ua' ? 'eu' : 'ue',
-        data: {
-            name, phone,
-            phoneReg: document.getElementById('fPhoneReg').value.trim(),
-            seats: document.getElementById('fSeats').value || 1,
-            from: document.getElementById('fFrom').value.trim(),
-            to: document.getElementById('fTo').value.trim(),
-            date,
-            timing: document.getElementById('fTiming').value.trim(),
-            price: document.getElementById('fPrice').value.trim(),
-            currency: document.getElementById('fCurrency').value,
-            deposit: document.getElementById('fDeposit').value.trim(),
-            weight: document.getElementById('fWeight').value.trim(),
-            weightPrice: document.getElementById('fWeightPrice').value.trim(),
-            note: document.getElementById('fNote').value.trim()
-        }
+        data: formData
     });
     if (res.ok) {
         // Якщо менеджер обрав рейс з suggest панелі — призначаємо
@@ -3113,6 +3285,10 @@ document.addEventListener('click', (e) => {
     // Close bulk dropdown
     if (!e.target.closest('.bulk-toolbar')) {
         closeBulkTripDd();
+    }
+    // Close messenger menus
+    if (!e.target.closest('.btn-write')) {
+        document.querySelectorAll('.messenger-menu.show').forEach(m => m.classList.remove('show'));
     }
     // Close trip calendar (skip if click was inside calendar — target may be detached after re-render)
     if (!e.target.closest('.tcal-wrap') && !tcalClickInside) {
