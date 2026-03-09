@@ -192,11 +192,24 @@
         .card-actions-toggle:hover { background: var(--primary); color: white; }
 
         /* Details panel */
-        .card-details { display: none; padding: 12px; background: #f8fafc; border-top: 1px solid var(--border); }
+        .card-details { display: none; padding: 0; background: #f8fafc; border-top: 1px solid var(--border); }
         .card-details.show { display: block; }
+
+        /* Accordion sections */
+        .detail-accordion { border-bottom: 1px solid var(--border); }
+        .detail-accordion:last-child { border-bottom: none; }
+        .detail-section-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; background: none; border: none; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.3px; transition: background 0.15s; }
+        .detail-section-btn:hover { background: #eef2ff; }
+        .detail-section-btn .acc-icon { font-size: 10px; transition: transform 0.2s; color: var(--text-secondary); }
+        .detail-section-btn.open .acc-icon { transform: rotate(90deg); }
+        .detail-section-btn .acc-title { flex: 1; text-align: left; }
+        .detail-section-btn .acc-count { font-size: 9px; font-weight: 600; color: var(--text-secondary); background: var(--bg-main); padding: 1px 6px; border-radius: 8px; }
+        .detail-section-content { display: none; padding: 0 12px 12px; }
+        .detail-section-content.open { display: block; }
+        .details-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+
         .detail-section-title { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin: 12px 0 6px; padding-bottom: 4px; border-bottom: 2px solid var(--primary); }
         .detail-section-title:first-child { margin-top: 0; }
-        .details-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
         .detail-block { background: white; border: 1px solid var(--border); border-left: 3px solid var(--primary); border-radius: 6px; padding: 8px 10px; position: relative; }
         .detail-block-label { font-size: 9px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px; }
         .detail-block-value { font-size: 12px; font-weight: 600; color: var(--text-primary); word-break: break-word; }
@@ -333,6 +346,20 @@
         .modal-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 26px; height: 26px; border-radius: 4px; cursor: pointer; font-size: 14px; }
         .modal-body { padding: 12px; max-height: 60vh; overflow-y: auto; }
         .modal-footer { padding: 10px 12px; background: var(--bg-main); display: flex; justify-content: flex-end; gap: 6px; }
+
+        /* Column configurator */
+        .col-cfg-section { margin-bottom: 12px; }
+        .col-cfg-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px; }
+        .col-cfg-pool { display: flex; flex-wrap: wrap; gap: 4px; }
+        .col-cfg-chip { padding: 5px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: white; color: var(--text-primary); transition: all 0.15s; user-select: none; }
+        .col-cfg-chip:hover { border-color: var(--primary); background: #eef2ff; }
+        .col-cfg-chip.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .col-cfg-chip.selected:hover { background: var(--primary-dark, #3730a3); }
+        .col-cfg-selected { min-height: 40px; padding: 8px; background: var(--bg-main); border: 2px dashed var(--border); border-radius: 8px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+        .col-cfg-selected:empty::before { content: 'Перетягніть або натисніть на колонки вище'; color: var(--text-secondary); font-size: 11px; }
+        .col-cfg-selected-chip { padding: 5px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; cursor: grab; background: var(--primary); color: white; display: flex; align-items: center; gap: 4px; }
+        .col-cfg-selected-chip .remove-col { font-size: 13px; opacity: 0.7; cursor: pointer; margin-left: 2px; }
+        .col-cfg-selected-chip .remove-col:hover { opacity: 1; }
         .form-group { margin-bottom: 8px; }
         .form-group label { display: block; font-size: 9px; font-weight: 600; color: var(--text-secondary); margin-bottom: 2px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 7px; border: 2px solid var(--border); border-radius: 4px; font-size: 12px; font-family: inherit; }
@@ -668,8 +695,33 @@
     <button class="nav-item active" id="navPax" onclick="showPaxView('all')"><span>👥</span>Пасажири</button>
     <button class="nav-item" id="navTrips" onclick="showTripsView()"><span>🚐</span>Рейси</button>
     <button class="nav-item" onclick="silentSync()"><span>🔄</span>Синхр.</button>
+    <button class="nav-item" onclick="openColumnConfigurator()"><span>⚙️</span>Колонки</button>
     <button class="nav-item" onclick="openAddModal()"><span>➕</span>Додати</button>
 </nav>
+
+<!-- COLUMN CONFIGURATOR MODAL -->
+<div class="modal-overlay" id="columnModal" onclick="if(event.target===this)closeModal('columnModal')">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">⚙️ Налаштування колонок «Основне»</div>
+            <button class="modal-close" onclick="closeModal('columnModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="col-cfg-section">
+                <div class="col-cfg-label">Обрані колонки (відображаються в «Основне»)</div>
+                <div class="col-cfg-selected" id="colCfgSelected"></div>
+            </div>
+            <div class="col-cfg-section">
+                <div class="col-cfg-label">Доступні колонки (натисніть щоб додати)</div>
+                <div class="col-cfg-pool" id="colCfgPool"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="bs-btn" onclick="resetDefaultColumns()">Скинути</button>
+            <button class="bs-btn primary" onclick="saveColumnConfig()">💾 Зберегти</button>
+        </div>
+    </div>
+</div>
 
 <!-- PASSENGER MODAL (Add/Edit) -->
 <div class="modal-overlay" id="passengerModal" onclick="if(event.target===this)closeModal('passengerModal')">
@@ -812,14 +864,24 @@ const COL_MAP = {
     archivedBy:'ARCHIVED_BY', archiveReason:'ARCHIVE_REASON', archiveId:'ARCHIVE_ID',
     calId:'CAL_ID'
 };
-const DETAIL_SECTIONS = [
-    { title:'👤 Основне', fields:['name','phone','phoneReg','direction','date','seats'] },
-    { title:'🗺️ Маршрут', fields:['from','to','timing','vehicle','seatInCar','calId'] },
-    { title:'💰 Фінанси', fields:['price','currency','deposit','currencyDeposit','weight','weightPrice','currencyWeight','debt'] },
-    { title:'📊 Статуси', fields:['payStatus','leadStatus','crmStatus','tag'] },
-    { title:'📝 Примітки', fields:['note','noteSms'] },
-    { title:'🔧 Системні', fields:['pax_id','smartId','dateCreated','sourceSheet','cliId','bookingId'], readonly:true }
+const DEFAULT_OSNOVNE_FIELDS = ['name','phone','phoneReg','direction','date','seats'];
+const OTHER_SECTIONS = [
+    { key:'route', title:'🗺️ Маршрут', fields:['from','to','timing','vehicle','seatInCar','calId'] },
+    { key:'finance', title:'💰 Фінанси', fields:['price','currency','deposit','currencyDeposit','weight','weightPrice','currencyWeight','debt'] },
+    { key:'statuses', title:'📊 Статуси', fields:['payStatus','leadStatus','crmStatus','tag'] },
+    { key:'notes', title:'📝 Примітки', fields:['note','noteSms'] },
+    { key:'system', title:'🔧 Системні', fields:['pax_id','smartId','dateCreated','sourceSheet','cliId','bookingId'], readonly:true }
 ];
+function getOsnovneFields() {
+    try { const s = localStorage.getItem('esco_osnovne_cols'); if (s) return JSON.parse(s); } catch(e) {}
+    return DEFAULT_OSNOVNE_FIELDS;
+}
+function getDetailSections() {
+    return [
+        { key:'osnovne', title:'👤 Основне', fields: getOsnovneFields() },
+        ...OTHER_SECTIONS
+    ];
+}
 const READONLY_FIELDS = ['pax_id','smartId','dateCreated','sourceSheet','cliId','bookingId','rteId','debt','dateArchive','archivedBy','archiveReason','archiveId'];
 const SELECT_OPTIONS = {
     leadStatus: ['Новий','В роботі','Підтверджено','Відмова'],
@@ -1089,23 +1151,30 @@ function renderCard(p) {
 
     // Trip strip — повна ширина внизу картки
     let tripStrip = '';
+    const tripDDHtml = `<div class="trip-assign-dd" id="tripDD-${id}"></div>`;
     if (calId) {
         const trip = trips.find(t => t.cal_id === calId);
         const tripDate = trip ? formatTripDate(trip.date) : '';
         const tripCity = trip ? (trip.city || '') : '';
         const tripAuto = trip ? (trip.auto_name || '') : '';
         const tripFree = trip ? (parseInt(trip.free_seats) || 0) : '';
-        tripStrip = `<div class="card-trip-strip has-trip" onclick="event.stopPropagation(); toggleTripAssignDD('${id}')">
-            <span class="card-trip-icon">🚐</span>
-            <span class="card-trip-text">${tripDate} — ${tripCity}</span>
-            <span class="card-trip-detail">${tripAuto}${tripFree !== '' ? ' · ' + tripFree + ' вільн.' : ''}</span>
-            <span class="card-trip-arrow">›</span>
+        tripStrip = `<div class="trip-assign-wrap" style="position:relative">
+            <div class="card-trip-strip has-trip" onclick="event.stopPropagation(); toggleTripAssignDD('${id}')">
+                <span class="card-trip-icon">🚐</span>
+                <span class="card-trip-text">${tripDate} — ${tripCity}</span>
+                <span class="card-trip-detail">${tripAuto}${tripFree !== '' ? ' · ' + tripFree + ' вільн.' : ''}</span>
+                <span class="card-trip-arrow">›</span>
+            </div>
+            ${tripDDHtml}
         </div>`;
     } else {
-        tripStrip = `<div class="card-trip-strip no-trip" onclick="event.stopPropagation(); toggleTripAssignDD('${id}')">
-            <span class="card-trip-icon">⚠️</span>
-            <span class="card-trip-text empty">Без рейсу — натисніть щоб призначити</span>
-            <span class="card-trip-arrow">›</span>
+        tripStrip = `<div class="trip-assign-wrap" style="position:relative">
+            <div class="card-trip-strip no-trip" onclick="event.stopPropagation(); toggleTripAssignDD('${id}')">
+                <span class="card-trip-icon">⚠️</span>
+                <span class="card-trip-text empty">Без рейсу — натисніть щоб призначити</span>
+                <span class="card-trip-arrow">›</span>
+            </div>
+            ${tripDDHtml}
         </div>`;
     }
 
@@ -1160,37 +1229,76 @@ function renderCard(p) {
 // ================================================================
 // DETAILS PANEL
 // ================================================================
-function renderDetails(p) {
-    let html = '';
+function renderDetailFields(p, fields, isReadonly) {
     const ADDRESS_FIELDS = ['from','to'];
+    let html = '<div class="details-grid">';
+    fields.forEach(key => {
+        const colName = COL_MAP[key] || key;
+        const val = p[colName] || '';
+        const isRO = READONLY_FIELDS.includes(key) || isReadonly;
+        const displayVal = val || '—';
+        const safeVal = String(val).replace(/'/g,"\\'");
+        const mapBtn = (ADDRESS_FIELDS.includes(key) && val)
+            ? `<button class="detail-micro-btn" onclick="event.stopPropagation(); openMap('${safeVal}')" title="Карта">🗺️</button>`
+            : '';
+        html += `<div class="detail-block">
+            <div class="detail-block-label">${colName}</div>
+            <div class="detail-block-value ${val?'':'empty'}" id="dv-${p['PAX_ID']}-${key}">${displayVal}</div>
+            ${!isRO ? `<div class="detail-block-actions">
+                <button class="detail-micro-btn" onclick="event.stopPropagation(); startInlineEdit('${p['PAX_ID']}','${key}','${p._sheet||''}')">✏️</button>
+                ${mapBtn}
+                <button class="detail-micro-btn" onclick="event.stopPropagation(); copyToClipboard('${safeVal}')">📋</button>
+            </div>` : `<div class="detail-block-actions">${mapBtn}<button class="detail-micro-btn" onclick="event.stopPropagation(); copyToClipboard('${safeVal}')">📋</button></div>`}
+        </div>`;
+    });
+    html += '</div>';
+    return html;
+}
 
-    DETAIL_SECTIONS.forEach(section => {
-        html += `<div class="detail-section-title">${section.title}</div><div class="details-grid">`;
-        section.fields.forEach(key => {
-            const colName = COL_MAP[key] || key;
-            const val = p[colName] || '';
-            const isRO = READONLY_FIELDS.includes(key) || section.readonly;
-            const displayVal = val || '—';
-            const safeVal = String(val).replace(/'/g,"\\'");
+function renderDetails(p) {
+    const sections = getDetailSections();
+    let html = '';
 
-            // Map button for address fields
-            const mapBtn = (ADDRESS_FIELDS.includes(key) && val)
-                ? `<button class="detail-micro-btn" onclick="event.stopPropagation(); openMap('${safeVal}')" title="Карта">🗺️</button>`
-                : '';
-
-            html += `<div class="detail-block">
-                <div class="detail-block-label">${colName}</div>
-                <div class="detail-block-value ${val?'':'empty'}" id="dv-${p['PAX_ID']}-${key}">${displayVal}</div>
-                ${!isRO ? `<div class="detail-block-actions">
-                    <button class="detail-micro-btn" onclick="event.stopPropagation(); startInlineEdit('${p['PAX_ID']}','${key}','${p._sheet||''}')">✏️</button>
-                    ${mapBtn}
-                    <button class="detail-micro-btn" onclick="event.stopPropagation(); copyToClipboard('${safeVal}')">📋</button>
-                </div>` : `<div class="detail-block-actions">${mapBtn}<button class="detail-micro-btn" onclick="event.stopPropagation(); copyToClipboard('${safeVal}')">📋</button></div>`}
-            </div>`;
-        });
-        html += '</div>';
+    sections.forEach((section, i) => {
+        const isFirst = i === 0; // Основне — завжди відкрите
+        const paxId = p['PAX_ID'];
+        const secId = `acc-${paxId}-${section.key}`;
+        html += `<div class="detail-accordion">
+            <button class="detail-section-btn ${isFirst?'open':''}" onclick="event.stopPropagation(); toggleAccSection('${secId}', this)">
+                <span class="acc-icon">›</span>
+                <span class="acc-title">${section.title}</span>
+                <span class="acc-count">${section.fields.length}</span>
+            </button>
+            <div class="detail-section-content ${isFirst?'open':''}" id="${secId}">
+                ${isFirst ? renderDetailFields(p, section.fields, section.readonly) : ''}
+            </div>
+        </div>`;
     });
     return html;
+}
+
+function toggleAccSection(secId, btn) {
+    const content = document.getElementById(secId);
+    if (!content) return;
+    const isOpen = content.classList.contains('open');
+    if (isOpen) {
+        content.classList.remove('open');
+        btn.classList.remove('open');
+    } else {
+        content.classList.add('open');
+        btn.classList.add('open');
+        // Lazy-load content if empty
+        if (!content.innerHTML.trim()) {
+            const paxId = secId.split('-')[1];
+            const sectionKey = secId.split('-').slice(2).join('-');
+            const sections = getDetailSections();
+            const section = sections.find(s => s.key === sectionKey);
+            const p = passengers.find(x => x['PAX_ID'] === paxId);
+            if (section && p) {
+                content.innerHTML = renderDetailFields(p, section.fields, section.readonly);
+            }
+        }
+    }
 }
 
 function openMap(address) {
@@ -1824,6 +1932,100 @@ function togglePcSidebar() {
 
 function openModal(id) { document.getElementById(id)?.classList.add('show'); }
 function closeModal(id) { document.getElementById(id)?.classList.remove('show'); }
+
+// ================================================================
+// COLUMN CONFIGURATOR
+// ================================================================
+let colCfgTemp = []; // temporary selection while modal is open
+
+function getAllColumnKeys() {
+    return Object.keys(COL_MAP);
+}
+
+function openColumnConfigurator() {
+    colCfgTemp = [...getOsnovneFields()];
+    renderColumnConfigurator();
+    openModal('columnModal');
+}
+
+function renderColumnConfigurator() {
+    const pool = document.getElementById('colCfgPool');
+    const selected = document.getElementById('colCfgSelected');
+    if (!pool || !selected) return;
+
+    const allKeys = getAllColumnKeys();
+
+    // Render selected chips (sortable order)
+    selected.innerHTML = colCfgTemp.map(key => {
+        const colName = COL_MAP[key] || key;
+        return `<div class="col-cfg-selected-chip" draggable="true" data-key="${key}"
+            ondragstart="colDragStart(event,'${key}')" ondragover="colDragOver(event)" ondrop="colDrop(event,'${key}')">
+            ${colName}
+            <span class="remove-col" onclick="removeFromOsnovne('${key}')">✕</span>
+        </div>`;
+    }).join('');
+
+    // Render pool (all columns, highlight selected)
+    pool.innerHTML = allKeys.map(key => {
+        const colName = COL_MAP[key] || key;
+        const isSel = colCfgTemp.includes(key);
+        return `<div class="col-cfg-chip ${isSel?'selected':''}" onclick="toggleColCfg('${key}')">${colName}</div>`;
+    }).join('');
+}
+
+function toggleColCfg(key) {
+    const idx = colCfgTemp.indexOf(key);
+    if (idx >= 0) {
+        colCfgTemp.splice(idx, 1);
+    } else {
+        colCfgTemp.push(key);
+    }
+    renderColumnConfigurator();
+}
+
+function removeFromOsnovne(key) {
+    colCfgTemp = colCfgTemp.filter(k => k !== key);
+    renderColumnConfigurator();
+}
+
+// Drag-and-drop reorder
+let colDragKey = null;
+function colDragStart(e, key) { colDragKey = key; e.dataTransfer.effectAllowed = 'move'; }
+function colDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function colDrop(e, targetKey) {
+    e.preventDefault();
+    if (!colDragKey || colDragKey === targetKey) return;
+    const fromIdx = colCfgTemp.indexOf(colDragKey);
+    const toIdx = colCfgTemp.indexOf(targetKey);
+    if (fromIdx < 0 || toIdx < 0) return;
+    colCfgTemp.splice(fromIdx, 1);
+    colCfgTemp.splice(toIdx, 0, colDragKey);
+    colDragKey = null;
+    renderColumnConfigurator();
+}
+
+function saveColumnConfig() {
+    if (colCfgTemp.length === 0) {
+        alert('Оберіть хоча б одну колонку');
+        return;
+    }
+    localStorage.setItem('esco_osnovne_cols', JSON.stringify(colCfgTemp));
+    closeModal('columnModal');
+    // Re-render open details
+    if (openDetailsId) {
+        const p = passengers.find(x => x['PAX_ID'] === openDetailsId);
+        if (p) {
+            const el = document.getElementById('details-' + openDetailsId);
+            if (el) el.innerHTML = renderDetails(p);
+        }
+    }
+    renderList();
+}
+
+function resetDefaultColumns() {
+    colCfgTemp = [...DEFAULT_OSNOVNE_FIELDS];
+    renderColumnConfigurator();
+}
 
 function showLoader(text) { document.getElementById('loaderText').textContent = text || 'Завантаження...'; document.getElementById('globalLoader').classList.add('show'); }
 function hideLoader() { document.getElementById('globalLoader').classList.remove('show'); }
