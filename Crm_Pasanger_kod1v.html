@@ -259,6 +259,48 @@
         .trip-filter-select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 20px; background: white; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 22px; }
         .trip-filter-select:focus { outline: none; border-color: var(--orange); }
 
+        /* TRIP CALENDAR PICKER */
+        .tcal-wrap { position: relative; display: inline-block; }
+        .tcal-toggle { padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; background: white; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .tcal-toggle:hover { border-color: var(--orange); }
+        .tcal-toggle.has-date { border-color: var(--orange); background: #fff7ed; color: var(--orange); }
+        .tcal-toggle .tcal-icon { font-size: 14px; }
+        .tcal-toggle .tcal-clear { font-size: 13px; margin-left: 2px; opacity: 0.5; }
+        .tcal-toggle .tcal-clear:hover { opacity: 1; }
+        .tcal-dropdown { position: absolute; top: calc(100% + 6px); left: 0; z-index: 200; background: white; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.18); padding: 16px; min-width: 320px; display: none; }
+        .tcal-dropdown.show { display: block; animation: tcalIn 0.15s ease-out; }
+        @keyframes tcalIn { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform: translateY(0); } }
+        .tcal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .tcal-month-label { font-size: 14px; font-weight: 800; color: var(--primary); text-transform: capitalize; }
+        .tcal-nav { display: flex; gap: 4px; }
+        .tcal-nav-btn { width: 30px; height: 30px; border: none; border-radius: 8px; background: var(--bg-main); cursor: pointer; font-size: 14px; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+        .tcal-nav-btn:hover { background: var(--orange); color: white; }
+        .tcal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 4px; }
+        .tcal-wd { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-secondary); padding: 4px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tcal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+        .tcal-day { position: relative; width: 100%; aspect-ratio: 1; border: none; border-radius: 10px; background: transparent; cursor: default; font-size: 12px; font-weight: 600; color: var(--text-secondary); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.15s; padding: 2px; }
+        .tcal-day.other-month { opacity: 0.3; }
+        .tcal-day.today { outline: 2px solid var(--orange); outline-offset: -2px; font-weight: 800; }
+        .tcal-day.has-trip { cursor: pointer; font-weight: 800; color: var(--primary); }
+        .tcal-day.has-trip:hover { transform: scale(1.12); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+        .tcal-day.selected { background: var(--orange); color: white !important; box-shadow: 0 2px 10px rgba(255,140,50,0.4); }
+        .tcal-day.selected .tcal-dots span { background: white !important; }
+        .tcal-day.selected .tcal-pax { color: rgba(255,255,255,0.85) !important; }
+        .tcal-dots { display: flex; gap: 2px; margin-top: 1px; }
+        .tcal-dots span { width: 6px; height: 6px; border-radius: 50%; }
+        .tcal-dots .dot-ua-eu { background: #2563eb; }
+        .tcal-dots .dot-eu-ua { background: #059669; }
+        .tcal-dots .dot-both { background: linear-gradient(135deg, #2563eb 50%, #059669 50%); }
+        .tcal-pax { font-size: 8px; font-weight: 800; color: var(--text-secondary); line-height: 1; margin-top: 1px; }
+        .tcal-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+        .tcal-footer-btn { border: none; background: none; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
+        .tcal-footer-btn:hover { background: var(--bg-main); }
+        .tcal-footer-btn.today-btn { color: var(--orange); }
+        .tcal-footer-btn.clear-btn { color: var(--danger); }
+        .tcal-legend { display: flex; gap: 10px; align-items: center; }
+        .tcal-legend-item { display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 600; color: var(--text-secondary); }
+        .tcal-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
         .trips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
         .trip-card { background: white; border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; border-left: 5px solid var(--orange); transition: all 0.2s; }
         .trip-card.trip-dir-ua-eu { border-left-color: #2563eb; }
@@ -685,7 +727,13 @@
                     <button class="trip-filter-btn" data-time="past" onclick="setTripTimeFilter(this,'past')">Минулі</button>
                     <button class="trip-filter-btn" data-time="all" onclick="setTripTimeFilter(this,'all')">Всі</button>
                     <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
-                    <input type="date" class="trip-filter-select" id="tripDateFilter" onchange="setTripDateFilter(this.value)" title="Фільтр по даті рейсу" style="min-width:130px;">
+                    <div class="tcal-wrap" id="tcalWrap">
+                        <button class="tcal-toggle" id="tcalToggle" onclick="toggleTripCalendar()">
+                            <span class="tcal-icon">📅</span>
+                            <span id="tcalLabel">Дата рейсу</span>
+                        </button>
+                        <div class="tcal-dropdown" id="tcalDropdown"></div>
+                    </div>
                     <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
                     <button class="trip-filter-btn" data-dir="all" onclick="setTripDirFilter(this,'all')">Всі</button>
                     <button class="trip-filter-btn dir-ua-eu" data-dir="ua-eu" onclick="setTripDirFilter(this,'ua-eu')">UA → EU</button>
@@ -1684,7 +1732,177 @@ function setTripDirFilter(btn, val) {
 
 function setTripDateFilter(val) {
     tripDateFilter = val || '';
+    const toggle = document.getElementById('tcalToggle');
+    const label = document.getElementById('tcalLabel');
+    if (val) {
+        const p = val.split('-');
+        label.textContent = p[2] + '.' + p[1] + '.' + p[0];
+        toggle.classList.add('has-date');
+    } else {
+        label.textContent = 'Дата рейсу';
+        toggle.classList.remove('has-date');
+    }
     renderTrips();
+}
+
+// ── TRIP CALENDAR WIDGET ──
+let tcalMonth = new Date().getMonth();
+let tcalYear = new Date().getFullYear();
+
+function toggleTripCalendar() {
+    const dd = document.getElementById('tcalDropdown');
+    if (dd.classList.contains('show')) { dd.classList.remove('show'); return; }
+    dd.classList.add('show');
+    renderTripCalendarWidget();
+}
+
+function closeTripCalendar() {
+    document.getElementById('tcalDropdown').classList.remove('show');
+}
+
+function getTripDateMap() {
+    const map = {};
+    trips.forEach(t => {
+        if (t.status === 'Архів' || t.status === 'Виконано') return;
+        const fd = formatTripDate(t.date);
+        if (!fd || fd === '—') return;
+        if (!map[fd]) map[fd] = { uaeu: 0, euua: 0, pax: 0 };
+        const dir = getTripDirection(t);
+        if (dir === 'ua-eu') map[fd].uaeu++;
+        else if (dir === 'eu-ua') map[fd].euua++;
+        map[fd].pax += (parseInt(t.occupied) || 0);
+    });
+    return map;
+}
+
+function renderTripCalendarWidget() {
+    const dd = document.getElementById('tcalDropdown');
+    const tripMap = getTripDateMap();
+    const monthNames = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+    const dayNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+
+    const firstDay = new Date(tcalYear, tcalMonth, 1);
+    let startDow = firstDay.getDay() - 1;
+    if (startDow < 0) startDow = 6;
+    const daysInMonth = new Date(tcalYear, tcalMonth + 1, 0).getDate();
+    const prevMonthDays = new Date(tcalYear, tcalMonth, 0).getDate();
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const selectedKey = tripDateFilter ? (() => { const p = tripDateFilter.split('-'); return p[2]+'.'+p[1]+'.'+p[0]; })() : '';
+
+    let daysHtml = '';
+    // Previous month
+    for (let i = startDow - 1; i >= 0; i--) {
+        const d = prevMonthDays - i;
+        const m = tcalMonth === 0 ? 12 : tcalMonth;
+        const y = tcalMonth === 0 ? tcalYear - 1 : tcalYear;
+        const key = String(d).padStart(2,'0') + '.' + String(m).padStart(2,'0') + '.' + y;
+        const info = tripMap[key];
+        daysHtml += renderCalDay(d, key, info, true, false, selectedKey);
+    }
+    // Current month
+    for (let d = 1; d <= daysInMonth; d++) {
+        const key = String(d).padStart(2,'0') + '.' + String(tcalMonth+1).padStart(2,'0') + '.' + tcalYear;
+        const isToday = d === today.getDate() && tcalMonth === today.getMonth() && tcalYear === today.getFullYear();
+        const info = tripMap[key];
+        daysHtml += renderCalDay(d, key, info, false, isToday, selectedKey);
+    }
+    // Next month
+    const totalCells = startDow + daysInMonth;
+    const remaining = (7 - totalCells % 7) % 7;
+    for (let d = 1; d <= remaining; d++) {
+        const m = tcalMonth === 11 ? 1 : tcalMonth + 2;
+        const y = tcalMonth === 11 ? tcalYear + 1 : tcalYear;
+        const key = String(d).padStart(2,'0') + '.' + String(m).padStart(2,'0') + '.' + y;
+        const info = tripMap[key];
+        daysHtml += renderCalDay(d, key, info, true, false, selectedKey);
+    }
+
+    dd.innerHTML = `
+        <div class="tcal-header">
+            <span class="tcal-month-label">${monthNames[tcalMonth]} ${tcalYear}</span>
+            <div class="tcal-nav">
+                <button class="tcal-nav-btn" onclick="tcalPrev()">&larr;</button>
+                <button class="tcal-nav-btn" onclick="tcalNext()">&rarr;</button>
+            </div>
+        </div>
+        <div class="tcal-weekdays">${dayNames.map(d => '<span class="tcal-wd">'+d+'</span>').join('')}</div>
+        <div class="tcal-days">${daysHtml}</div>
+        <div class="tcal-footer">
+            <div class="tcal-legend">
+                <span class="tcal-legend-item"><span class="tcal-legend-dot" style="background:#2563eb;"></span> UA→EU</span>
+                <span class="tcal-legend-item"><span class="tcal-legend-dot" style="background:#059669;"></span> EU→UA</span>
+            </div>
+            <div style="display:flex;gap:4px;">
+                <button class="tcal-footer-btn today-btn" onclick="tcalToday()">Сьогодні</button>
+                <button class="tcal-footer-btn clear-btn" onclick="tcalClear()">Скинути</button>
+            </div>
+        </div>`;
+}
+
+function renderCalDay(d, key, info, otherMonth, isToday, selectedKey) {
+    const hasTrip = !!info;
+    const isSelected = key === selectedKey;
+    let cls = 'tcal-day';
+    if (otherMonth) cls += ' other-month';
+    if (isToday) cls += ' today';
+    if (hasTrip) cls += ' has-trip';
+    if (isSelected) cls += ' selected';
+
+    let dotsHtml = '';
+    let paxHtml = '';
+    if (info) {
+        if (info.uaeu > 0 && info.euua > 0) {
+            dotsHtml = '<span class="dot-ua-eu"></span><span class="dot-eu-ua"></span>';
+        } else if (info.uaeu > 0) {
+            dotsHtml = '<span class="dot-ua-eu"></span>';
+        } else if (info.euua > 0) {
+            dotsHtml = '<span class="dot-eu-ua"></span>';
+        }
+        if (info.pax > 0) paxHtml = `<span class="tcal-pax">${info.pax}</span>`;
+    }
+
+    const onclick = hasTrip ? ` onclick="tcalSelectDate('${key}')"` : '';
+    return `<button class="${cls}"${onclick}>
+        <span>${d}</span>
+        ${dotsHtml || paxHtml ? `<div class="tcal-dots">${dotsHtml}</div>` : ''}
+        ${paxHtml}
+    </button>`;
+}
+
+function tcalSelectDate(key) {
+    const parts = key.split('.');
+    const isoDate = parts[2] + '-' + parts[1] + '-' + parts[0];
+    if (tripDateFilter === isoDate) {
+        setTripDateFilter('');
+    } else {
+        setTripDateFilter(isoDate);
+    }
+    renderTripCalendarWidget();
+}
+
+function tcalPrev() {
+    tcalMonth--;
+    if (tcalMonth < 0) { tcalMonth = 11; tcalYear--; }
+    renderTripCalendarWidget();
+}
+
+function tcalNext() {
+    tcalMonth++;
+    if (tcalMonth > 11) { tcalMonth = 0; tcalYear++; }
+    renderTripCalendarWidget();
+}
+
+function tcalToday() {
+    const now = new Date();
+    tcalMonth = now.getMonth();
+    tcalYear = now.getFullYear();
+    renderTripCalendarWidget();
+}
+
+function tcalClear() {
+    setTripDateFilter('');
+    closeTripCalendar();
 }
 
 function setTripAutoFilter(val) {
@@ -2466,6 +2684,11 @@ document.addEventListener('click', (e) => {
     // Close bulk dropdown
     if (!e.target.closest('.bulk-toolbar')) {
         closeBulkTripDd();
+    }
+    // Close trip calendar
+    if (!e.target.closest('.tcal-wrap')) {
+        const dd = document.getElementById('tcalDropdown');
+        if (dd) dd.classList.remove('show');
     }
 });
 </script>
