@@ -1060,7 +1060,7 @@ function renderCard(p) {
     const dirIcon = dir.includes('Україна') || dir.includes('UА') ? '🇺🇦→🇪🇺' : '🇪🇺→🇺🇦';
     const phone = p['Телефон пасажира'] || '';
     const seats = p['Кількість місць'] || 1;
-    const date = p['Дата виїзду'] || '';
+    const date = formatTripDate(p['Дата виїзду'] || '');
     const price = p['Ціна квитка'] || '';
     const curr = p['Валюта квитка'] || '';
     const name = p['Піб'] || '';
@@ -2079,27 +2079,36 @@ function selectTripVehicle(calId) {
 // Підтвердження — надсилаємо API
 async function confirmTripAssign() {
     if (!tmSelectedCalId) return;
+
+    // Зберігаємо значення ДО закриття модалки (closeTripModal обнуляє їх)
+    var calId = tmSelectedCalId;
+    var paxIds = tmPaxIds.slice();
+    var mode = tmMode;
+    var callback = tmFormCallback;
+
     closeTripModal();
 
     // Якщо з форми додавання — callback
-    if (tmMode === 'form' && tmFormCallback) {
-        tmFormCallback(tmSelectedCalId);
+    if (mode === 'form' && callback) {
+        callback(calId);
         return;
     }
 
     showLoader('Призначаю рейс...');
-    var res = await apiPost('assignTrip', { cal_id: tmSelectedCalId, pax_ids: tmPaxIds });
+    var res = await apiPost('assignTrip', { cal_id: calId, pax_ids: paxIds });
 
     if (res.ok) {
-        tmPaxIds.forEach(function(id) {
+        // Оновлюємо локальний стан
+        paxIds.forEach(function(id) {
             var p = passengers.find(function(x) { return x['PAX_ID'] === id; });
             if (p) {
-                p['CAL_ID'] = tmSelectedCalId;
+                p['CAL_ID'] = calId;
                 if (p['Статус ліда'] === 'Новий') p['Статус ліда'] = 'В роботі';
             }
         });
         hideLoader();
         showToast('✅ Рейс призначено');
+        renderCards();
         silentSync();
     } else {
         hideLoader();
@@ -2109,9 +2118,10 @@ async function confirmTripAssign() {
 
 // Зняти з рейсу (кнопка в модалці)
 async function doUnassignTrip() {
+    // Зберігаємо ДО закриття
+    var paxId = tmPaxIds.length > 0 ? tmPaxIds[0] : '';
     closeTripModal();
-    if (tmPaxIds.length === 0) return;
-    var paxId = tmPaxIds[0];
+    if (!paxId) return;
 
     var p = passengers.find(function(x) { return x['PAX_ID'] === paxId; });
     if (!p) return;
@@ -2122,6 +2132,7 @@ async function doUnassignTrip() {
         p['CAL_ID'] = '';
         hideLoader();
         showToast('✅ Знято з рейсу');
+        renderCards();
         silentSync();
     } else {
         hideLoader();
