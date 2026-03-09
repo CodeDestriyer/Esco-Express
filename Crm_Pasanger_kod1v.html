@@ -196,16 +196,14 @@
         .card-details.show { display: block; }
 
         /* Accordion sections */
-        .detail-accordion { border-bottom: 1px solid var(--border); }
-        .detail-accordion:last-child { border-bottom: none; }
-        .detail-section-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; background: none; border: none; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.3px; transition: background 0.15s; }
-        .detail-section-btn:hover { background: #eef2ff; }
-        .detail-section-btn .acc-icon { font-size: 10px; transition: transform 0.2s; color: var(--text-secondary); }
-        .detail-section-btn.open .acc-icon { transform: rotate(90deg); }
-        .detail-section-btn .acc-title { flex: 1; text-align: left; }
-        .detail-section-btn .acc-count { font-size: 9px; font-weight: 600; color: var(--text-secondary); background: var(--bg-main); padding: 1px 6px; border-radius: 8px; }
-        .detail-section-content { display: none; padding: 0 12px 12px; }
-        .detail-section-content.open { display: block; }
+        .detail-accordion-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 10px; background: #f1f5f9; border-bottom: 1px solid var(--border); }
+        .detail-tab { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 16px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--text-secondary); transition: all 0.15s; white-space: nowrap; }
+        .detail-tab:hover { border-color: var(--primary); color: var(--primary); background: #eef2ff; }
+        .detail-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .detail-tab .tab-count { font-size: 9px; font-weight: 700; background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 8px; }
+        .detail-tab.active .tab-count { background: rgba(255,255,255,0.25); }
+        .detail-tab-panel { display: none; padding: 10px 12px; }
+        .detail-tab-panel.active { display: block; }
         .details-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 
         .detail-section-title { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin: 12px 0 6px; padding-bottom: 4px; border-bottom: 2px solid var(--primary); }
@@ -348,18 +346,19 @@
         .modal-footer { padding: 10px 12px; background: var(--bg-main); display: flex; justify-content: flex-end; gap: 6px; }
 
         /* Column configurator */
-        .col-cfg-section { margin-bottom: 12px; }
-        .col-cfg-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px; }
-        .col-cfg-pool { display: flex; flex-wrap: wrap; gap: 4px; }
-        .col-cfg-chip { padding: 5px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: white; color: var(--text-primary); transition: all 0.15s; user-select: none; }
-        .col-cfg-chip:hover { border-color: var(--primary); background: #eef2ff; }
-        .col-cfg-chip.selected { background: var(--primary); color: white; border-color: var(--primary); }
-        .col-cfg-chip.selected:hover { background: var(--primary-dark, #3730a3); }
-        .col-cfg-selected { min-height: 40px; padding: 8px; background: var(--bg-main); border: 2px dashed var(--border); border-radius: 8px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-        .col-cfg-selected:empty::before { content: 'Перетягніть або натисніть на колонки вище'; color: var(--text-secondary); font-size: 11px; }
-        .col-cfg-selected-chip { padding: 5px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; cursor: grab; background: var(--primary); color: white; display: flex; align-items: center; gap: 4px; }
-        .col-cfg-selected-chip .remove-col { font-size: 13px; opacity: 0.7; cursor: pointer; margin-left: 2px; }
-        .col-cfg-selected-chip .remove-col:hover { opacity: 1; }
+        .col-cfg-section { margin-bottom: 14px; }
+        .col-cfg-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.3px; }
+        .col-cfg-list { display: flex; flex-direction: column; gap: 2px; max-height: 220px; overflow-y: auto; padding: 4px 0; }
+        .col-cfg-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; cursor: pointer; transition: background 0.12s; user-select: none; }
+        .col-cfg-item:hover { background: #f1f5f9; }
+        .col-cfg-item.checked { background: #eef2ff; }
+        .col-cfg-item .col-check { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; font-size: 11px; color: white; }
+        .col-cfg-item.checked .col-check { background: var(--primary); border-color: var(--primary); }
+        .col-cfg-item .col-name { font-size: 12px; font-weight: 600; color: var(--text-primary); flex: 1; }
+        .col-cfg-item.greyed .col-name { color: var(--text-secondary); opacity: 0.55; }
+        .col-cfg-item.greyed .col-check { border-color: #d1d5db; }
+        .col-cfg-item.checked.greyed .col-check { background: var(--primary); border-color: var(--primary); opacity: 0.7; }
+        .col-cfg-item.checked.greyed .col-name { opacity: 0.8; color: var(--primary); }
         .form-group { margin-bottom: 8px; }
         .form-group label { display: block; font-size: 9px; font-weight: 600; color: var(--text-secondary); margin-bottom: 2px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 7px; border: 2px solid var(--border); border-radius: 4px; font-size: 12px; font-family: inherit; }
@@ -694,7 +693,6 @@
 <nav class="bottom-nav">
     <button class="nav-item active" id="navPax" onclick="showPaxView('all')"><span>👥</span>Пасажири</button>
     <button class="nav-item" onclick="window.location.href='index_posylki.html'"><span>📦</span>Посилки</button>
-    <button class="nav-item" id="navTrips" onclick="showTripsView()"><span>🚐</span>Рейси</button>
     <button class="nav-item" onclick="silentSync()"><span>🔄</span>Синхр.</button>
     <button class="nav-item" onclick="openColumnConfigurator()"><span>⚙️</span>Колонки</button>
     <button class="nav-item" onclick="openAddModal()"><span>➕</span>Додати</button>
@@ -702,23 +700,19 @@
 
 <!-- COLUMN CONFIGURATOR MODAL -->
 <div class="modal-overlay" id="columnModal" onclick="if(event.target===this)closeModal('columnModal')">
-    <div class="modal">
+    <div class="modal" style="max-width:380px">
         <div class="modal-header">
-            <div class="modal-title">⚙️ Налаштування колонок «Основне»</div>
+            <div class="modal-title">⚙️ Колонки «Основне»</div>
             <button class="modal-close" onclick="closeModal('columnModal')">✕</button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="padding:12px">
             <div class="col-cfg-section">
-                <div class="col-cfg-label">Обрані колонки (відображаються в «Основне»)</div>
-                <div class="col-cfg-selected" id="colCfgSelected"></div>
-            </div>
-            <div class="col-cfg-section">
-                <div class="col-cfg-label">Доступні колонки (натисніть щоб додати)</div>
-                <div class="col-cfg-pool" id="colCfgPool"></div>
+                <div class="col-cfg-label">Оберіть колонки для секції «Основне»</div>
+                <div class="col-cfg-list" id="colCfgList"></div>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="bs-btn" onclick="resetDefaultColumns()">Скинути</button>
+            <button class="bs-btn" onclick="resetDefaultColumns()">🔄 Скинути</button>
             <button class="bs-btn primary" onclick="saveColumnConfig()">💾 Зберегти</button>
         </div>
     </div>
@@ -1258,46 +1252,53 @@ function renderDetailFields(p, fields, isReadonly) {
 
 function renderDetails(p) {
     const sections = getDetailSections();
-    let html = '';
+    const paxId = p['PAX_ID'];
 
+    // Tabs row (horizontal)
+    let tabsHtml = '<div class="detail-accordion-tabs">';
     sections.forEach((section, i) => {
-        const isFirst = i === 0; // Основне — завжди відкрите
-        const paxId = p['PAX_ID'];
-        const secId = `acc-${paxId}-${section.key}`;
-        html += `<div class="detail-accordion">
-            <button class="detail-section-btn ${isFirst?'open':''}" onclick="event.stopPropagation(); toggleAccSection('${secId}', this)">
-                <span class="acc-icon">›</span>
-                <span class="acc-title">${section.title}</span>
-                <span class="acc-count">${section.fields.length}</span>
-            </button>
-            <div class="detail-section-content ${isFirst?'open':''}" id="${secId}">
-                ${isFirst ? renderDetailFields(p, section.fields, section.readonly) : ''}
-            </div>
+        tabsHtml += `<div class="detail-tab ${i===0?'active':''}" onclick="event.stopPropagation(); switchDetailTab('${paxId}','${section.key}',this)" data-section="${section.key}">
+            ${section.title} <span class="tab-count">${section.fields.length}</span>
         </div>`;
     });
-    return html;
+    tabsHtml += '</div>';
+
+    // Panels (only first rendered immediately)
+    let panelsHtml = '';
+    sections.forEach((section, i) => {
+        const panelId = `panel-${paxId}-${section.key}`;
+        panelsHtml += `<div class="detail-tab-panel ${i===0?'active':''}" id="${panelId}" data-section-key="${section.key}" data-pax-id="${paxId}" data-readonly="${section.readonly||false}">
+            ${i === 0 ? renderDetailFields(p, section.fields, section.readonly) : ''}
+        </div>`;
+    });
+
+    return tabsHtml + panelsHtml;
 }
 
-function toggleAccSection(secId, btn) {
-    const content = document.getElementById(secId);
-    if (!content) return;
-    const isOpen = content.classList.contains('open');
-    if (isOpen) {
-        content.classList.remove('open');
-        btn.classList.remove('open');
-    } else {
-        content.classList.add('open');
-        btn.classList.add('open');
-        // Lazy-load content if empty
-        if (!content.innerHTML.trim()) {
-            const paxId = secId.split('-')[1];
-            const sectionKey = secId.split('-').slice(2).join('-');
-            const sections = getDetailSections();
-            const section = sections.find(s => s.key === sectionKey);
-            const p = passengers.find(x => x['PAX_ID'] === paxId);
-            if (section && p) {
-                content.innerHTML = renderDetailFields(p, section.fields, section.readonly);
-            }
+function switchDetailTab(paxId, sectionKey, tabEl) {
+    // Find the card details container
+    const card = tabEl.closest('.card-details');
+    if (!card) return;
+
+    // Deactivate all tabs and panels
+    card.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+    card.querySelectorAll('.detail-tab-panel').forEach(p => p.classList.remove('active'));
+
+    // Activate clicked tab
+    tabEl.classList.add('active');
+
+    // Activate target panel
+    const panel = card.querySelector(`#panel-${paxId}-${sectionKey}`);
+    if (!panel) return;
+    panel.classList.add('active');
+
+    // Lazy-load: render content on first open
+    if (!panel.innerHTML.trim()) {
+        const sections = getDetailSections();
+        const section = sections.find(s => s.key === sectionKey);
+        const p = passengers.find(x => x['PAX_ID'] === paxId);
+        if (section && p) {
+            panel.innerHTML = renderDetailFields(p, section.fields, section.readonly);
         }
     }
 }
@@ -1950,27 +1951,22 @@ function openColumnConfigurator() {
 }
 
 function renderColumnConfigurator() {
-    const pool = document.getElementById('colCfgPool');
-    const selected = document.getElementById('colCfgSelected');
-    if (!pool || !selected) return;
+    const list = document.getElementById('colCfgList');
+    if (!list) return;
 
     const allKeys = getAllColumnKeys();
+    // Collect all fields used in OTHER_SECTIONS
+    const otherFields = new Set();
+    OTHER_SECTIONS.forEach(s => s.fields.forEach(f => otherFields.add(f)));
 
-    // Render selected chips (sortable order)
-    selected.innerHTML = colCfgTemp.map(key => {
-        const colName = COL_MAP[key] || key;
-        return `<div class="col-cfg-selected-chip" draggable="true" data-key="${key}"
-            ondragstart="colDragStart(event,'${key}')" ondragover="colDragOver(event)" ondrop="colDrop(event,'${key}')">
-            ${colName}
-            <span class="remove-col" onclick="removeFromOsnovne('${key}')">✕</span>
-        </div>`;
-    }).join('');
-
-    // Render pool (all columns, highlight selected)
-    pool.innerHTML = allKeys.map(key => {
+    list.innerHTML = allKeys.map(key => {
         const colName = COL_MAP[key] || key;
         const isSel = colCfgTemp.includes(key);
-        return `<div class="col-cfg-chip ${isSel?'selected':''}" onclick="toggleColCfg('${key}')">${colName}</div>`;
+        const isInOther = otherFields.has(key) && !isSel;
+        return `<div class="col-cfg-item ${isSel?'checked':''} ${isInOther?'greyed':''}" onclick="toggleColCfg('${key}')">
+            <div class="col-check">${isSel ? '✓' : ''}</div>
+            <div class="col-name">${colName}</div>
+        </div>`;
     }).join('');
 }
 
@@ -1981,27 +1977,6 @@ function toggleColCfg(key) {
     } else {
         colCfgTemp.push(key);
     }
-    renderColumnConfigurator();
-}
-
-function removeFromOsnovne(key) {
-    colCfgTemp = colCfgTemp.filter(k => k !== key);
-    renderColumnConfigurator();
-}
-
-// Drag-and-drop reorder
-let colDragKey = null;
-function colDragStart(e, key) { colDragKey = key; e.dataTransfer.effectAllowed = 'move'; }
-function colDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
-function colDrop(e, targetKey) {
-    e.preventDefault();
-    if (!colDragKey || colDragKey === targetKey) return;
-    const fromIdx = colCfgTemp.indexOf(colDragKey);
-    const toIdx = colCfgTemp.indexOf(targetKey);
-    if (fromIdx < 0 || toIdx < 0) return;
-    colCfgTemp.splice(fromIdx, 1);
-    colCfgTemp.splice(toIdx, 0, colDragKey);
-    colDragKey = null;
     renderColumnConfigurator();
 }
 
