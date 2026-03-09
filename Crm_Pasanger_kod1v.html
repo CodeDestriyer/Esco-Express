@@ -228,16 +228,22 @@
         select.detail-inline-edit { padding: 3px 4px; cursor: pointer; appearance: auto; }
 
         /* Card actions */
-        .card-actions { display: none; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 12px; background: white; }
-        .card-actions.show { display: grid; padding: 10px 12px; border-top: 1px solid var(--border); }
+        .card-actions { display: none; gap: 6px; padding: 0 12px; background: white; }
+        .card-actions.show { display: flex; padding: 10px 12px; border-top: 1px solid var(--border); }
+        .card-actions .btn-card-action { flex: 1; min-width: 0; }
         .btn-card-action.btn-write { background: #dbeafe; color: #1d4ed8; }
         .btn-card-action.btn-write:hover { background: #1d4ed8; color: white; }
         .btn-card-action.btn-edit { background: #fef3c7; color: #92400e; }
         .btn-card-action.btn-edit:hover { background: #f59e0b; color: white; }
-        .messenger-menu { display: none; position: absolute; bottom: calc(100% + 4px); left: 0; right: 0; background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); padding: 6px; z-index: 50; grid-template-columns: repeat(2, 1fr); gap: 4px; }
-        .messenger-menu.show { display: grid; }
-        .messenger-menu-item { display: block; width: 100%; padding: 8px 12px; border: none; background: none; cursor: pointer; font-size: 11px; font-weight: 600; font-family: inherit; text-align: left; border-radius: 6px; transition: background 0.15s; white-space: nowrap; }
-        .messenger-menu-item:hover { background: var(--bg-main); }
+        .messenger-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 200; align-items: center; justify-content: center; }
+        .messenger-overlay.show { display: flex; }
+        .messenger-popup { background: white; border-radius: 14px; padding: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); min-width: 240px; max-width: 300px; }
+        .messenger-popup-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; text-align: center; }
+        .messenger-popup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .messenger-popup-item { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 8px; border: 1px solid var(--border); border-radius: 10px; background: white; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: all 0.15s; }
+        .messenger-popup-item:hover { background: var(--bg-main); border-color: var(--primary); }
+        .messenger-popup-cancel { display: block; width: 100%; margin-top: 10px; padding: 10px; border: none; border-radius: 10px; background: var(--bg-main); color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .messenger-popup-cancel:hover { background: #e2e8f0; }
         .btn-card-action { padding: 10px 6px; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 4px; }
         .btn-card-action.btn-call { background: var(--primary); color: white; }
         .btn-card-action.btn-delete { background: #fee2e2; color: #dc2626; }
@@ -978,6 +984,15 @@
     </div>
 </div>
 
+<!-- MESSENGER POPUP -->
+<div class="messenger-overlay" id="messengerOverlay" onclick="if(event.target===this)closeMessengerPopup()">
+    <div class="messenger-popup">
+        <div class="messenger-popup-title">✉️ Написати через:</div>
+        <div class="messenger-popup-grid" id="messengerGrid"></div>
+        <button class="messenger-popup-cancel" onclick="closeMessengerPopup()">Скасувати</button>
+    </div>
+</div>
+
 <!-- TRIP ASSIGN MODAL -->
 <div class="trip-modal-overlay" id="tripAssignOverlay" onclick="if(event.target===this)closeTripModal()">
     <div class="trip-modal">
@@ -1412,17 +1427,11 @@ function renderCard(p) {
             ${tripStrip}
         </div>
         <div class="card-details ${isOpen?'show':''}" id="details-${id}">${isOpen ? renderDetails(p) : ''}</div>
-        <div class="card-actions ${isActionsOpen?'show':''}" id="actions-${id}" style="position:relative;">
+        <div class="card-actions ${isActionsOpen?'show':''}" id="actions-${id}">
             <button class="btn-card-action btn-call" onclick="window.open('tel:${phone}')">📞 Дзвінок</button>
-            <button class="btn-card-action btn-write" onclick="event.stopPropagation(); toggleMessengerMenu('${id}')">✉️ Писати</button>
+            <button class="btn-card-action btn-write" onclick="event.stopPropagation(); openMessengerPopup('${phone}','${smartId}')">✉️ Писати</button>
             <button class="btn-card-action btn-edit" onclick="event.stopPropagation(); openEditPax('${id}')">✏️ Редагувати</button>
             <button class="btn-card-action btn-delete" onclick="deletePax('${id}','${p._sheet||''}','${name}')">🗑️ Видалити</button>
-            <div class="messenger-menu" id="msgMenu-${id}">
-                <button class="messenger-menu-item" onclick="event.stopPropagation(); openMessenger('viber','${phone}')">💬 Viber</button>
-                <button class="messenger-menu-item" onclick="event.stopPropagation(); openMessenger('telegram','${phone}')">✈️ Telegram</button>
-                <button class="messenger-menu-item" onclick="event.stopPropagation(); openMessenger('whatsapp','${phone}')">📱 WhatsApp</button>
-                <button class="messenger-menu-item" onclick="event.stopPropagation(); openMessenger('smartsender','${smartId}')">🤖 SmartSender</button>
-            </div>
         </div>
     </div>`;
 }
@@ -1545,28 +1554,39 @@ function toggleCardActions(id) {
 }
 
 // ================================================================
-// MESSENGER MENU
+// MESSENGER POPUP
 // ================================================================
-function toggleMessengerMenu(id) {
-    const menu = document.getElementById('msgMenu-' + id);
-    if (menu) menu.classList.toggle('show');
+function openMessengerPopup(phone, smartId) {
+    const grid = document.getElementById('messengerGrid');
+    const cleanPhone = (phone || '').replace(/[^+\d]/g, '');
+    grid.innerHTML = `
+        <button class="messenger-popup-item" onclick="openMessenger('viber','${cleanPhone}')">💬 Viber</button>
+        <button class="messenger-popup-item" onclick="openMessenger('telegram','${cleanPhone}')">✈️ Telegram</button>
+        <button class="messenger-popup-item" onclick="openMessenger('whatsapp','${cleanPhone}')">📱 WhatsApp</button>
+        <button class="messenger-popup-item" onclick="openMessenger('smartsender','${smartId || ''}')">🤖 SmartSender</button>
+    `;
+    document.getElementById('messengerOverlay').classList.add('show');
+}
+
+function closeMessengerPopup() {
+    document.getElementById('messengerOverlay').classList.remove('show');
 }
 
 function openMessenger(type, contact) {
+    closeMessengerPopup();
     if (!contact) { showToast('⚠️ Контакт не вказаний'); return; }
-    const cleanPhone = contact.replace(/[^+\d]/g, '');
     switch (type) {
         case 'viber':
-            window.open('viber://chat?number=' + encodeURIComponent(cleanPhone), '_blank');
+            window.open('viber://chat?number=' + encodeURIComponent(contact), '_blank');
             break;
         case 'telegram':
-            window.open('https://t.me/' + cleanPhone, '_blank');
+            window.open('https://t.me/' + contact, '_blank');
             break;
         case 'whatsapp':
-            window.open('https://wa.me/' + cleanPhone.replace('+', ''), '_blank');
+            window.open('https://wa.me/' + contact.replace('+', ''), '_blank');
             break;
         case 'smartsender':
-            if (contact) window.open('https://smartsender.com/contacts/' + encodeURIComponent(contact), '_blank');
+            window.open('https://smartsender.com/contacts/' + encodeURIComponent(contact), '_blank');
             break;
     }
 }
@@ -3283,10 +3303,6 @@ document.addEventListener('click', (e) => {
     // Close bulk dropdown
     if (!e.target.closest('.bulk-toolbar')) {
         closeBulkTripDd();
-    }
-    // Close messenger menus
-    if (!e.target.closest('.btn-write')) {
-        document.querySelectorAll('.messenger-menu.show').forEach(m => m.classList.remove('show'));
     }
     // Close trip calendar (skip if click was inside calendar — target may be detached after re-render)
     if (!e.target.closest('.tcal-wrap') && !tcalClickInside) {
