@@ -249,18 +249,31 @@
         .trip-filter-btn { padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; background: white; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.2s; }
         .trip-filter-btn:hover { border-color: var(--orange); }
         .trip-filter-btn.active { background: var(--orange); color: white; border-color: var(--orange); }
+        .trip-filter-btn.dir-ua-eu { border-color: #2563eb; color: #2563eb; font-weight: 800; }
+        .trip-filter-btn.dir-ua-eu:hover { background: #dbeafe; }
+        .trip-filter-btn.dir-ua-eu.active { background: #2563eb; color: white; border-color: #2563eb; }
+        .trip-filter-btn.dir-eu-ua { border-color: #059669; color: #059669; font-weight: 800; }
+        .trip-filter-btn.dir-eu-ua:hover { background: #d1fae5; }
+        .trip-filter-btn.dir-eu-ua.active { background: #059669; color: white; border-color: #059669; }
+        .trip-filters-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .trip-filter-select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 20px; background: white; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 22px; }
+        .trip-filter-select:focus { outline: none; border-color: var(--orange); }
 
-        .trips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
-        .trip-card { background: white; border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; border-left: 4px solid var(--orange); transition: all 0.2s; }
+        .trips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+        .trip-card { background: white; border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; border-left: 5px solid var(--orange); transition: all 0.2s; }
+        .trip-card.trip-dir-ua-eu { border-left-color: #2563eb; }
+        .trip-card.trip-dir-eu-ua { border-left-color: #059669; }
         .trip-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); transform: translateY(-2px); }
-        .trip-card-header { padding: 14px 16px; }
-        .trip-card-city { font-size: 16px; font-weight: 800; color: var(--primary); }
-        .trip-card-meta { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
-        .trip-card-tag { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 10px; background: var(--bg-main); color: var(--text-secondary); }
-        .trip-card-tag.dir { background: #dbeafe; color: #2563eb; }
-        .trip-card-tag.date { background: #fef3c7; color: #d97706; }
-        .trip-card-tag.auto { background: #e0e7ff; color: #4338ca; }
-        .trip-card-body { padding: 0 16px 14px; }
+        .trip-card-header { padding: 16px 18px 10px; }
+        .trip-card-city { font-size: 17px; font-weight: 800; color: var(--primary); letter-spacing: -0.3px; }
+        .trip-card-meta { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+        .trip-card-tag { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 10px; background: var(--bg-main); color: var(--text-secondary); letter-spacing: 0.2px; }
+        .trip-card-tag.dir { font-size: 13px; font-weight: 900; padding: 5px 12px; border-radius: 8px; letter-spacing: 0.5px; }
+        .trip-card-tag.dir-ua-eu { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+        .trip-card-tag.dir-eu-ua { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
+        .trip-card-tag.date { background: #fef3c7; color: #b45309; font-size: 13px; font-weight: 800; padding: 5px 12px; }
+        .trip-card-tag.auto { background: #ede9fe; color: #5b21b6; font-size: 12px; font-weight: 700; padding: 4px 10px; }
+        .trip-card-body { padding: 0 18px 14px; }
         .trip-progress { margin-top: 8px; }
         .trip-progress-text { font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
         .trip-progress-bar { height: 8px; background: var(--bg-main); border-radius: 4px; overflow: hidden; }
@@ -271,7 +284,7 @@
         .trip-action-btn:hover { border-color: var(--primary); background: var(--bg-main); }
         .trip-action-btn.danger { color: var(--danger); }
         .trip-action-btn.danger:hover { background: #fee2e2; border-color: var(--danger); }
-        .trip-status-badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+        .trip-status-badge { display: inline-block; padding: 4px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; }
         .trip-status-open { background: #d1fae5; color: #059669; }
         .trip-status-full { background: #fee2e2; color: #dc2626; }
         .trip-status-done { background: #e0e7ff; color: #4338ca; }
@@ -666,15 +679,23 @@
 
         <!-- TRIPS VIEW -->
         <div class="trips-view" id="tripsView">
-            <div class="trips-filters">
-                <button class="trip-filter-btn active" data-time="future" onclick="setTripTimeFilter(this,'future')">Майбутні</button>
-                <button class="trip-filter-btn" data-time="past" onclick="setTripTimeFilter(this,'past')">Минулі</button>
-                <button class="trip-filter-btn" data-time="all" onclick="setTripTimeFilter(this,'all')">Всі</button>
-                <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
-                <button class="trip-filter-btn active" data-dir="all" onclick="setTripDirFilter(this,'all')">Всі</button>
-                <button class="trip-filter-btn" data-dir="ua-eu" onclick="setTripDirFilter(this,'ua-eu')">🇺🇦→🇪🇺</button>
-                <button class="trip-filter-btn" data-dir="eu-ua" onclick="setTripDirFilter(this,'eu-ua')">🇪🇺→🇺🇦</button>
-                <button class="bs-btn primary" style="margin-left:auto;padding:8px 16px;font-size:11px;" onclick="openNewTripForm()">➕ Новий рейс</button>
+            <div class="trips-filters" style="display:flex;flex-direction:column;gap:8px;">
+                <div class="trip-filters-row">
+                    <button class="trip-filter-btn active" data-time="future" onclick="setTripTimeFilter(this,'future')">Майбутні</button>
+                    <button class="trip-filter-btn" data-time="past" onclick="setTripTimeFilter(this,'past')">Минулі</button>
+                    <button class="trip-filter-btn" data-time="all" onclick="setTripTimeFilter(this,'all')">Всі</button>
+                    <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+                    <input type="date" class="trip-filter-select" id="tripDateFilter" onchange="setTripDateFilter(this.value)" title="Фільтр по даті рейсу" style="min-width:130px;">
+                    <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+                    <button class="trip-filter-btn" data-dir="all" onclick="setTripDirFilter(this,'all')">Всі</button>
+                    <button class="trip-filter-btn dir-ua-eu" data-dir="ua-eu" onclick="setTripDirFilter(this,'ua-eu')">UA → EU</button>
+                    <button class="trip-filter-btn dir-eu-ua" data-dir="eu-ua" onclick="setTripDirFilter(this,'eu-ua')">EU → UA</button>
+                    <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+                    <select class="trip-filter-select" id="tripAutoFilter" onchange="setTripAutoFilter(this.value)" title="Фільтр по авто">
+                        <option value="all">Всі авто</option>
+                    </select>
+                    <button class="bs-btn primary" style="margin-left:auto;padding:8px 16px;font-size:11px;" onclick="openNewTripForm()">➕ Новий рейс</button>
+                </div>
             </div>
             <div class="trips-grid" id="tripsGrid"></div>
         </div>
@@ -902,6 +923,8 @@ let currentView = 'pax'; // 'pax' | 'trips'
 let currentDir = 'all';
 let tripTimeFilter = 'future';
 let tripDirFilter = 'all';
+let tripDateFilter = '';
+let tripAutoFilter = 'all';
 let openDetailsId = null;
 let openActionsId = null;
 let selectedIds = new Set();
@@ -948,6 +971,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tripRes.ok) trips = tripRes.data;
         updateAllCounts();
         updateTripFilterDropdown();
+        updateTripAutoFilterDropdown();
         render();
     }).catch(() => { hideLoader(); render(); });
 
@@ -969,6 +993,7 @@ function silentSync() {
         if (tripRes.ok) trips = tripRes.data;
         updateAllCounts();
         updateTripFilterDropdown();
+        updateTripAutoFilterDropdown();
         render();
         updateSyncTime();
     }).catch(() => {});
@@ -1553,8 +1578,22 @@ function renderTrips() {
     grid.innerHTML = filtered.map(t => renderTripCard(t)).join('');
 }
 
+function getTripDirection(t) {
+    const d = String(t.direction || '').toLowerCase();
+    if (d.match(/ук|ua|україна/)) return 'ua-eu';
+    if (d.match(/єв|eu|європа/)) return 'eu-ua';
+    return 'other';
+}
+
+function cleanAutoName(name) {
+    if (!name) return '';
+    return String(name).replace(/\s*\(\d{4}-\d{2}-\d{2}T[\d:.]+Z?\)\s*/g, '').trim();
+}
+
 function getFilteredTrips() {
     return trips.filter(t => {
+        // Hide archived/done
+        if (t.status === 'Архів' || t.status === 'Виконано') return false;
         // Time filter
         if (tripTimeFilter !== 'all') {
             const parts = String(t.date || '').split('.');
@@ -1567,12 +1606,20 @@ function getFilteredTrips() {
         }
         // Dir filter
         if (tripDirFilter !== 'all') {
-            const d = String(t.direction || '').toLowerCase();
-            if (tripDirFilter === 'ua-eu' && !d.match(/ук|ua|україна/)) return false;
-            if (tripDirFilter === 'eu-ua' && !d.match(/єв|eu|європа/)) return false;
+            if (getTripDirection(t) !== tripDirFilter) return false;
         }
-        // Hide archived in future
-        if (tripTimeFilter === 'future' && t.status === 'Архів') return false;
+        // Date filter
+        if (tripDateFilter) {
+            const fd = formatTripDate(t.date);
+            const parts = tripDateFilter.split('-');
+            const target = parts[2] + '.' + parts[1] + '.' + parts[0];
+            if (fd !== target) return false;
+        }
+        // Auto filter
+        if (tripAutoFilter !== 'all') {
+            const autoName = cleanAutoName(t.auto_name);
+            if (autoName !== tripAutoFilter) return false;
+        }
         return true;
     });
 }
@@ -1581,25 +1628,33 @@ function renderTripCard(t) {
     const maxS = parseInt(t.max_seats) || 0;
     const occ = parseInt(t.occupied) || 0;
     const pct = maxS > 0 ? Math.round(occ / maxS * 100) : 0;
-    const dirTag = String(t.direction || '').includes('Україна') ? '🇺🇦→🇪🇺' : String(t.direction || '').includes('Європа') ? '🇪🇺→🇺🇦' : '↔';
+    const dir = getTripDirection(t);
+    const isUaEu = dir === 'ua-eu';
+    const isEuUa = dir === 'eu-ua';
+    const dirLabel = isUaEu ? 'UA → EU' : isEuUa ? 'EU → UA' : (t.direction || '↔');
+    const dirCssClass = isUaEu ? 'dir-ua-eu' : isEuUa ? 'dir-eu-ua' : 'dir';
+    const cardDirClass = isUaEu ? 'trip-dir-ua-eu' : isEuUa ? 'trip-dir-eu-ua' : '';
     const statusCls = t.status === 'Повний' ? 'trip-status-full' : t.status === 'Виконано' ? 'trip-status-done' : t.status === 'Архів' ? 'trip-status-archive' : 'trip-status-open';
     const safeCalId = String(t.cal_id || '').replace(/'/g, "\\'");
     const safeCity = String(t.city || '').replace(/'/g, "\\'");
     const safeDate = String(t.date || '').replace(/'/g, "\\'");
     const noCalId = !t.cal_id || !String(t.cal_id).trim();
+    const autoName = cleanAutoName(t.auto_name);
 
-    return `<div class="trip-card ${noCalId ? 'trip-no-id' : ''}">
+    return `<div class="trip-card ${cardDirClass} ${noCalId ? 'trip-no-id' : ''}">
         <div class="trip-card-header">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <span class="trip-card-city">${t.city || '—'}</span>
                 <span class="trip-status-badge ${statusCls}">${t.status || 'Відкритий'}</span>
             </div>
             <div class="trip-card-meta">
-                <span class="trip-card-tag dir">${dirTag} ${t.direction||''}</span>
-                <span class="trip-card-tag date">📅 ${formatTripDate(t.date)}</span>
-                <span class="trip-card-tag auto">🚐 ${t.auto_name||''} (${t.layout||''})</span>
+                <span class="trip-card-tag ${dirCssClass}">${dirLabel}</span>
+                <span class="trip-card-tag date">${formatTripDate(t.date)}</span>
             </div>
-            ${noCalId ? '<div style="color:#dc2626;font-size:10px;font-weight:700;margin-top:4px;">⚠️ CAL_ID порожній — видалення неможливе</div>' : ''}
+            <div class="trip-card-meta" style="margin-top:4px;">
+                <span class="trip-card-tag auto">${autoName || '—'}</span>
+            </div>
+            ${noCalId ? '<div style="color:#dc2626;font-size:10px;font-weight:700;margin-top:4px;">CAL_ID порожній — видалення неможливе</div>' : ''}
         </div>
         <div class="trip-card-body">
             <div class="trip-progress">
@@ -1625,6 +1680,37 @@ function setTripDirFilter(btn, val) {
     tripDirFilter = val;
     document.querySelectorAll('.trip-filter-btn[data-dir]').forEach(b => b.classList.toggle('active', b.dataset.dir === val));
     renderTrips();
+}
+
+function setTripDateFilter(val) {
+    tripDateFilter = val || '';
+    renderTrips();
+}
+
+function setTripAutoFilter(val) {
+    tripAutoFilter = val || 'all';
+    renderTrips();
+}
+
+function updateTripAutoFilterDropdown() {
+    const sel = document.getElementById('tripAutoFilter');
+    if (!sel) return;
+    const autos = new Set();
+    trips.forEach(t => {
+        if (t.status === 'Архів' || t.status === 'Виконано') return;
+        const name = cleanAutoName(t.auto_name);
+        if (name) autos.add(name);
+    });
+    const prev = sel.value;
+    sel.innerHTML = '<option value="all">Всі авто</option>';
+    [...autos].sort().forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a;
+        opt.textContent = a;
+        sel.appendChild(opt);
+    });
+    if ([...autos].includes(prev)) sel.value = prev;
+    else { tripAutoFilter = 'all'; sel.value = 'all'; }
 }
 
 // ================================================================
