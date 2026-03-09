@@ -2397,7 +2397,9 @@ function seatPickerSelect(seatName) {
 
 async function saveSeatPicker() {
     if (!seatPickerPaxId) return;
-    const p = passengers.find(x => x['PAX_ID'] === seatPickerPaxId);
+    const paxId = seatPickerPaxId;
+    const shName = seatPickerSheet || '';
+    const p = passengers.find(x => x['PAX_ID'] === paxId);
     if (!p) return;
 
     const colName = 'Місце в авто';
@@ -2408,11 +2410,11 @@ async function saveSeatPicker() {
     p[colName] = newVal;
     closeSeatPicker();
 
-    const el = document.getElementById('dv-' + seatPickerPaxId + '-seatInCar');
+    const el = document.getElementById('dv-' + paxId + '-seatInCar');
     if (el) el.textContent = newVal || '—';
 
-    const shName = seatPickerSheet || p._sheet || '';
-    const res = await apiPost('updateField', { sheet: shName, pax_id: seatPickerPaxId, col: colName, value: newVal });
+    const sheet = shName || p._sheet || '';
+    const res = await apiPost('updateField', { sheet: sheet, pax_id: paxId, col: colName, value: newVal });
     if (res.ok) {
         showToast('✅ Місце збережено: ' + (newVal || 'скинуто'));
         render();
