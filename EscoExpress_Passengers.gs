@@ -1454,6 +1454,66 @@ function apiFreeSeat(params) {
 
 
 // ══════════════════════════════════════════════════════════════
+// ROUTES — Читання аркушів маршрутів з Marhrut_crm_v6
+// ══════════════════════════════════════════════════════════════
+
+function apiGetRoutes(params) {
+  var ss = SpreadsheetApp.openById(DB.MARHRUT);
+  var allSheets = ss.getSheets();
+  var result = [];
+
+  for (var s = 0; s < allSheets.length; s++) {
+    var sheet = allSheets[s];
+    var sheetName = sheet.getName();
+
+    // Пропускаємо службові аркуші (логи, конфіг тощо)
+    if (/^(Лог|Конфіг|Config|Log|Шаблон|Template)/i.test(sheetName)) continue;
+
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    if (lastRow < 2 || lastCol < 1) {
+      result.push({ sheetName: sheetName, headers: [], rows: [], rowCount: 0 });
+      continue;
+    }
+
+    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { return String(h).trim(); });
+    var dataRows = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+
+    var rows = [];
+    for (var i = 0; i < dataRows.length; i++) {
+      var row = dataRows[i];
+      // Пропускаємо повністю порожні рядки
+      var isEmpty = row.every(function(cell) { return String(cell).trim() === ''; });
+      if (isEmpty) continue;
+
+      var obj = {};
+      for (var j = 0; j < headers.length; j++) {
+        if (headers[j]) {
+          var val = row[j];
+          // Форматуємо дати
+          if (val instanceof Date) {
+            obj[headers[j]] = Utilities.formatDate(val, 'Europe/Kiev', 'dd.MM.yyyy');
+          } else {
+            obj[headers[j]] = String(val !== null && val !== undefined ? val : '');
+          }
+        }
+      }
+      rows.push(obj);
+    }
+
+    result.push({
+      sheetName: sheetName,
+      headers: headers.filter(function(h) { return h !== ''; }),
+      rows: rows,
+      rowCount: rows.length
+    });
+  }
+
+  return { ok: true, data: result };
+}
+
+
+// ══════════════════════════════════════════════════════════════
 // doGet / doPost — UNIVERSAL ROUTER
 // ══════════════════════════════════════════════════════════════
 
@@ -1541,6 +1601,9 @@ function doPost(e) {
       case 'deleteTrip':         result = apiDeleteTrip(body); break;
       case 'duplicateTrip':      result = apiDuplicateTrip(body); break;
 
+      // ── ROUTES (Marhrut_crm_v6) ──
+      case 'getRoutes':          result = apiGetRoutes(body); break;
+
       // ── AUTOPARK ──
       case 'getAutopark':        result = apiGetAutopark(body); break;
       case 'getAutoSeats':       result = apiGetAutoSeats(body); break;
@@ -1551,7 +1614,7 @@ function doPost(e) {
       case 'freeSeat':           result = apiFreeSeat(body); break;
 
       default:
-        result = { ok: false, error: 'Unknown action: ' + action + '. Available: getAll, getOne, getPassengersByTrip, getStats, checkDuplicates, suggestTrips, addPassenger, clonePassenger, updateField, updatePassenger, bulkUpdateField, assignTrip, unassignTrip, reassignTrip, deletePassenger, bulkDelete, archivePassenger, restorePassenger, moveDirection, getTrips, getTrip, createTrip, updateTrip, archiveTrip, deleteTrip, duplicateTrip, getAutopark, getAutoSeats, getSeating, assignSeat, freeSeat' };
+        result = { ok: false, error: 'Unknown action: ' + action + '. Available: getAll, getOne, getPassengersByTrip, getStats, checkDuplicates, suggestTrips, addPassenger, clonePassenger, updateField, updatePassenger, bulkUpdateField, assignTrip, unassignTrip, reassignTrip, deletePassenger, bulkDelete, archivePassenger, restorePassenger, moveDirection, getTrips, getTrip, createTrip, updateTrip, archiveTrip, deleteTrip, duplicateTrip, getRoutes, getAutopark, getAutoSeats, getSeating, assignSeat, freeSeat' };
     }
   } catch (err) {
     result = { ok: false, error: err.message };

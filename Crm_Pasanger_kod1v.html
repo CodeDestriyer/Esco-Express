@@ -1263,40 +1263,22 @@ async function loadRoutes() {
     const errEl = document.getElementById('routesError');
     const list = document.getElementById('routesList');
     loading.style.display = 'block';
+    loading.textContent = '⏳ Завантаження аркушів маршрутів з Marhrut_crm...';
     errEl.style.display = 'none';
     list.innerHTML = '';
 
     try {
-        // 1) Fetch all trips
-        const tripRes = await apiPost('getTrips', { filter: {} });
-        if (!tripRes.ok || !tripRes.data) {
-            loading.style.display = 'none';
-            errEl.style.display = 'block';
-            errEl.textContent = '❌ Не вдалось завантажити рейси: ' + (tripRes.error || 'Невідома помилка');
-            return;
-        }
-        const allTrips = tripRes.data.filter(t => t.status !== 'Архів');
-
-        // 2) For each trip, fetch passengers assigned to it
-        loading.textContent = '⏳ Завантаження пасажирів маршрутів (' + allTrips.length + ' рейсів)...';
-        routes = [];
-        for (const t of allTrips) {
-            if (!t.cal_id) continue;
-            const paxRes = await apiPost('getPassengersByTrip', { cal_id: t.cal_id });
-            const paxList = (paxRes.ok && paxRes.data) ? paxRes.data : [];
-            routes.push({
-                sheetName: (t.city || '?') + ' — ' + formatTripDate(t.date) + ' (' + (t.direction || '?') + ')',
-                cal_id: t.cal_id,
-                trip: t,
-                rows: paxList,
-                headers: paxList.length > 0 ? ['Піб','Телефон пасажира','Напрям','Статус ліда','Статус оплати','Від','До'] : []
-            });
-        }
-
+        const res = await apiPost('getRoutes', {});
         loading.style.display = 'none';
-        setCount('pcCountRoutes', routes.length);
-        setCount('mobileCountRoutes', routes.length);
-        renderRoutes();
+        if (res.ok && res.data) {
+            routes = res.data;
+            setCount('pcCountRoutes', routes.length);
+            setCount('mobileCountRoutes', routes.length);
+            renderRoutes();
+        } else {
+            errEl.style.display = 'block';
+            errEl.textContent = '❌ ' + (res.error || 'Не вдалось завантажити маршрути');
+        }
     } catch (e) {
         loading.style.display = 'none';
         errEl.style.display = 'block';
@@ -1304,44 +1286,78 @@ async function loadRoutes() {
     }
 }
 
+// Ключові колонки для відображення маршрутів (скорочена таблиця)
+const ROUTE_DISPLAY_COLS = [
+    'RTE_ID', 'Тип запису', 'Піб пасажира', 'Телефон пасажира',
+    'Дата рейсу', 'Номер авто', 'Водій', 'Місце в авто',
+    'Адреса прибуття', 'Сума', 'Валюта', 'Статус оплати', 'Статус'
+];
+
 function renderRoutes() {
     const list = document.getElementById('routesList');
     if (!list) return;
     if (routes.length === 0) {
-        list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:8px;">🗺️</div><div style="font-size:13px;font-weight:600;">Маршрутів не знайдено</div><div style="font-size:11px;margin-top:4px;">Немає активних рейсів з пасажирами</div></div>';
+        list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:8px;">🗺️</div><div style="font-size:13px;font-weight:600;">Аркушів маршрутів не знайдено</div><div style="font-size:11px;margin-top:4px;">Таблиця Marhrut_crm порожня</div></div>';
         return;
     }
-    list.innerHTML = routes.map((sheet, idx) => {
+
+    // Загальна статистика
+    const totalRows = routes.reduce((s, r) => s + (r.rowCount || r.rows.length), 0);
+    let html = `<div style="margin-bottom:14px;padding:10px 14px;background:#f0e6ff;border-radius:10px;font-size:12px;color:#5b21b6;font-weight:600;">
+        📊 Всього: ${routes.length} аркушів, ${totalRows} записів у Marhrut_crm_v6
+    </div>`;
+
+    html += routes.map((sheet, idx) => {
         const rows = sheet.rows || [];
-        const t = sheet.trip || {};
-        const maxS = parseInt(t.max_seats) || 0;
-        const occ = rows.length;
-        const free = Math.max(0, maxS - occ);
-        const cols = sheet.headers.length > 0 ? sheet.headers : [];
+        const name = sheet.sheetName || ('Аркуш ' + (idx + 1));
+        const allCols = sheet.headers || [];
+        // Показуємо скорочений набір колонок (ті що є в аркуші)
+        const displayCols = ROUTE_DISPLAY_COLS.filter(c => allCols.includes(c));
+        const cols = displayCols.length > 0 ? displayCols : allCols.slice(0, 12);
+
+        // Рахуємо статистику
+        const paxCount = rows.filter(r => (r['Тип запису'] || '').includes('Пасажир')).length;
+        const parcelCount = rows.filter(r => (r['Тип запису'] || '').includes('Посилк')).length;
+        const statusCounts = {};
+        rows.forEach(r => { const s = r['Статус'] || '—'; statusCounts[s] = (statusCounts[s] || 0) + 1; });
+
+        let statsHtml = '';
+        if (paxCount || parcelCount) {
+            statsHtml = `<span style="font-size:10px;opacity:0.85;margin-left:8px;">👤 ${paxCount} пас. · 📦 ${parcelCount} пос.</span>`;
+        }
+
         return `<div class="route-sheet-card">
             <div class="route-sheet-header" onclick="this.nextElementSibling.classList.toggle('open')">
                 <div>
-                    <span class="route-sheet-title">${sheet.sheetName}</span>
-                    <span style="font-size:10px;opacity:0.8;margin-left:8px;">${t.auto_name ? '🚐 ' + cleanAutoName(t.auto_name) : ''}</span>
+                    <span class="route-sheet-title">🗺️ ${name}</span>
+                    ${statsHtml}
                 </div>
                 <div style="display:flex;gap:8px;align-items:center;">
-                    <span class="route-sheet-count">${occ} пасажирів</span>
-                    <span style="background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;">${free} вільн.</span>
+                    <span class="route-sheet-count">${rows.length} записів</span>
+                    <span style="background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;">
+                        ${allCols.length} колонок
+                    </span>
                 </div>
             </div>
             <div class="route-sheet-body${idx === 0 ? ' open' : ''}">
-                ${rows.length === 0 ? '<div style="padding:16px;text-align:center;color:var(--text-secondary);font-size:12px;">Немає пасажирів в цьому маршруті</div>' :
+                ${rows.length === 0 ? '<div style="padding:16px;text-align:center;color:var(--text-secondary);font-size:12px;">Порожній аркуш</div>' :
                 `<div style="overflow-x:auto;"><table class="route-sheet-table">
                     <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
                     <tbody>${rows.map(r => `<tr>${cols.map(c => {
-                        const key = c;
-                        const val = r[key] ?? r[c] ?? '';
+                        let val = r[c] ?? '';
+                        // Кольорове виділення статусів
+                        if (c === 'Статус оплати' && val === 'Оплачено') val = '<span style="color:#059669;font-weight:700;">' + val + '</span>';
+                        if (c === 'Статус оплати' && val === 'Не оплачено') val = '<span style="color:#dc2626;font-weight:700;">' + val + '</span>';
+                        if (c === 'Тип запису' && String(val).includes('Пасажир')) val = '👤 ' + val;
+                        if (c === 'Тип запису' && String(val).includes('Посилк')) val = '📦 ' + val;
                         return '<td>' + val + '</td>';
                     }).join('')}</tr>`).join('')}</tbody>
                 </table></div>`}
             </div>
         </div>`;
     }).join('');
+
+    list.innerHTML = html;
 }
 
 function updatePcSidebarActive() {
