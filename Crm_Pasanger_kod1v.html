@@ -317,6 +317,11 @@
         .route-header-bar { background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%); color:white; border-radius:12px; padding:16px 20px; margin-bottom:16px; }
         .route-header-bar h2 { margin:0; font-size:20px; font-weight:800; }
         .route-header-bar .route-subtitle { font-size:12px; opacity:0.85; margin-top:4px; }
+        .route-card.selected { background:#f0f7ff; border-left-color:var(--primary); }
+        .route-card .card-checkbox-wrap { flex-shrink:0; }
+        .route-card .detail-block-actions { margin-top:4px; }
+        .route-card .detail-block-actions .detail-micro-btn { background:none; border:1px solid var(--border); border-radius:4px; padding:2px 6px; cursor:pointer; font-size:11px; }
+        .route-card .detail-block-actions .detail-micro-btn:hover { background:var(--bg-main); }
         .passengers-view { display: block; }
         .passengers-view.hidden { display: none; }
 
@@ -948,6 +953,28 @@
                 <h2 style="margin:0;font-size:18px;color:var(--text-primary);">🗺️ Маршрути</h2>
                 <button class="bs-btn" style="background:var(--primary);color:white;font-size:11px;padding:8px 14px;" onclick="loadRoutes()">🔄 Оновити</button>
             </div>
+            <!-- Route filters -->
+            <div id="routeFiltersBar" style="display:none;margin-bottom:12px;">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+                    <button class="trip-filter-btn active" id="rteFilterAll" onclick="setRouteTypeFilter('all',this)">Всі</button>
+                    <button class="trip-filter-btn" id="rteFilterPax" onclick="setRouteTypeFilter('pax',this)">👤 Пасажири</button>
+                    <button class="trip-filter-btn" id="rteFilterParcel" onclick="setRouteTypeFilter('parcel',this)">📦 Посилки</button>
+                    <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+                    <button class="trip-filter-btn active" id="rteStatusAll" onclick="setRouteStatusFilter('all',this)">Всі</button>
+                    <button class="trip-filter-btn" id="rteStatusNew" onclick="setRouteStatusFilter('Новий',this)" style="border-color:#f59e0b;color:#92400e;">Новий</button>
+                    <button class="trip-filter-btn" id="rteStatusWork" onclick="setRouteStatusFilter('В роботі',this)" style="border-color:#3b82f6;color:#1d4ed8;">В роботі</button>
+                    <button class="trip-filter-btn" id="rteStatusConfirmed" onclick="setRouteStatusFilter('Підтверджено',this)" style="border-color:#10b981;color:#059669;">Підтверджено</button>
+                    <button class="trip-filter-btn" id="rteStatusRefused" onclick="setRouteStatusFilter('Відмова',this)" style="border-color:#ef4444;color:#dc2626;">Відмова</button>
+                </div>
+            </div>
+            <!-- Route bulk toolbar -->
+            <div class="bulk-toolbar" id="routeBulkToolbar">
+                <span class="bulk-toolbar-count" id="routeBulkCount">0 обрано</span>
+                <button class="bulk-toolbar-btn select-all" onclick="toggleRouteSelectAll()">☑ Вибрати всі</button>
+                <button class="bulk-toolbar-btn" style="background:#fee2e2;color:#dc2626;" onclick="routeBulkDeleteFromRoute()">🗑️ З маршруту</button>
+                <button class="bulk-toolbar-btn" style="background:#ede9fe;color:#7c3aed;" onclick="routeBulkTransfer()">🔄 Пересадити</button>
+                <button class="bulk-toolbar-btn cancel" onclick="clearRouteSelection()">✕ Скасувати</button>
+            </div>
             <div id="routesLoading" style="display:none;text-align:center;padding:40px;color:var(--text-secondary);font-size:13px;">⏳ Завантаження маршрутів...</div>
             <div id="routesError" style="display:none;text-align:center;padding:40px;color:#dc2626;font-size:13px;"></div>
             <div id="routesList"></div>
@@ -1215,6 +1242,11 @@ let trips = [];
 let routes = [];
 let allRouteSheets = []; // Всі аркуші (включно з Відправка_, Витрати_, Шаблони)
 let activeRouteIdx = null; // Індекс обраного маршруту для перегляду
+let routeTypeFilter = 'all'; // all | pax | parcel
+let routeStatusFilter = 'all'; // all | Новий | Підтверджено | В роботі | Відмова
+let routeSelectedIds = new Set();
+let routeOpenDetailsId = null;
+let routeOpenActionsId = null;
 let currentView = 'pax'; // 'pax' | 'trips' | 'routes'
 let currentDir = 'all';
 let tripTimeFilter = 'future';
@@ -1465,11 +1497,33 @@ function openRoute(idx) {
     showRoutesView();
 }
 
+// ── Фільтри маршруту ──
+function setRouteTypeFilter(val, btn) {
+    routeTypeFilter = val;
+    document.querySelectorAll('#rteFilterAll,#rteFilterPax,#rteFilterParcel').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderRoutes();
+}
+function setRouteStatusFilter(val, btn) {
+    routeStatusFilter = val;
+    document.querySelectorAll('#rteStatusAll,#rteStatusNew,#rteStatusWork,#rteStatusConfirmed,#rteStatusRefused').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderRoutes();
+}
+function getFilteredRouteRows(rows) {
+    let filtered = rows;
+    if (routeTypeFilter === 'pax') filtered = filtered.filter(r => (r['Тип запису'] || '').includes('Пасажир'));
+    if (routeTypeFilter === 'parcel') filtered = filtered.filter(r => (r['Тип запису'] || '').includes('Посилк'));
+    if (routeStatusFilter !== 'all') filtered = filtered.filter(r => (r['Статус'] || '') === routeStatusFilter);
+    return filtered;
+}
+
 // ── Рендер вмісту обраного маршруту ──
 function renderRoutes() {
     const list = document.getElementById('routesList');
     const headerBar = document.getElementById('routeHeaderBar');
     const headerEmpty = document.getElementById('routeHeaderEmpty');
+    const filtersBar = document.getElementById('routeFiltersBar');
     const title = document.getElementById('routeViewTitle');
     const subtitle = document.getElementById('routeSubtitle');
     if (!list) return;
@@ -1477,6 +1531,7 @@ function renderRoutes() {
     if (routes.length === 0) {
         if (headerBar) headerBar.style.display = 'none';
         if (headerEmpty) headerEmpty.style.display = 'flex';
+        if (filtersBar) filtersBar.style.display = 'none';
         list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:8px;">🗺️</div><div style="font-size:13px;font-weight:600;">Активних маршрутів не знайдено</div><div style="font-size:11px;margin-top:4px;">Створіть новий маршрут через меню зліва</div></div>';
         return;
     }
@@ -1484,6 +1539,7 @@ function renderRoutes() {
     if (activeRouteIdx === null || activeRouteIdx >= routes.length) {
         if (headerBar) headerBar.style.display = 'none';
         if (headerEmpty) headerEmpty.style.display = 'flex';
+        if (filtersBar) filtersBar.style.display = 'none';
         list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:8px;">👈</div><div style="font-size:13px;font-weight:600;">Оберіть маршрут у меню зліва</div></div>';
         return;
     }
@@ -1495,26 +1551,30 @@ function renderRoutes() {
     const paxCount = rows.filter(r => (r['Тип запису'] || '').includes('Пасажир')).length;
     const parcelCount = rows.filter(r => (r['Тип запису'] || '').includes('Посилк')).length;
 
-    // Show route header bar
+    // Show route header bar + filters
     if (headerBar) headerBar.style.display = 'block';
     if (headerEmpty) headerEmpty.style.display = 'none';
+    if (filtersBar) filtersBar.style.display = 'block';
     if (title) title.textContent = '🚐 ' + name;
     if (subtitle) subtitle.textContent = '👤 ' + paxCount + ' пасажирів · 📦 ' + parcelCount + ' посилок · ' + rows.length + ' записів';
 
+    const filtered = getFilteredRouteRows(rows);
     let html = '';
 
-    if (rows.length === 0) {
-        html += '<div style="padding:40px;text-align:center;color:var(--text-secondary);font-size:13px;">Маршрут порожній — перенесіть ліди з пасажирів</div>';
+    if (filtered.length === 0) {
+        html += '<div style="padding:40px;text-align:center;color:var(--text-secondary);font-size:13px;">' +
+            (rows.length === 0 ? 'Маршрут порожній — перенесіть ліди з пасажирів' : 'Немає записів за обраним фільтром') + '</div>';
     } else {
-        html += rows.map((r, idx) => renderRouteCard(r, idx)).join('');
+        html += filtered.map((r, idx) => renderRouteCard(r, idx, sheet.sheetName)).join('');
     }
 
     list.innerHTML = html;
     renderRouteSidebar();
+    updateRouteBulkToolbar();
 }
 
-// ── Рендер картки ліда маршруту (card-style) ──
-function renderRouteCard(r, idx) {
+// ── Рендер картки ліда маршруту (card-style як в CRM) ──
+function renderRouteCard(r, idx, sheetName) {
     const rteId = r['RTE_ID'] || '';
     const type = r['Тип запису'] || '';
     const name = r['Піб пасажира'] || '—';
@@ -1538,23 +1598,20 @@ function renderRouteCard(r, idx) {
     const weightCurr = r['Валюта багажу'] || '';
     const note = r['Примітка'] || '';
     const phoneReg = r['Телефон реєстратора'] || '';
+    const smartId = r['Ід_смарт'] || '';
 
-    // Status class
     const statusClass = status === 'Підтверджено' ? 'status-confirmed' :
         status === 'Відмова' ? 'status-refused' :
         status === 'Новий' ? 'status-new' : '';
 
-    // Direction badge
     const isUE = direction.includes('Україна') || direction.includes('UA');
     const dirLabel = direction ? (isUE ? 'UA → EU' : 'EU → UA') : '';
     const dirCls = isUE ? 'dir-badge-ua-eu' : 'dir-badge-eu-ua';
 
-    // Pay badge
     const payBadge = payStatus === 'Оплачено' ? '<span class="badge badge-paid">Оплачено</span>' :
         payStatus === 'Частково' ? '<span class="badge badge-partial">Частково</span>' :
         payStatus === 'Не оплачено' ? '<span class="badge badge-unpaid">Не оплачено</span>' : '';
 
-    // Status badge
     const lsBadge = status === 'Підтверджено' ? '<span class="badge badge-confirmed">Підтверджено</span>' :
         status === 'В роботі' ? '<span class="badge badge-work">В роботі</span>' :
         status === 'Новий' ? '<span class="badge badge-new">Новий</span>' :
@@ -1563,26 +1620,48 @@ function renderRouteCard(r, idx) {
     const isPax = type.includes('Пасажир');
     const typeIcon = isPax ? '👤' : '📦';
     const displayDate = date ? formatTripDate(date) : '—';
+    const isSelected = routeSelectedIds.has(rteId);
+    const isDetailsOpen = routeOpenDetailsId === rteId;
+    const isActionsOpen = routeOpenActionsId === rteId;
+    const safeSheet = (sheetName || '').replace(/'/g, "\\'");
+    const cleanPhone = (phone || '').replace(/[^+\d]/g, '');
 
-    // Detail fields for expanded view
-    const detailFields = [];
-    if (phoneReg) detailFields.push({label: 'Тел. реєстратора', value: phoneReg});
-    if (auto) detailFields.push({label: 'Номер авто', value: auto});
-    if (seat) detailFields.push({label: 'Місце в авто', value: seat});
-    if (driver) detailFields.push({label: 'Водій', value: driver});
-    if (deposit) detailFields.push({label: 'Завдаток', value: deposit + ' ' + depositCurr});
-    if (weight) detailFields.push({label: 'Вага багажу', value: weight});
-    if (weightPrice) detailFields.push({label: 'Ціна багажу', value: weightPrice + ' ' + weightCurr});
-    if (note) detailFields.push({label: 'Примітка', value: note});
+    // All detail fields for expanded view
+    const allFields = [
+        {label: 'ПІБ', key: 'Піб пасажира', value: name},
+        {label: 'Телефон', key: 'Телефон пасажира', value: phone},
+        {label: 'Тел. реєстратора', key: 'Телефон реєстратора', value: phoneReg},
+        {label: 'Напрям', key: 'Напрям', value: direction},
+        {label: 'Дата рейсу', key: 'Дата рейсу', value: displayDate},
+        {label: 'Кількість місць', key: 'Кількість місць', value: seats},
+        {label: 'Номер авто', key: 'Номер авто', value: auto},
+        {label: 'Місце в авто', key: 'Місце в авто', value: seat},
+        {label: 'Водій', key: 'Водій', value: driver},
+        {label: 'Адреса відправки', key: 'Адреса відправки', value: from},
+        {label: 'Адреса прибуття', key: 'Адреса прибуття', value: to},
+        {label: 'Сума', key: 'Сума', value: price},
+        {label: 'Валюта', key: 'Валюта', value: curr},
+        {label: 'Завдаток', key: 'Завдаток', value: deposit},
+        {label: 'Валюта завдатку', key: 'Валюта завдатку', value: depositCurr},
+        {label: 'Вага багажу', key: 'Вага багажу', value: weight},
+        {label: 'Ціна багажу', key: 'Ціна багажу', value: weightPrice},
+        {label: 'Валюта багажу', key: 'Валюта багажу', value: weightCurr},
+        {label: 'Статус оплати', key: 'Статус оплати', value: payStatus},
+        {label: 'Статус', key: 'Статус', value: status},
+        {label: 'Примітка', key: 'Примітка', value: note}
+    ];
 
-    return `<div class="route-card ${statusClass}">
-        <div class="route-card-header" onclick="toggleRouteCardDetails(${idx})">
+    return `<div class="route-card ${statusClass} ${isSelected ? 'selected' : ''}" id="rte-card-${rteId}">
+        <div class="route-card-header" onclick="toggleRouteDetails('${rteId}')">
             <div class="route-card-top">
+                <div class="card-checkbox-wrap" onclick="event.stopPropagation()">
+                    <input class="card-checkbox" type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleRouteSelect('${rteId}',this.checked)">
+                </div>
                 ${dirLabel ? `<span class="card-direction ${dirCls}">${dirLabel}</span>` : ''}
                 <span class="route-card-phone">${phone}</span>
                 <span class="route-card-seats">${seats}м</span>
                 <span class="route-card-date">${displayDate}</span>
-                ${seat ? `<span style="background:#e0e7ff;color:#3730a3;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;">${seat}</span>` : ''}
+                ${seat ? `<span style="background:#e0e7ff;color:#3730a3;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;">💺 ${seat}</span>` : ''}
                 <span class="route-card-price">${price ? price + ' ' + curr : ''}</span>
             </div>
             <div class="route-card-info">
@@ -1592,24 +1671,312 @@ function renderRouteCard(r, idx) {
                 ${lsBadge} ${payBadge}
             </div>
             ${(from || to) ? `<div class="route-card-route">📍 ${from || '—'} → ${to || '—'}</div>` : ''}
-            ${detailFields.length > 0 ? `<div class="route-card-meta">
+            <div class="route-card-meta">
                 ${auto ? `<span>🚐 ${auto}</span>` : ''}
-                ${seat ? `<span>💺 ${seat}</span>` : ''}
-                ${driver ? `<span>🧑‍✈️ ${driver}</span>` : ''}
+                ${driver ? `<span>🧑 ${driver}</span>` : ''}
                 ${weight ? `<span>📦 ${weight}</span>` : ''}
-            </div>` : ''}
+                ${note ? `<span>📝 ${note.substring(0, 30)}${note.length > 30 ? '...' : ''}</span>` : ''}
+            </div>
         </div>
-        <div class="route-card-details" id="rte-details-${idx}">
+        <div class="route-card-details ${isDetailsOpen ? 'show' : ''}" id="rte-details-${rteId}">
             <div class="details-grid">
-                ${detailFields.map(f => `<div class="detail-block"><div class="detail-block-label">${f.label}</div><div class="detail-block-value">${f.value}</div></div>`).join('')}
+                ${allFields.map(f => {
+                    const val = f.value || '—';
+                    const safeVal = String(f.value || '').replace(/'/g, "\\'");
+                    const safeKey = f.key.replace(/'/g, "\\'");
+                    return `<div class="detail-block">
+                        <div class="detail-block-label">${f.label}</div>
+                        <div class="detail-block-value" id="rdv-${rteId}-${f.key}">${val}</div>
+                        <div class="detail-block-actions">
+                            <button class="detail-micro-btn" onclick="event.stopPropagation(); startRouteInlineEdit('${rteId}','${safeKey}','${safeSheet}')">✏️</button>
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>
+            <!-- Кнопки дій для ліда -->
+            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+                <button class="btn-card-action btn-call" onclick="event.stopPropagation(); window.open('tel:${cleanPhone}')">📞 Дзвінок</button>
+                <button class="btn-card-action btn-write" onclick="event.stopPropagation(); openMessengerPopup('${cleanPhone}','${smartId}')">✉️ Писати</button>
+                <button class="btn-card-action btn-edit" onclick="event.stopPropagation(); openRouteEditModal('${rteId}','${safeSheet}')">✏️ Редагувати</button>
+                <button class="btn-card-action" style="background:#fee2e2;color:#dc2626;" onclick="event.stopPropagation(); deleteFromRoute('${rteId}','${safeSheet}','${name.replace(/'/g,"\\'")}')">🗑️ З маршруту</button>
+                <button class="btn-card-action" style="background:#ede9fe;color:#7c3aed;" onclick="event.stopPropagation(); transferRouteLeadModal('${rteId}','${safeSheet}')">🔄 Пересадити</button>
             </div>
         </div>
     </div>`;
 }
 
-function toggleRouteCardDetails(idx) {
-    const el = document.getElementById('rte-details-' + idx);
-    if (el) el.classList.toggle('show');
+// ── Деталі картки маршруту ──
+function toggleRouteDetails(rteId) {
+    if (routeOpenDetailsId === rteId) {
+        routeOpenDetailsId = null;
+    } else {
+        routeOpenDetailsId = rteId;
+    }
+    renderRoutes();
+}
+
+// ── Вибір лідів маршруту ──
+function toggleRouteSelect(rteId, checked) {
+    if (checked) routeSelectedIds.add(rteId); else routeSelectedIds.delete(rteId);
+    updateRouteBulkToolbar();
+    const card = document.getElementById('rte-card-' + rteId);
+    if (card) card.classList.toggle('selected', checked);
+}
+function toggleRouteSelectAll() {
+    const sheet = routes[activeRouteIdx];
+    if (!sheet) return;
+    const filtered = getFilteredRouteRows(sheet.rows || []);
+    if (routeSelectedIds.size >= filtered.length) {
+        routeSelectedIds.clear();
+    } else {
+        filtered.forEach(r => routeSelectedIds.add(r['RTE_ID']));
+    }
+    renderRoutes();
+}
+function clearRouteSelection() {
+    routeSelectedIds.clear();
+    updateRouteBulkToolbar();
+    renderRoutes();
+}
+function updateRouteBulkToolbar() {
+    const tb = document.getElementById('routeBulkToolbar');
+    const ct = document.getElementById('routeBulkCount');
+    if (!tb) return;
+    if (routeSelectedIds.size > 0) {
+        tb.classList.add('show');
+        ct.textContent = routeSelectedIds.size + ' обрано';
+    } else {
+        tb.classList.remove('show');
+    }
+}
+
+// ── Inline edit для полів маршруту ──
+function startRouteInlineEdit(rteId, colName, sheetName) {
+    const sheet = routes[activeRouteIdx];
+    if (!sheet) return;
+    const row = (sheet.rows || []).find(r => r['RTE_ID'] === rteId);
+    if (!row) return;
+    const val = row[colName] || '';
+    const el = document.getElementById('rdv-' + rteId + '-' + colName);
+    if (!el) return;
+
+    // Select fields
+    const selectOpts = {
+        'Статус': ['Новий','В роботі','Підтверджено','Відмова'],
+        'Статус оплати': ['Не оплачено','Частково','Оплачено'],
+        'Валюта': ['UAH','EUR','CHF','USD','CZK','PLN'],
+        'Валюта завдатку': ['UAH','EUR','CHF','USD','CZK','PLN'],
+        'Валюта багажу': ['UAH','EUR','CHF','USD','CZK','PLN']
+    };
+
+    if (selectOpts[colName]) {
+        const opts = selectOpts[colName].map(o => `<option value="${o}" ${o === val ? 'selected' : ''}>${o}</option>`).join('');
+        el.innerHTML = `<select class="detail-inline-edit" onchange="saveRouteInlineEdit('${rteId}','${colName}','${sheetName}',this.value)" onblur="cancelRouteInlineEdit('${rteId}','${colName}')">${opts}</select>`;
+        el.querySelector('select').focus();
+    } else if (colName === 'Дата рейсу') {
+        el.innerHTML = `<input class="detail-inline-edit" type="date" value="${val}" onchange="saveRouteInlineEdit('${rteId}','${colName}','${sheetName}',this.value)" onblur="cancelRouteInlineEdit('${rteId}','${colName}')">`;
+        el.querySelector('input').focus();
+    } else {
+        el.innerHTML = `<input class="detail-inline-edit" type="text" value="${val}" onkeydown="if(event.key==='Enter')saveRouteInlineEdit('${rteId}','${colName}','${sheetName}',this.value);if(event.key==='Escape')cancelRouteInlineEdit('${rteId}','${colName}')" onblur="saveRouteInlineEdit('${rteId}','${colName}','${sheetName}',this.value)">`;
+        el.querySelector('input').focus();
+    }
+}
+async function saveRouteInlineEdit(rteId, colName, sheetName, newVal) {
+    const sheet = routes[activeRouteIdx];
+    if (!sheet) return;
+    const row = (sheet.rows || []).find(r => r['RTE_ID'] === rteId);
+    if (!row) return;
+    const oldVal = row[colName] || '';
+    if (String(newVal) === String(oldVal)) { cancelRouteInlineEdit(rteId, colName); return; }
+
+    row[colName] = newVal;
+    const el = document.getElementById('rdv-' + rteId + '-' + colName);
+    if (el) el.textContent = newVal || '—';
+
+    const res = await apiPost('updateField', { sheet: sheetName, pax_id: rteId, col: colName, value: newVal });
+    if (res.ok) {
+        showToast('✅ Збережено');
+        renderRoutes();
+    } else {
+        showToast('❌ Помилка: ' + (res.error || ''));
+        row[colName] = oldVal;
+        if (el) el.textContent = oldVal || '—';
+    }
+}
+function cancelRouteInlineEdit(rteId, colName) {
+    const sheet = routes[activeRouteIdx];
+    if (!sheet) return;
+    const row = (sheet.rows || []).find(r => r['RTE_ID'] === rteId);
+    if (!row) return;
+    const el = document.getElementById('rdv-' + rteId + '-' + colName);
+    if (el) el.textContent = row[colName] || '—';
+}
+
+// ── Редагувати лід маршруту через модалку ──
+function openRouteEditModal(rteId, sheetName) {
+    const sheet = routes[activeRouteIdx];
+    if (!sheet) return;
+    const r = (sheet.rows || []).find(row => row['RTE_ID'] === rteId);
+    if (!r) return;
+
+    // Використовуємо ту саму модалку пасажира але з route-контекстом
+    editingPaxId = rteId;
+    document.getElementById('paxModalTitle').textContent = '✏️ Редагувати (маршрут)';
+    document.getElementById('smsParserWrap').style.display = 'none';
+    document.getElementById('duplicateWarning').className = 'duplicate-warning';
+    document.getElementById('duplicateWarning').textContent = '';
+
+    const dir = String(r['Напрям'] || '').toLowerCase().trim();
+    const isEuUa = dir.startsWith('єв') || dir.startsWith('eu') || dir.startsWith('європа');
+    document.getElementById('fDirection').value = isEuUa ? 'eu-ua' : 'ua-eu';
+    document.getElementById('fName').value = r['Піб пасажира'] || '';
+    document.getElementById('fPhone').value = r['Телефон пасажира'] || '';
+    document.getElementById('fPhoneReg').value = r['Телефон реєстратора'] || '';
+    document.getElementById('fSeats').value = r['Кількість місць'] || 1;
+    document.getElementById('fFrom').value = r['Адреса відправки'] || '';
+    document.getElementById('fTo').value = r['Адреса прибуття'] || '';
+    document.getElementById('fPrice').value = r['Сума'] || '';
+    document.getElementById('fDeposit').value = r['Завдаток'] || '';
+    document.getElementById('fTiming').value = '';
+    document.getElementById('fWeight').value = r['Вага багажу'] || '';
+    document.getElementById('fWeightPrice').value = r['Ціна багажу'] || '';
+    document.getElementById('fNote').value = r['Примітка'] || '';
+
+    const rawDate = r['Дата рейсу'] || '';
+    let dateVal = '';
+    if (rawDate) {
+        const s = String(rawDate);
+        if (s.includes('T')) dateVal = s.split('T')[0];
+        else if (s.match(/^\d{4}-\d{2}-\d{2}$/)) dateVal = s;
+        else if (s.match(/^\d{2}\.\d{2}\.\d{4}$/)) { const pts = s.split('.'); dateVal = pts[2]+'-'+pts[1]+'-'+pts[0]; }
+    }
+    document.getElementById('fDate').value = dateVal;
+
+    const currVal = r['Валюта'] || 'EUR';
+    const currEl = document.getElementById('fCurrency');
+    if (currEl) currEl.value = currVal;
+
+    const saveBtn = document.getElementById('paxSaveBtn');
+    if (saveBtn) {
+        saveBtn.textContent = '💾 Оновити';
+        saveBtn.setAttribute('data-route-sheet', sheetName);
+    }
+    openModal('passengerModal');
+}
+
+// ── Видалити лід з маршруту ──
+async function deleteFromRoute(rteId, sheetName, leadName) {
+    showConfirm('Видалити «' + leadName + '» з маршруту?', async (yes) => {
+        if (!yes) return;
+        showLoader('Видалення з маршруту...');
+        const res = await apiPost('deletePassenger', { sheet: sheetName, pax_id: rteId });
+        hideLoader();
+        if (res.ok) {
+            const sheet = routes[activeRouteIdx];
+            if (sheet) sheet.rows = (sheet.rows || []).filter(r => r['RTE_ID'] !== rteId);
+            routeSelectedIds.delete(rteId);
+            showToast('✅ Видалено з маршруту');
+            renderRoutes();
+        } else {
+            showToast('❌ ' + (res.error || 'Помилка'));
+        }
+    });
+}
+
+// ── Bulk видалити з маршруту ──
+async function routeBulkDeleteFromRoute() {
+    if (routeSelectedIds.size === 0) return;
+    const sheet = routes[activeRouteIdx];
+    if (!sheet) return;
+    showConfirm('Видалити ' + routeSelectedIds.size + ' записів з маршруту?', async (yes) => {
+        if (!yes) return;
+        showLoader('Видалення...');
+        let ok = 0, fail = 0;
+        for (const rteId of routeSelectedIds) {
+            const res = await apiPost('deletePassenger', { sheet: sheet.sheetName, pax_id: rteId });
+            if (res.ok) { ok++; sheet.rows = (sheet.rows || []).filter(r => r['RTE_ID'] !== rteId); }
+            else fail++;
+        }
+        hideLoader();
+        routeSelectedIds.clear();
+        showToast('✅ Видалено: ' + ok + (fail ? ', помилок: ' + fail : ''));
+        renderRoutes();
+    });
+}
+
+// ── Пересадити лід в інший маршрут ──
+function transferRouteLeadModal(rteId, sheetName) {
+    const otherRoutes = routes.filter((r, i) => i !== activeRouteIdx);
+    if (otherRoutes.length === 0) { showToast('⚠️ Немає інших маршрутів для пересадки'); return; }
+
+    const opts = otherRoutes.map(r => {
+        const n = (r.sheetName || '').replace('Маршрут_', '');
+        return `<button class="messenger-popup-item" onclick="doTransferRouteLead('${rteId}','${sheetName}','${r.sheetName}')" style="padding:10px;font-size:12px;">🗺️ ${n}</button>`;
+    }).join('');
+
+    const grid = document.getElementById('messengerGrid');
+    grid.innerHTML = opts;
+    document.getElementById('messengerOverlay').classList.add('show');
+}
+
+async function doTransferRouteLead(rteId, fromSheet, toSheet) {
+    closeMessengerPopup();
+    const sheet = routes[activeRouteIdx];
+    if (!sheet) return;
+    const row = (sheet.rows || []).find(r => r['RTE_ID'] === rteId);
+    if (!row) return;
+
+    showLoader('Пересадка...');
+    // Add to new route
+    const addRes = await apiPost('addToRoute', { sheetName: toSheet, leads: [row] });
+    if (!addRes.ok) { hideLoader(); showToast('❌ ' + (addRes.error || 'Помилка додавання')); return; }
+    // Delete from old route
+    const delRes = await apiPost('deletePassenger', { sheet: fromSheet, pax_id: rteId });
+    hideLoader();
+    if (delRes.ok) {
+        sheet.rows = (sheet.rows || []).filter(r => r['RTE_ID'] !== rteId);
+        showToast('✅ Пересаджено в ' + toSheet.replace('Маршрут_', ''));
+        loadRoutes();
+    } else {
+        showToast('⚠️ Додано в новий маршрут, але не видалено зі старого');
+    }
+}
+
+// ── Bulk пересадка ──
+function routeBulkTransfer() {
+    if (routeSelectedIds.size === 0) return;
+    const otherRoutes = routes.filter((r, i) => i !== activeRouteIdx);
+    if (otherRoutes.length === 0) { showToast('⚠️ Немає інших маршрутів'); return; }
+
+    const opts = otherRoutes.map(r => {
+        const n = (r.sheetName || '').replace('Маршрут_', '');
+        return `<button class="messenger-popup-item" onclick="doBulkTransfer('${r.sheetName}')" style="padding:10px;font-size:12px;">🗺️ ${n}</button>`;
+    }).join('');
+
+    const grid = document.getElementById('messengerGrid');
+    grid.innerHTML = opts;
+    document.getElementById('messengerOverlay').classList.add('show');
+}
+
+async function doBulkTransfer(toSheet) {
+    closeMessengerPopup();
+    const sheet = routes[activeRouteIdx];
+    if (!sheet) return;
+    showLoader('Пересадка ' + routeSelectedIds.size + ' записів...');
+
+    const leadsToMove = (sheet.rows || []).filter(r => routeSelectedIds.has(r['RTE_ID']));
+    const addRes = await apiPost('addToRoute', { sheetName: toSheet, leads: leadsToMove });
+    if (!addRes.ok) { hideLoader(); showToast('❌ ' + (addRes.error || 'Помилка')); return; }
+
+    let ok = 0;
+    for (const rteId of routeSelectedIds) {
+        const res = await apiPost('deletePassenger', { sheet: sheet.sheetName, pax_id: rteId });
+        if (res.ok) { ok++; sheet.rows = (sheet.rows || []).filter(r => r['RTE_ID'] !== rteId); }
+    }
+    hideLoader();
+    routeSelectedIds.clear();
+    showToast('✅ Пересаджено: ' + ok + ' в ' + toSheet.replace('Маршрут_', ''));
+    loadRoutes();
 }
 
 // ── Створення нового маршруту ──
