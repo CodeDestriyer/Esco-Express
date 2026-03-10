@@ -1267,21 +1267,40 @@ async function loadRoutes() {
     list.innerHTML = '';
 
     try {
-        const res = await apiPost('getRoutes', {});
-        loading.style.display = 'none';
-        if (res.ok && res.data) {
-            routes = res.data;
-            setCount('pcCountRoutes', routes.length);
-            setCount('mobileCountRoutes', routes.length);
-            renderRoutes();
-        } else {
+        // 1) Fetch all trips
+        const tripRes = await apiPost('getTrips', { filter: {} });
+        if (!tripRes.ok || !tripRes.data) {
+            loading.style.display = 'none';
             errEl.style.display = 'block';
-            errEl.textContent = '❌ ' + (res.error || 'Сервер не повернув маршрутів. Можливо getRoutes ще не реалізовано в GAS.');
+            errEl.textContent = '❌ Не вдалось завантажити рейси: ' + (tripRes.error || 'Невідома помилка');
+            return;
         }
+        const allTrips = tripRes.data.filter(t => t.status !== 'Архів');
+
+        // 2) For each trip, fetch passengers assigned to it
+        loading.textContent = '⏳ Завантаження пасажирів маршрутів (' + allTrips.length + ' рейсів)...';
+        routes = [];
+        for (const t of allTrips) {
+            if (!t.cal_id) continue;
+            const paxRes = await apiPost('getPassengersByTrip', { cal_id: t.cal_id });
+            const paxList = (paxRes.ok && paxRes.data) ? paxRes.data : [];
+            routes.push({
+                sheetName: (t.city || '?') + ' — ' + formatTripDate(t.date) + ' (' + (t.direction || '?') + ')',
+                cal_id: t.cal_id,
+                trip: t,
+                rows: paxList,
+                headers: paxList.length > 0 ? ['Піб','Телефон пасажира','Напрям','Статус ліда','Статус оплати','Від','До'] : []
+            });
+        }
+
+        loading.style.display = 'none';
+        setCount('pcCountRoutes', routes.length);
+        setCount('mobileCountRoutes', routes.length);
+        renderRoutes();
     } catch (e) {
         loading.style.display = 'none';
         errEl.style.display = 'block';
-        errEl.textContent = '❌ Помилка запиту: ' + e.message;
+        errEl.textContent = '❌ Помилка: ' + e.message;
     }
 }
 
@@ -1289,23 +1308,36 @@ function renderRoutes() {
     const list = document.getElementById('routesList');
     if (!list) return;
     if (routes.length === 0) {
-        list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:8px;">🗺️</div><div style="font-size:13px;font-weight:600;">Аркушів маршрутів не знайдено</div><div style="font-size:11px;margin-top:4px;">Перевірте чи GAS повертає дані getRoutes</div></div>';
+        list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:8px;">🗺️</div><div style="font-size:13px;font-weight:600;">Маршрутів не знайдено</div><div style="font-size:11px;margin-top:4px;">Немає активних рейсів з пасажирами</div></div>';
         return;
     }
     list.innerHTML = routes.map((sheet, idx) => {
         const rows = sheet.rows || [];
-        const name = sheet.sheetName || sheet.name || ('Маршрут ' + (idx + 1));
-        const cols = sheet.headers || (rows.length > 0 ? Object.keys(rows[0]) : []);
+        const t = sheet.trip || {};
+        const maxS = parseInt(t.max_seats) || 0;
+        const occ = rows.length;
+        const free = Math.max(0, maxS - occ);
+        const cols = sheet.headers.length > 0 ? sheet.headers : [];
         return `<div class="route-sheet-card">
             <div class="route-sheet-header" onclick="this.nextElementSibling.classList.toggle('open')">
-                <span class="route-sheet-title">🗺️ ${name}</span>
-                <span class="route-sheet-count">${rows.length} записів</span>
+                <div>
+                    <span class="route-sheet-title">${sheet.sheetName}</span>
+                    <span style="font-size:10px;opacity:0.8;margin-left:8px;">${t.auto_name ? '🚐 ' + cleanAutoName(t.auto_name) : ''}</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <span class="route-sheet-count">${occ} пасажирів</span>
+                    <span style="background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;">${free} вільн.</span>
+                </div>
             </div>
             <div class="route-sheet-body${idx === 0 ? ' open' : ''}">
-                ${rows.length === 0 ? '<div style="padding:16px;text-align:center;color:var(--text-secondary);font-size:12px;">Порожній аркуш</div>' :
+                ${rows.length === 0 ? '<div style="padding:16px;text-align:center;color:var(--text-secondary);font-size:12px;">Немає пасажирів в цьому маршруті</div>' :
                 `<div style="overflow-x:auto;"><table class="route-sheet-table">
                     <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
-                    <tbody>${rows.map(r => `<tr>${cols.map(c => `<td>${r[c] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody>
+                    <tbody>${rows.map(r => `<tr>${cols.map(c => {
+                        const key = c;
+                        const val = r[key] ?? r[c] ?? '';
+                        return '<td>' + val + '</td>';
+                    }).join('')}</tr>`).join('')}</tbody>
                 </table></div>`}
             </div>
         </div>`;
