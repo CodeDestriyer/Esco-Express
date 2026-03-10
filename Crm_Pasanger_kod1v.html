@@ -650,8 +650,12 @@
         .bulk-toolbar.show { display: flex; }
         .bulk-toolbar-count { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; }
         .bulk-toolbar-btn { padding: 8px 14px; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.2s; }
+        .bulk-toolbar-btn.select-all { background: rgba(255,255,255,0.2); color: white; }
+        .bulk-toolbar-btn.select-all:hover { background: rgba(255,255,255,0.35); }
         .bulk-toolbar-btn.assign { background: var(--orange); color: white; }
         .bulk-toolbar-btn.assign:hover { background: #ea580c; }
+        .bulk-toolbar-btn.route { background: #7c3aed; color: white; }
+        .bulk-toolbar-btn.route:hover { background: #6d28d9; }
         .bulk-toolbar-btn.cancel { background: rgba(255,255,255,0.15); color: white; }
         .bulk-toolbar-btn.cancel:hover { background: rgba(255,255,255,0.25); }
         .bulk-trip-dd { position: absolute; bottom: 100%; left: 0; margin-bottom: 6px; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 240px; max-height: 280px; overflow-y: auto; display: none; color: var(--text-primary); }
@@ -1086,9 +1090,27 @@
 <!-- BULK TOOLBAR -->
 <div class="bulk-toolbar" id="bulkToolbar">
     <span class="bulk-toolbar-count" id="bulkCount">0 обрано</span>
+    <button class="bulk-toolbar-btn select-all" onclick="toggleSelectAll()">☑ Вибрати всі</button>
     <button class="bulk-toolbar-btn assign" onclick="openBulkTripDropdown(event)">🚐 Призначити рейс</button>
+    <button class="bulk-toolbar-btn route" onclick="openRouteAssignModal()">🗺️ В маршрут</button>
     <button class="bulk-toolbar-btn cancel" onclick="clearSelection()">✕ Скасувати</button>
     <div class="bulk-trip-dd" id="bulkTripDd"></div>
+</div>
+
+<!-- ROUTE ASSIGN MODAL -->
+<div class="modal-overlay" id="routeAssignModal" onclick="if(event.target===this)closeModal('routeAssignModal')">
+    <div class="modal" style="max-width:400px;">
+        <div class="modal-header">
+            <span class="modal-title" id="routeAssignTitle">🗺️ Перенести в маршрут</span>
+            <button class="modal-close" onclick="closeModal('routeAssignModal')">×</button>
+        </div>
+        <div class="modal-body" style="padding:12px;">
+            <div id="routeAssignList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('routeAssignModal')">Скасувати</button>
+        </div>
+    </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -3360,6 +3382,91 @@ function clearSelection() {
     updateBulkToolbar();
     closeBulkTripDd();
     render();
+}
+
+// ── Вибрати всі / зняти всі ──
+function toggleSelectAll() {
+    const filtered = getFilteredPassengers();
+    if (selectedIds.size >= filtered.length) {
+        // Всі вже вибрані — знімаємо
+        selectedIds.clear();
+    } else {
+        // Вибираємо всі видимі
+        filtered.forEach(p => selectedIds.add(p['PAX_ID']));
+    }
+    updateBulkToolbar();
+    render();
+}
+
+// ── Модалка вибору маршруту ──
+function openRouteAssignModal() {
+    if (selectedIds.size === 0) return;
+    const list = document.getElementById('routeAssignList');
+    const title = document.getElementById('routeAssignTitle');
+    title.textContent = '🗺️ Перенести ' + selectedIds.size + ' лід(ів) в маршрут';
+
+    if (routes.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:12px;">Немає доступних маршрутів.<br>Створіть маршрут у меню зліва.</div>';
+    } else {
+        list.innerHTML = routes.map((sheet, idx) => {
+            const name = (sheet.sheetName || '').replace('Маршрут_', '');
+            const rows = sheet.rows || [];
+            const pax = rows.filter(r => (r['Тип запису'] || '').includes('Пасажир')).length;
+            const parcels = rows.filter(r => (r['Тип запису'] || '').includes('Посилк')).length;
+            return `<button onclick="assignToRoute(${idx})" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:2px solid #e2e8f0;border-radius:10px;background:white;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:all .2s;" onmouseover="this.style.borderColor='#7c3aed';this.style.background='#faf5ff'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
+                <span>🗺️ ${name}</span>
+                <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">👤${pax} · 📦${parcels}</span>
+            </button>`;
+        }).join('');
+    }
+    openModal('routeAssignModal');
+}
+
+async function assignToRoute(routeIdx) {
+    const sheet = routes[routeIdx];
+    if (!sheet) return;
+    const sheetName = sheet.sheetName;
+    const paxIds = Array.from(selectedIds);
+
+    // Збираємо дані лідів для переносу
+    const leadsData = paxIds.map(id => {
+        const p = passengers.find(x => x['PAX_ID'] === id);
+        if (!p) return null;
+        return {
+            'RTE_ID': p['PAX_ID'],
+            'Тип запису': 'Пасажир',
+            'Піб пасажира': p['Піб'] || '',
+            'Телефон пасажира': p['Телефон пасажира'] || '',
+            'Дата рейсу': p['Дата виїзду'] || '',
+            'Адреса відправки': p['Адреса відправки'] || '',
+            'Адреса прибуття': p['Адреса прибуття'] || '',
+            'Сума': p['Ціна квитка'] || '',
+            'Валюта': p['Валюта квитка'] || '',
+            'Статус оплати': p['Статус оплати'] || 'Не оплачено',
+            'Статус': p['Статус ліда'] || 'Новий',
+            'Кількість місць': p['Кількість місць'] || 1
+        };
+    }).filter(Boolean);
+
+    if (leadsData.length === 0) return;
+
+    closeModal('routeAssignModal');
+    showLoader('Переносимо ' + leadsData.length + ' лід(ів) в маршрут...');
+
+    try {
+        const res = await apiPost('addToRoute', { sheetName: sheetName, leads: leadsData });
+        hideLoader();
+        if (res.ok) {
+            showToast('✅ ' + leadsData.length + ' лід(ів) перенесено в ' + sheetName.replace('Маршрут_', ''));
+            clearSelection();
+            loadRoutes(); // Оновити маршрути
+        } else {
+            showToast('❌ ' + (res.error || 'Помилка переносу'));
+        }
+    } catch (e) {
+        hideLoader();
+        showToast('❌ Помилка: ' + e.message);
+    }
 }
 
 function updateBulkToolbar() {
