@@ -1133,6 +1133,7 @@ const LAYOUTS = {
 let passengers = [];
 let trips = [];
 let routes = [];
+let allRouteSheets = []; // Всі аркуші (включно з Відправка_, Витрати_, Шаблони)
 let currentView = 'pax'; // 'pax' | 'trips' | 'routes'
 let currentDir = 'all';
 let tripTimeFilter = 'future';
@@ -1271,7 +1272,13 @@ async function loadRoutes() {
         const res = await apiPost('getRoutes', {});
         loading.style.display = 'none';
         if (res.ok && res.data) {
-            routes = res.data;
+            // Зберігаємо ВСІ аркуші (для створення маршрутів тощо)
+            allRouteSheets = res.data;
+            // Фільтруємо: показуємо тільки Маршрут_* (без шаблону)
+            routes = res.data.filter(s => {
+                const n = (s.sheetName || '');
+                return n.startsWith('Маршрут_') && n !== 'Маршрут_Шаблон';
+            });
             setCount('pcCountRoutes', routes.length);
             setCount('mobileCountRoutes', routes.length);
             renderRoutes();
@@ -1297,14 +1304,14 @@ function renderRoutes() {
     const list = document.getElementById('routesList');
     if (!list) return;
     if (routes.length === 0) {
-        list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:8px;">🗺️</div><div style="font-size:13px;font-weight:600;">Аркушів маршрутів не знайдено</div><div style="font-size:11px;margin-top:4px;">Таблиця Marhrut_crm порожня</div></div>';
+        list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:8px;">🗺️</div><div style="font-size:13px;font-weight:600;">Активних маршрутів не знайдено</div><div style="font-size:11px;margin-top:4px;">Створіть новий маршрут</div></div>';
         return;
     }
 
-    // Загальна статистика
-    const totalRows = routes.reduce((s, r) => s + (r.rowCount || r.rows.length), 0);
+    // Загальна статистика (тільки маршрути)
+    const totalRows = routes.reduce((s, r) => s + (r.rows || []).length, 0);
     let html = `<div style="margin-bottom:14px;padding:10px 14px;background:#f0e6ff;border-radius:10px;font-size:12px;color:#5b21b6;font-weight:600;">
-        📊 Всього: ${routes.length} аркушів, ${totalRows} записів у Marhrut_crm_v6
+        🗺️ Маршрути: ${routes.length} шт., ${totalRows} записів
     </div>`;
 
     html += routes.map((sheet, idx) => {
