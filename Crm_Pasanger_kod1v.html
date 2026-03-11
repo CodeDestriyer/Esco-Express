@@ -226,7 +226,7 @@
         .detail-block-label { font-size: 9px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px; }
         .detail-block-value { font-size: 12px; font-weight: 600; color: var(--text-primary); word-break: break-word; }
         .detail-block-value.empty { color: var(--text-secondary); opacity: 0.5; }
-        .detail-block-actions { position: absolute; top: 4px; right: 4px; display: flex; gap: 2px; opacity: 0; transition: opacity 0.15s; }
+        .detail-block-actions { position: absolute; top: 4px; right: 4px; display: flex; gap: 2px; opacity: 0.5; transition: opacity 0.15s; }
         .detail-block:hover .detail-block-actions { opacity: 1; }
         .detail-micro-btn { width: 20px; height: 20px; border: none; border-radius: 4px; background: var(--bg-main); color: var(--text-secondary); font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .detail-micro-btn:hover { background: var(--primary); color: white; }
@@ -1538,6 +1538,7 @@ let tripDateFilter = '';
 let tripAutoFilter = 'all';
 let openDetailsId = null;
 let openActionsId = null;
+let activeDetailTab = {}; // { paxId: sectionKey } — зберігає активну вкладку деталей
 let selectedIds = new Set();
 let editingField = null;
 let confirmCallback = null;
@@ -2764,25 +2765,37 @@ function renderDetailFields(p, fields, isReadonly) {
 function renderDetails(p) {
     const sections = getDetailSections();
     const paxId = p['PAX_ID'];
+    const savedTab = activeDetailTab[paxId] || sections[0].key;
+    const savedIdx = sections.findIndex(s => s.key === savedTab);
+    const activeIdx = savedIdx >= 0 ? savedIdx : 0;
 
     // Tabs row (horizontal)
     let tabsHtml = '<div class="detail-accordion-tabs">';
     sections.forEach((section, i) => {
         const countLabel = section.async ? '' : `<span class="tab-count">${section.fields.length}</span>`;
-        tabsHtml += `<div class="detail-tab ${i===0?'active':''}" onclick="event.stopPropagation(); switchDetailTab('${paxId}','${section.key}',this)" data-section="${section.key}">
+        tabsHtml += `<div class="detail-tab ${i===activeIdx?'active':''}" onclick="event.stopPropagation(); switchDetailTab('${paxId}','${section.key}',this)" data-section="${section.key}">
             ${section.title} ${countLabel}
         </div>`;
     });
     tabsHtml += '</div>';
 
-    // Panels (only first rendered immediately)
+    // Panels (render active tab immediately)
     let panelsHtml = '';
     sections.forEach((section, i) => {
         const panelId = `panel-${paxId}-${section.key}`;
-        panelsHtml += `<div class="detail-tab-panel ${i===0?'active':''}" id="${panelId}" data-section-key="${section.key}" data-pax-id="${paxId}" data-readonly="${section.readonly||false}" data-async="${section.async||false}">
-            ${i === 0 ? renderDetailFields(p, section.fields, section.readonly) : ''}
+        const isActive = i === activeIdx;
+        panelsHtml += `<div class="detail-tab-panel ${isActive?'active':''}" id="${panelId}" data-section-key="${section.key}" data-pax-id="${paxId}" data-readonly="${section.readonly||false}" data-async="${section.async||false}">
+            ${isActive ? (section.async && section.key === 'payments' ? '' : renderDetailFields(p, section.fields, section.readonly)) : ''}
         </div>`;
     });
+
+    // Lazy-load payments if it's the active tab
+    if (sections[activeIdx] && sections[activeIdx].async && sections[activeIdx].key === 'payments') {
+        setTimeout(() => {
+            const panel = document.getElementById(`panel-${paxId}-payments`);
+            if (panel) loadPaymentsTab(paxId, panel);
+        }, 0);
+    }
 
     return tabsHtml + panelsHtml;
 }
@@ -2791,6 +2804,9 @@ function switchDetailTab(paxId, sectionKey, tabEl) {
     // Find the card details container
     const card = tabEl.closest('.card-details');
     if (!card) return;
+
+    // Зберігаємо активну вкладку
+    activeDetailTab[paxId] = sectionKey;
 
     // Deactivate all tabs and panels
     card.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
@@ -2920,6 +2936,7 @@ function smartToggleDetails(e, id) {
 function toggleDetails(id) {
     if (openDetailsId === id) {
         openDetailsId = null;
+        delete activeDetailTab[id];
     } else {
         openDetailsId = id;
         const p = passengers.find(x => x['PAX_ID'] === id);
