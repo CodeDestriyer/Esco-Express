@@ -1588,7 +1588,7 @@ function silentSync() {
     Promise.all([
         apiPost('getAll', { sheet: 'all' }),
         apiPost('getTrips', { filter: {} }),
-        apiPost('getRoutes', {})
+        apiPost('getRoutesList', {})
     ]).then(([paxRes, tripRes, routeRes]) => {
         if (paxRes.ok) {
             passengers = paxRes.data;
@@ -1596,8 +1596,19 @@ function silentSync() {
         }
         if (tripRes.ok) trips = tripRes.data;
         if (routeRes.ok && routeRes.data) {
-            allRouteSheets = routeRes.data;
-            routes = routeRes.data.filter(s => {
+            // Оновити список маршрутів (без даних — lazy loading)
+            var newList = routeRes.data;
+            // Зберегти вже завантажені дані (rows) для кожного аркуша
+            allRouteSheets = newList.map(function(s) {
+                var existing = allRouteSheets.find(function(e) { return e.sheetName === s.sheetName; });
+                return {
+                    sheetName: s.sheetName,
+                    rowCount: s.rowCount,
+                    headers: existing && existing.rows !== null ? existing.headers : [],
+                    rows: existing ? existing.rows : null
+                };
+            });
+            routes = allRouteSheets.filter(s => {
                 const n = (s.sheetName || '');
                 return n.startsWith('Маршрут_') && n !== 'Маршрут_Шаблон';
             });

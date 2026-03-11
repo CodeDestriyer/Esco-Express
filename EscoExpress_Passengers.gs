@@ -929,23 +929,41 @@ function apiRestorePassenger(params) {
   var archSheet = archSS.getSheetByName('Архів') || archSS.getSheets()[0];
   var archInfo = getAllData(archSheet);
   var archIdIdx = archInfo.headers.indexOf('PAX_ID');
-  var archCrmIdx = archInfo.headers.indexOf('Статус CRM');
-  var archDateIdx = archInfo.headers.indexOf('DATE_ARCHIVE');
-  var archByIdx = archInfo.headers.indexOf('ARCHIVED_BY');
-  var archReasonIdx = archInfo.headers.indexOf('ARCHIVE_REASON');
-  var archSourceIdx = archInfo.headers.indexOf('SOURCE_DIR');
+
+  // Зібрати існуючі PAX_ID в обох аркушах пасажирів (захист від дублів)
+  var existingIds = {};
+  [SHEETS.PAX_UE, SHEETS.PAX_EU].forEach(function(shName) {
+    var sh = getSheet(shName);
+    if (!sh) return;
+    var info = getAllData(sh);
+    var idIdx = info.headers.indexOf('PAX_ID');
+    if (idIdx === -1) return;
+    for (var i = 0; i < info.data.length; i++) {
+      var id = String(info.data[i][idIdx]).trim();
+      if (id) existingIds[id] = true;
+    }
+  });
 
   var restored = 0;
+  var skipped = 0;
   var rowsToDelete = [];
 
   for (var i = 0; i < archInfo.data.length; i++) {
-    if (paxIds.indexOf(String(archInfo.data[i][archIdIdx])) !== -1) {
+    var archPaxId = String(archInfo.data[i][archIdIdx]);
+    if (paxIds.indexOf(archPaxId) !== -1) {
+      // Перевірка: чи вже існує в пасажирах (захист від дублів)
+      if (existingIds[archPaxId]) {
+        // Вже є — тільки видалити з архіву, не додавати повторно
+        rowsToDelete.push(DATA_START + i);
+        skipped++;
+        continue;
+      }
+
       var obj = rowToObj(archInfo.headers, archInfo.data[i]);
 
       // Визначити куди повертати
       var targetShName = obj['SOURCE_DIR'] || SHEETS.PAX_UE;
       if (targetShName !== SHEETS.PAX_UE && targetShName !== SHEETS.PAX_EU) {
-        // Fallback по напряму
         var dir = obj['Напрям'] || '';
         targetShName = (dir.indexOf('eu-ua') !== -1 || dir.indexOf('EU→UA') !== -1) ? SHEETS.PAX_EU : SHEETS.PAX_UE;
       }
@@ -958,12 +976,14 @@ function apiRestorePassenger(params) {
       obj['DATE_ARCHIVE'] = '';
       obj['ARCHIVED_BY'] = '';
       obj['ARCHIVE_REASON'] = '';
+      obj['ARCHIVE_ID'] = '';
 
       // Записати в основну таблицю
       var targetHeaders = getHeaders(targetSh);
       var newRow = targetHeaders.map(function(h) { return obj[h] !== undefined ? obj[h] : ''; });
       targetSh.appendRow(newRow);
 
+      existingIds[archPaxId] = true; // Додали — запам'ятати щоб не дублювати
       rowsToDelete.push(DATA_START + i);
       restored++;
     }
@@ -975,7 +995,7 @@ function apiRestorePassenger(params) {
     archSheet.deleteRow(rowsToDelete[r]);
   }
 
-  return { ok: true, restored: restored };
+  return { ok: true, restored: restored, skipped: skipped };
 }
 
 // getArchive — Отримати записи з архіву (з пагінацією)
