@@ -38,7 +38,8 @@
         .search-input::placeholder { color: rgba(255,255,255,0.6); }
         .search-input:focus { background: rgba(255,255,255,0.25); }
         .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: 0.7; }
-        .header-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+        .header-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+        .sync-indicator { color: rgba(255,255,255,0.6); font-size: 10px; white-space: nowrap; }
         .role-badge { background: rgba(255,255,255,0.2); color: white; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; display: none; }
         .header-chat-btn { width: 32px; height: 32px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; text-decoration: none; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
         .header-chat-btn:hover { background: rgba(255,255,255,0.25); transform: scale(1.1); }
@@ -182,6 +183,16 @@
         }
         .pc-sidebar-add:hover { border-color: var(--info); background: #eff6ff; }
         
+        .pc-sidebar.collapsed-sidebar { width: 0; min-width: 0; overflow: hidden; padding: 0; box-shadow: none; }
+        .pc-sidebar-collapse-btn {
+            display: none; position: fixed; top: 60px; left: 300px; z-index: 150;
+            width: 24px; height: 48px; background: white; border: 1px solid var(--border); border-left: none;
+            border-radius: 0 8px 8px 0; cursor: pointer; align-items: center; justify-content: center;
+            font-size: 12px; color: var(--text-secondary); box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+            transition: left 0.3s ease, background 0.2s;
+        }
+        .pc-sidebar-collapse-btn:hover { background: var(--bg-main); color: var(--primary); }
+
         /* Main content area */
         .main-content-area { flex: 1; padding: 12px; overflow-y: auto; transition: margin-left 0.3s ease, margin-right 0.3s ease; }
         .main-content-area.shifted-by-bulk { margin-left: 300px; }
@@ -824,238 +835,46 @@
         /* INLINE HEADER EDIT - kept for route passengers view */
         .header-inline-input:focus { border-color: var(--primary); }
 
-        /* BULK ACTIONS SIDEBAR - виїзна панель (червоно-бордова) */
-        .bulk-actions-sidebar { 
-            display: none; 
-            position: fixed; 
-            top: 52px; 
-            left: 0; 
-            bottom: 56px;
-            width: 300px;
-            background: linear-gradient(180deg, #7f1d1d 0%, #450a0a 100%);
-            z-index: 200;
-            box-shadow: 4px 0 20px rgba(0,0,0,0.3);
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-            overflow-y: auto;
-        }
-        .bulk-actions-sidebar.show {
-            display: flex;
-            flex-direction: column;
-            transform: translateX(0);
-        }
-        /* Кнопка Меню у bulk sidebar */
-        .bulk-sidebar-menu-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 14px;
-            border: 1px solid rgba(255,255,255,0.25);
-            border-radius: 8px;
-            background: rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.85);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            width: 100%;
-        }
-        .bulk-sidebar-menu-btn:hover {
-            background: rgba(255,255,255,0.18);
-            color: white;
-        }
-        .bulk-sidebar-header {
-            padding: 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .bulk-sidebar-title {
-            color: white;
-            font-size: 14px;
-            font-weight: 700;
-        }
-        .bulk-sidebar-count {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .bulk-sidebar-actions {
-            flex: 1;
-            padding: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .bulk-sidebar-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 14px;
-            border: none;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            font-family: inherit;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.2s ease;
-            text-align: left;
-        }
-        .bulk-sidebar-btn:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateX(4px);
-        }
-        .bulk-sidebar-btn:active {
-            transform: scale(0.98);
-        }
-        /* Всі кнопки однакові - стильно */
-        .bulk-sidebar-btn .btn-icon {
-            font-size: 18px;
-            width: 24px;
-            text-align: center;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-        }
-        .bulk-sidebar-divider {
-            height: 1px;
-            background: rgba(255,255,255,0.1);
-            margin: 8px 0;
-        }
-        /* Bulk sidebar collapsible groups */
-        .bulk-group-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 8px 12px; margin: 2px 0;
-            background: rgba(255,255,255,0.08); border-radius: 6px;
-            cursor: pointer; color: rgba(255,255,255,0.7);
-            font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-            transition: all 0.2s;
-        }
-        .bulk-group-header:hover { background: rgba(255,255,255,0.15); color: white; }
-        .bulk-group-toggle { font-size: 9px; transition: transform 0.2s; }
-        .bulk-group-header.collapsed .bulk-group-toggle { transform: rotate(-90deg); }
-        .bulk-group-items { max-height: 500px; overflow: hidden; transition: max-height 0.3s ease; display: flex; flex-direction: column; gap: 4px; }
-        .bulk-group-items.collapsed { max-height: 0; }
-        .bulk-group-items .bulk-sidebar-btn { width: 100%; }
-        .bulk-sidebar-close {
-            padding: 12px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        .bulk-sidebar-close-btn {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 8px;
-            background: transparent;
-            color: white;
-            font-family: inherit;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .bulk-sidebar-close-btn:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        
-        /* Стара панель - приховуємо на PC */
-        @media (min-width: 1100px) {
-            .bulk-actions-bar { display: none !important; }
-        }
-        
-        /* Mobile styles */
-        @media (max-width: 1099px) {
-            /* Mobile: bulk sidebar ЗАХОВАНО, використовуємо bulk-actions-bar */
-            .bulk-actions-sidebar { display: none !important; }
+        /* BULK TOOLBAR — як у пасажирській CRM */
+        .bulk-toolbar { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 10px 16px; border-radius: 12px; z-index: 90; display: none; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-size: 12px; font-weight: 600; max-width: 95vw; flex-direction: row; }
+        .bulk-toolbar.show { display: flex; }
+        .bulk-toolbar-count { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .bulk-toolbar-btn { padding: 8px 14px; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.2s; }
+        .bulk-toolbar-btn.select-all { background: rgba(255,255,255,0.2); color: white; }
+        .bulk-toolbar-btn.select-all:hover { background: rgba(255,255,255,0.35); }
+        .bulk-toolbar-btn.vehicle { background: var(--info); color: white; }
+        .bulk-toolbar-btn.vehicle:hover { background: #2563eb; }
+        .bulk-toolbar-btn.optimize { background: var(--purple); color: white; }
+        .bulk-toolbar-btn.optimize:hover { background: #7c3aed; }
+        .bulk-toolbar-btn.route { background: var(--success); color: white; }
+        .bulk-toolbar-btn.route:hover { background: #059669; }
+        .bulk-toolbar-btn.archive { background: #6b7280; color: white; }
+        .bulk-toolbar-btn.archive:hover { background: #4b5563; }
+        .bulk-toolbar-btn.cancel { background: rgba(255,255,255,0.15); color: white; }
+        .bulk-toolbar-btn.cancel:hover { background: rgba(255,255,255,0.25); }
+        .bulk-toolbar-btn.danger { background: #fee2e2; color: #dc2626; }
+        .bulk-toolbar-btn.danger:hover { background: #dc2626; color: white; }
 
-            /* Mobile bulk action bar — компактна панель внизу */
-            .bulk-actions-bar {
+        @media (min-width: 901px) {
+            .bulk-toolbar {
                 position: fixed;
-                bottom: 58px;
                 left: 0;
-                right: 0;
-                background: linear-gradient(135deg, #7f1d1d 0%, #5b1010 100%);
-                z-index: 150;
-                display: none;
+                top: 52px;
+                bottom: auto;
+                transform: none;
+                width: 300px;
+                max-width: 300px;
+                border-radius: 0;
                 flex-direction: column;
-                box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
-                border-radius: 16px 16px 0 0;
-                padding: 0;
-                transform: translateY(100%);
-                transition: transform 0.3s ease;
+                align-items: stretch;
+                padding: 16px;
+                gap: 10px;
+                height: calc(100vh - 52px);
+                box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+                z-index: 160;
             }
-            .bulk-actions-bar.show {
-                display: flex;
-                transform: translateY(0);
-            }
-            .bulk-actions-content {
-                display: flex;
-                flex-direction: column;
-                gap: 0;
-            }
-            /* Верхній рядок: кількість + кнопка закрити */
-            .bulk-bar-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 10px 14px 6px;
-            }
-            .bulk-selected {
-                color: rgba(255,255,255,0.95);
-                font-size: 13px;
-                font-weight: 600;
-            }
-            .bulk-bar-close {
-                background: rgba(255,255,255,0.15);
-                border: none;
-                color: white;
-                width: 28px;
-                height: 28px;
-                border-radius: 50%;
-                font-size: 14px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            /* Кнопки дій — горизонтальна прокрутка */
-            .bulk-buttons {
-                display: flex;
-                gap: 6px;
-                padding: 6px 14px 12px;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-            }
-            .bulk-buttons::-webkit-scrollbar { display: none; }
-            .bulk-btn {
-                flex-shrink: 0;
-                padding: 8px 12px;
-                border: none;
-                border-radius: 10px;
-                background: rgba(255,255,255,0.15);
-                color: white;
-                font-size: 13px;
-                font-weight: 500;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                white-space: nowrap;
-                transition: background 0.2s;
-                font-family: inherit;
-            }
-            .bulk-btn:hover { background: rgba(255,255,255,0.25); }
-            .bulk-btn:active { background: rgba(255,255,255,0.35); }
+            .bulk-toolbar-count { text-align: center; padding: 8px 12px; font-size: 13px; border-radius: 10px; }
+            .bulk-toolbar-btn { padding: 12px 16px; font-size: 13px; border-radius: 10px; text-align: center; }
         }
 
         /* VEHICLE BADGE ON CARD */
@@ -1252,6 +1071,8 @@
             .workflow-bar { display: none; }
             .search-box { max-width: none; }
             .pc-sidebar { display: none; }
+            .pc-sidebar-collapse-btn { display: none !important; }
+            .main-content-area { padding-bottom: 130px; }
         }
 
         /* SCANNER / CAMERA */
@@ -1297,6 +1118,8 @@
             .logo { font-size: 15px; }
             .search-box { max-width: 300px; }
             .role-badge { display: block; }
+            .pc-sidebar-collapse-btn { display: flex; }
+            .bottom-nav { display: flex; }
             .main-content-area { padding: 16px 24px; padding-bottom: 130px; }
             .card-name { font-size: 14px; }
             .card-extra, .card-extra2 { font-size: 11px; }
@@ -1349,117 +1172,66 @@
 <div class="side-menu-overlay" id="sideMenuOverlay" onclick="closeSideMenu()"></div>
 <div class="side-menu" id="sideMenu">
     <div class="side-menu-header">
-        <span class="side-menu-title">📦 Посилки</span>
+        <span class="side-menu-title">📋 Меню</span>
         <button class="side-menu-close" onclick="closeSideMenu()">×</button>
     </div>
     <div class="side-menu-content">
-        <!-- Скинути всі фільтри -->
-        <div style="padding:8px 12px 4px;">
-            <div class="side-menu-item" onclick="resetFilters(); closeSideMenu();" style="background:linear-gradient(135deg,var(--primary),var(--info));color:white;font-weight:700;justify-content:center;cursor:pointer;border-radius:10px;padding:12px;font-size:14px;border:none;">
-                <span class="side-menu-item-left" style="color:white;justify-content:center;">🔄 Скинути всі фільтри</span>
-            </div>
+        <div class="side-menu-item active" id="mobileDirectionAll" onclick="setDirection('all'); closeSideMenu();">
+            <span class="side-menu-item-left">📊 Всі посилки</span>
+            <span class="side-menu-item-count" id="mobileCountAll">0</span>
         </div>
-        <!-- Напрямок -->
-        <div class="side-menu-section">
-            <div class="side-menu-section-header" onclick="toggleMobileSection('direction')">
-                <span class="side-menu-section-title">🧭 Напрямок</span>
-                <span class="section-toggle" id="toggleDirection">▼</span>
-            </div>
-            <div class="side-menu-collapsible" id="mobileDirectionSection">
-                <div class="side-menu-item" id="mobileNewLeads" onclick="showNewLeads(); closeSideMenu();" style="background:rgba(59,130,246,0.25);">
-                    <span class="side-menu-item-left" style="color:white;font-weight:700;">🆕 Нові (24 год)</span>
-                    <span class="side-menu-item-count" id="mobileCountNew" style="background:var(--accent);color:white;">0</span>
-                </div>
-                <div class="side-menu-item" id="mobileDirectionAll" onclick="setDirection('all'); closeSideMenu();">
-                    <span class="side-menu-item-left">📊 Всі напрямки</span>
-                    <span class="side-menu-item-count" id="mobileCountAll">0</span>
-                </div>
-                <div class="side-menu-item" id="mobileDirectionUaEu" onclick="setDirection('ua-eu'); closeSideMenu();">
-                    <span class="side-menu-item-left">🇺🇦→🇪🇺 Україна → Європа</span>
-                    <span class="side-menu-item-count" id="mobileCountUaEu">0</span>
-                </div>
-                <div class="side-menu-item" id="mobileDirectionEuUa" onclick="setDirection('eu-ua'); closeSideMenu();">
-                    <span class="side-menu-item-left">🇪🇺→🇺🇦 Європа → Україна</span>
-                    <span class="side-menu-item-count" id="mobileCountEuUa">0</span>
-                </div>
-            </div>
+        <div class="side-menu-item" id="mobileNewLeads" onclick="showNewLeads(); closeSideMenu();" style="background:rgba(59,130,246,0.25);">
+            <span class="side-menu-item-left" style="color:white;font-weight:700;">🆕 Нові (24 год)</span>
+            <span class="side-menu-item-count" id="mobileCountNew" style="background:var(--accent);color:white;">0</span>
         </div>
-        
-        <!-- Дати - Календар -->
-        <div class="side-menu-section">
-            <div class="side-menu-section-header" onclick="toggleMobileSection('dates')">
-                <span class="side-menu-section-title">📅 Дата виїзду</span>
-                <span class="section-toggle" id="toggleDates">▼</span>
-            </div>
-            <div class="side-menu-collapsible" id="mobileDatesSection">
-                <div class="cal-direction-bar" style="padding:0 4px;">
-                    <select class="cal-direction-select" onchange="setCalendarDirection(this.value);">
-                        <option value="all">📊 Всі напрямки</option>
-                        <option value="ua-eu">🇺🇦→🇪🇺 Україна-Європа</option>
-                        <option value="eu-ua">🇪🇺→🇺🇦 Європа-Україна</option>
-                    </select>
-                </div>
-                <div class="calendar-box" id="mobileCalendar"></div>
-            </div>
+        <div class="side-menu-item" id="mobileDirectionUaEu" onclick="setDirection('ua-eu'); closeSideMenu();">
+            <span class="side-menu-item-left">🇺🇦→🇪🇺 Україна → Європа</span>
+            <span class="side-menu-item-count" id="mobileCountUaEu">0</span>
         </div>
-        
-        <!-- Авто -->
-        <div class="side-menu-section">
-            <div class="side-menu-section-header" onclick="toggleMobileSection('vehicles')">
-                <span class="side-menu-section-title">🚐 Автомобіль</span>
-                <span class="section-toggle" id="toggleVehicles">▼</span>
-            </div>
-            <div class="side-menu-collapsible" id="mobileVehiclesSection">
-                <div class="side-menu-item" id="mobileVehicleNone" style="border-color:var(--warning);color:var(--warning);" onclick="mobileSetVehicle('none')">
-                    <span class="side-menu-item-left">❓ Без авто</span>
-                    <span class="side-menu-item-count" id="mobileCountNoVehicle">0</span>
-                </div>
-                <div id="mobileVehiclesList"></div>
-                <div class="side-menu-item" onclick="openAddVehicleModal(); closeSideMenu();" style="color:var(--info);font-weight:600;border-top:1px solid var(--border);margin-top:4px;">
-                    <span class="side-menu-item-left">➕ Додати авто</span>
-                </div>
-            </div>
+        <div class="side-menu-item" id="mobileDirectionEuUa" onclick="setDirection('eu-ua'); closeSideMenu();">
+            <span class="side-menu-item-left">🇪🇺→🇺🇦 Європа → Україна</span>
+            <span class="side-menu-item-count" id="mobileCountEuUa">0</span>
         </div>
-        
-        <!-- Маршрути -->
-        <div class="side-menu-section">
-            <div class="side-menu-section-header" onclick="toggleMobileSection('routes')">
-                <span class="side-menu-section-title">🚀 Маршрути</span>
-                <span class="section-toggle" id="toggleRoutes">▼</span>
-            </div>
-            <div class="side-menu-collapsible" id="mobileRoutesSection">
-                <div class="side-menu-item" onclick="showAllRoutes(); closeSideMenu();">
-                    <span class="side-menu-item-left">📋 Всі маршрути</span>
-                    <span class="side-menu-item-count" id="mobileCountRoute">0</span>
-                </div>
-                <div id="mobileRoutesList"></div>
-            </div>
+        <div style="height:1px;background:rgba(255,255,255,0.1);margin:8px 0;"></div>
+        <div class="side-menu-item" onclick="toggleMobileSection('vehicles')" style="background:rgba(59,130,246,0.3);">
+            <span class="side-menu-item-left">🚐 Автомобіль</span>
+            <span class="side-menu-item-count" id="mobileCountNoVehicle">0</span>
         </div>
-        
-        <!-- Дії -->
-        <div class="side-menu-section">
-            <div class="side-menu-section-header" onclick="toggleMobileSection('actions')">
-                <span class="side-menu-section-title">📋 Статуси</span>
-                <span class="section-toggle" id="toggleActions">▼</span>
+        <div id="mobileVehiclesSection" style="display:none;padding-left:12px;">
+            <div class="side-menu-item" id="mobileVehicleNone" style="color:var(--warning);" onclick="mobileSetVehicle('none'); closeSideMenu();">
+                <span class="side-menu-item-left">❓ Без авто</span>
             </div>
-            <div class="side-menu-collapsible" id="mobileActionsSection">
-                <div class="side-menu-item" onclick="showStatusFilter('archived'); closeSideMenu();">
-                    <span class="side-menu-item-left">📦 Архів</span>
-                    <span class="side-menu-item-count" id="mobileCountArchive">0</span>
-                </div>
-                <div class="side-menu-item" onclick="showStatusFilter('refused'); closeSideMenu();">
-                    <span class="side-menu-item-left">❌ Відмови</span>
-                    <span class="side-menu-item-count" id="mobileCountRefused">0</span>
-                </div>
-                <div class="side-menu-item" onclick="showStatusFilter('transferred'); closeSideMenu();">
-                    <span class="side-menu-item-left">📆 Перенос</span>
-                    <span class="side-menu-item-count" id="mobileCountTransferred">0</span>
-                </div>
-                <div class="side-menu-item" onclick="showStatusFilter('deleted'); closeSideMenu();">
-                    <span class="side-menu-item-left">🗑️ Видалені</span>
-                    <span class="side-menu-item-count" id="mobileCountDeleted">0</span>
-                </div>
-            </div>
+            <div id="mobileVehiclesList"></div>
+        </div>
+        <div style="height:1px;background:rgba(255,255,255,0.1);margin:8px 0;"></div>
+        <div class="side-menu-item" onclick="showAllRoutes(); closeSideMenu();" style="background:rgba(16,185,129,0.3);">
+            <span class="side-menu-item-left">🚀 Маршрути</span>
+            <span class="side-menu-item-count" id="mobileCountRoute">0</span>
+        </div>
+        <div id="mobileRoutesList" style="display:none;padding-left:12px;"></div>
+        <div style="height:1px;background:rgba(255,255,255,0.1);margin:8px 0;"></div>
+        <div class="side-menu-item" onclick="showStatusFilter('archived'); closeSideMenu();">
+            <span class="side-menu-item-left">📦 Архів</span>
+            <span class="side-menu-item-count" id="mobileCountArchive">0</span>
+        </div>
+        <div class="side-menu-item" onclick="showStatusFilter('refused'); closeSideMenu();">
+            <span class="side-menu-item-left">❌ Відмови</span>
+            <span class="side-menu-item-count" id="mobileCountRefused">0</span>
+        </div>
+        <div class="side-menu-item" onclick="showStatusFilter('transferred'); closeSideMenu();">
+            <span class="side-menu-item-left">📆 Перенос</span>
+            <span class="side-menu-item-count" id="mobileCountTransferred">0</span>
+        </div>
+        <div class="side-menu-item" onclick="showStatusFilter('deleted'); closeSideMenu();">
+            <span class="side-menu-item-left">🗑️ Видалені</span>
+            <span class="side-menu-item-count" id="mobileCountDeleted">0</span>
+        </div>
+        <div style="height:1px;background:rgba(255,255,255,0.1);margin:8px 0;"></div>
+        <div class="side-menu-item" onclick="openAddModal(); closeSideMenu();" style="color:#10b981;">
+            <span class="side-menu-item-left">➕ Нова посилка</span>
+        </div>
+        <div class="side-menu-item" onclick="runOptimization(); closeSideMenu();" style="background:rgba(139,92,246,0.3);">
+            <span class="side-menu-item-left">⚡ Оптимізація маршруту</span>
         </div>
     </div>
 </div>
@@ -1474,9 +1246,10 @@
             <input type="text" class="search-input" id="searchInput" placeholder="Пошук посилок..." oninput="handleSearch()">
         </div>
         <div class="header-right">
+            <span class="sync-indicator" id="syncIndicator">🔄 —</span>
             <a href="https://messenger.smartsender.com/chats?project=yura-transportation-131349" target="_blank" class="header-chat-btn" title="SmartSender Чат">💬</a>
             <span class="role-badge">📦 Посилки</span>
-            <div class="user-avatar">Y</div>
+            <div class="user-avatar" onclick="promptManagerName()" title="Натисніть щоб змінити ім'я">OP</div>
         </div>
     </div>
 </header>
@@ -1485,42 +1258,67 @@
 <div class="main-layout">
     <!-- PC SIDEBAR -->
     <aside class="pc-sidebar" id="pcSidebar">
-        <!-- Скинути всі фільтри -->
-        <div style="padding:8px 10px;">
-            <div class="pc-sidebar-item" onclick="resetFilters()" style="background:linear-gradient(135deg,var(--primary),var(--info));color:white;font-weight:700;justify-content:center;cursor:pointer;border-radius:10px;padding:10px;font-size:13px;">
-                <span>🔄 Скинути всі фільтри</span>
-            </div>
-        </div>
-        <!-- Напрямок -->
+        <!-- Посилки -->
         <div class="pc-sidebar-section">
-            <div class="pc-sidebar-header" onclick="togglePcSection('direction')">
-                <span class="pc-sidebar-title"><span>🧭</span> Напрямок</span>
+            <div class="pc-sidebar-header collapsed" onclick="togglePcSection('direction')">
+                <span class="pc-sidebar-title"><span>📦</span> ПОСИЛКИ</span>
                 <span class="pc-sidebar-toggle" id="pcToggleDirection">▼</span>
             </div>
-            <div class="pc-sidebar-content" id="pcSectionDirection">
+            <div class="pc-sidebar-content collapsed" id="pcSectionDirection">
                 <div class="pc-sidebar-item" id="pcNewLeads" onclick="showNewLeads()" style="background:rgba(59,130,246,0.08);color:var(--primary);">
-                    <span><span class="item-icon">🆕</span>Нові (24 год)</span>
+                    <span><span class="item-icon">🆕</span><span class="item-text">Нові (24 год)</span></span>
                     <span class="item-count" id="pcCountNew" style="background:var(--accent);color:white;">0</span>
                 </div>
-                <div class="pc-sidebar-item" id="pcDirectionAll" onclick="setDirection('all')">
-                    <span><span class="item-icon">📊</span>Всі посилки</span>
+                <div class="pc-sidebar-item active" id="pcDirectionAll" onclick="setDirection('all')">
+                    <span><span class="item-icon">📊</span><span class="item-text">Всі</span></span>
                     <span class="item-count" id="pcCountAll">0</span>
                 </div>
                 <div class="pc-sidebar-item" id="pcDirectionUaEu" onclick="setDirection('ua-eu')">
-                    <span><span class="item-icon">🇺🇦→🇪🇺</span>Україна → Європа</span>
+                    <span><span class="item-icon">🇺🇦→🇪🇺</span><span class="item-text">Україна → Європа</span></span>
                     <span class="item-count" id="pcCountUaEu">0</span>
                 </div>
                 <div class="pc-sidebar-item" id="pcDirectionEuUa" onclick="setDirection('eu-ua')">
-                    <span><span class="item-icon">🇪🇺→🇺🇦</span>Європа → Україна</span>
+                    <span><span class="item-icon">🇪🇺→🇺🇦</span><span class="item-text">Європа → Україна</span></span>
                     <span class="item-count" id="pcCountEuUa">0</span>
+                </div>
+
+                <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+                    <div style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;margin-bottom:8px;letter-spacing:0.5px;">🔍 Фільтри</div>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">Статус оплати</label>
+                        <select id="filterPayStatus" onchange="applyFilters()" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;margin-top:4px;">
+                            <option value="all">Всі</option>
+                            <option value="Оплачено">Оплачено</option>
+                            <option value="Неоплачено">Неоплачено</option>
+                            <option value="Відправник">Відправник</option>
+                            <option value="Отримувач">Отримувач</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">Статус посилки</label>
+                        <select id="filterParcelStatus" onchange="applyFilters()" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;margin-top:4px;">
+                            <option value="all">Всі</option>
+                            <option value="Зареєстровано">Зареєстровано</option>
+                            <option value="Оформлено">Оформлено</option>
+                            <option value="Кордон">Кордон</option>
+                            <option value="Доставка">Доставка</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">Авто</label>
+                        <select id="filterVehicle" onchange="applyFilters()" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;margin-top:4px;">
+                            <option value="all">Всі</option>
+                            <option value="none">⚠️ Без авто</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
-        
+
         <!-- Дата -->
         <div class="pc-sidebar-section">
             <div class="pc-sidebar-header collapsed" onclick="togglePcSection('date')">
-                <span class="pc-sidebar-title"><span>📅</span> Дата відправки</span>
+                <span class="pc-sidebar-title"><span>📅</span> ДАТА ВІДПРАВКИ</span>
                 <span class="pc-sidebar-toggle" id="pcToggleDate">▼</span>
             </div>
             <div class="pc-sidebar-content collapsed" id="pcSectionDate">
@@ -1534,64 +1332,72 @@
                 <div class="pc-sidebar-calendar" id="pcCalendar"></div>
             </div>
         </div>
-        
+
         <!-- Автомобіль -->
         <div class="pc-sidebar-section">
             <div class="pc-sidebar-header collapsed" onclick="togglePcSection('vehicles')">
-                <span class="pc-sidebar-title"><span>🚐</span> Автомобіль</span>
+                <span class="pc-sidebar-title"><span>🚐</span> АВТОМОБІЛЬ</span>
                 <span class="pc-sidebar-toggle" id="pcToggleVehicles">▼</span>
             </div>
             <div class="pc-sidebar-content collapsed" id="pcSectionVehicles">
                 <div class="pc-sidebar-item warning" id="pcVehicleNone" onclick="setVehicleFilter('none')">
-                    <span><span class="item-icon">❓</span>Без авто</span>
+                    <span><span class="item-icon">❓</span><span class="item-text">Без авто</span></span>
                     <span class="item-count" id="pcCountNoVehicle">0</span>
                 </div>
                 <div id="pcVehiclesList"></div>
                 <div class="pc-sidebar-add" onclick="openAddVehicleModal()">➕ Додати авто</div>
             </div>
         </div>
-        
+
         <!-- Маршрути -->
         <div class="pc-sidebar-section">
             <div class="pc-sidebar-header collapsed" onclick="togglePcSection('routes')">
-                <span class="pc-sidebar-title"><span>🚀</span> Маршрути</span>
+                <span class="pc-sidebar-title"><span>🚀</span> МАРШРУТИ</span>
                 <span class="pc-sidebar-toggle" id="pcToggleRoutes">▼</span>
             </div>
             <div class="pc-sidebar-content collapsed" id="pcSectionRoutes">
                 <div class="pc-sidebar-item route" id="pcRouteAll" onclick="showAllRoutes()">
-                    <span><span class="item-icon">📋</span>Всі маршрути</span>
+                    <span><span class="item-icon">📋</span><span class="item-text">Всі маршрути</span></span>
                     <span class="item-count" id="pcCountRoute">0</span>
                 </div>
                 <div id="pcRoutesList"></div>
             </div>
         </div>
-        
-        <!-- Дії -->
+
+        <!-- Статуси -->
         <div class="pc-sidebar-section">
             <div class="pc-sidebar-header collapsed" onclick="togglePcSection('actions')">
-                <span class="pc-sidebar-title"><span>📋</span> Статуси</span>
+                <span class="pc-sidebar-title"><span>📋</span> СТАТУСИ</span>
                 <span class="pc-sidebar-toggle" id="pcToggleActions">▼</span>
             </div>
             <div class="pc-sidebar-content collapsed" id="pcSectionActions">
                 <div class="pc-sidebar-item archive" id="pcArchive" onclick="showStatusFilter('archived')">
-                    <span><span class="item-icon">📦</span>Архів</span>
+                    <span><span class="item-icon">📦</span><span class="item-text">Архів</span></span>
                     <span class="item-count" id="pcCountArchive">0</span>
                 </div>
                 <div class="pc-sidebar-item" id="pcRefused" onclick="showStatusFilter('refused')">
-                    <span><span class="item-icon">❌</span>Відмови</span>
+                    <span><span class="item-icon">❌</span><span class="item-text">Відмови</span></span>
                     <span class="item-count" id="pcCountRefused">0</span>
                 </div>
                 <div class="pc-sidebar-item" id="pcTransferred" onclick="showStatusFilter('transferred')">
-                    <span><span class="item-icon">📆</span>Перенос</span>
+                    <span><span class="item-icon">📆</span><span class="item-text">Перенос</span></span>
                     <span class="item-count" id="pcCountTransferred">0</span>
                 </div>
                 <div class="pc-sidebar-item" id="pcDeleted" onclick="showStatusFilter('deleted')">
-                    <span><span class="item-icon">🗑️</span>Видалені</span>
+                    <span><span class="item-icon">🗑️</span><span class="item-text">Видалені</span></span>
                     <span class="item-count" id="pcCountDeleted">0</span>
                 </div>
             </div>
         </div>
+
+        <!-- Дії -->
+        <div class="pc-sidebar-section">
+            <div style="padding:14px;display:flex;flex-direction:column;gap:8px;">
+                <button onclick="openAddModal()" style="width:100%;padding:12px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">➕ Нова посилка</button>
+            </div>
+        </div>
     </aside>
+    <button class="pc-sidebar-collapse-btn" id="pcSidebarCollapseBtn" onclick="togglePcSidebar()" title="Згорнути/розгорнути меню">◀</button>
 
     <!-- MAIN CONTENT AREA -->
     <main class="main-content-area">
@@ -1780,8 +1586,23 @@
     </div>
 </div>
 
-<!-- BULK ACTIONS SIDEBAR - PC версія (виїзна панель зліва) -->
-<div class="bulk-actions-sidebar" id="bulkActionsSidebar">
+<!-- BULK TOOLBAR — як у пасажирській CRM -->
+<div class="bulk-toolbar" id="bulkToolbar">
+    <span class="bulk-toolbar-count" id="bulkCount">0 обрано</span>
+    <button class="bulk-toolbar-btn select-all" onclick="selectAllVisible()">☑ Вибрати всі</button>
+    <button class="bulk-toolbar-btn vehicle" onclick="openBulkVehicleModal()">🚐 Авто</button>
+    <button class="bulk-toolbar-btn optimize" onclick="bulkOptimize()">⚡ Оптимізація</button>
+    <button class="bulk-toolbar-btn route" onclick="bulkMoveToRoute()">🚀 Маршрут</button>
+    <button class="bulk-toolbar-btn" style="background:#7c3aed;color:white;" onclick="openTagModal()">🏷️ Тег</button>
+    <button class="bulk-toolbar-btn" style="background:var(--info);color:white;" onclick="bulkSetParcelStatus()">📋 Статус</button>
+    <button class="bulk-toolbar-btn archive" onclick="bulkArchive()">📦 Архів</button>
+    <button class="bulk-toolbar-btn danger" onclick="bulkDelete()">🗑️ Видалити</button>
+    <button class="bulk-toolbar-btn cancel" onclick="clearSelection()">✕ Скасувати</button>
+</div>
+
+<!-- OLD BULK SIDEBAR HIDDEN -->
+<div style="display:none;">
+<div class="bulk-actions-sidebar-old" id="bulkActionsSidebar">
     <div class="bulk-sidebar-header">
         <span class="bulk-sidebar-title">Дії</span>
         <span class="bulk-sidebar-count"><span id="bulkCountSidebar">0</span> вибрано</span>
@@ -1863,7 +1684,10 @@
         </button>
     </div>
 </div>
+</div><!-- end hidden old bulk sidebar -->
 
+<!-- OLD BULK ACTIONS BAR (hidden) -->
+<div style="display:none;">
 <!-- BULK ACTIONS BAR - Mobile версія -->
 <div class="bulk-actions-bar" id="bulkActionsBar">
     <div class="bulk-actions-content">
@@ -1886,6 +1710,7 @@
         </div>
     </div>
 </div>
+</div><!-- end hidden old bulk actions bar -->
 
 <!-- TAG MODAL -->
 <div class="modal-overlay" id="tagModal" onclick="if(event.target===this)closeTagModal()">
@@ -1937,14 +1762,11 @@
 </div>
 
 <nav class="bottom-nav">
-    <button class="nav-item active" id="navPackages" onclick="toggleDirectionPopup()">
-        <span>📦</span>
-        <span id="navPackagesLabel">Посилки</span>
-    </button>
-    <button class="nav-item" onclick="window.location.href='index_pass_19v.html'"><span>👥</span>Пасажири</button>
+    <button class="nav-item active" id="navPackages" onclick="resetFilters()"><span>📦</span>Посилки</button>
+    <button class="nav-item" id="navPax" onclick="window.open('Crm_Pasanger_kod1v.html','_blank')"><span>👥</span>Пасажири</button>
     <button class="nav-item" onclick="syncWithSheets()"><span>🔄</span>Синхр.</button>
     <button class="nav-item" onclick="openColumnsModal()"><span>⚙️</span>Колонки</button>
-    <button class="nav-item" onclick="toggleAddPopup()"><span>➕</span>Додати</button>
+    <button class="nav-item" onclick="openAddModal()"><span>➕</span>Додати</button>
 </nav>
 
 <!-- ADD POPUP: Manual or Scanner -->
@@ -2259,6 +2081,7 @@ let undoHistory = []; // Історія для відміни дій
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
+    updateAvatarUI();
     renderCalendars();
 
     // За замовчуванням показуємо нові ліди
@@ -2278,6 +2101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(r => r.json())
     .then(data => {
         hideLoader();
+        updateSyncTime();
         if (data.success && data.packages) {
             packages = data.packages.map(p => {
                 let normalizedStatus = (p.status || '').toString().toLowerCase().trim();
@@ -2457,14 +2281,48 @@ function loadSettings() { try { const s = JSON.parse(localStorage.getItem('yuraC
 function saveSettings() { const columnLabels={}; Object.keys(ALL_COLUMNS).forEach(k=>{columnLabels[k]=ALL_COLUMNS[k].label;}); localStorage.setItem('yuraCrmPackagesV1', JSON.stringify({colSettings,vehicles,columnLabels,hiddenCols:[...hiddenCols]})); }
 
 // SIDE MENU
-function openSideMenu() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('sideMenuOverlay').classList.add('show'); renderMobileCalendar(); updateMobileVehicles(); }
+function openSideMenu() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('sideMenuOverlay').classList.add('show'); }
 function closeSideMenu() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('sideMenuOverlay').classList.remove('show'); }
 
+// Згортання/розгортання PC сайдбару (як у пасажирській CRM)
+function togglePcSidebar() {
+    const sidebar = document.getElementById('pcSidebar');
+    const btn = document.getElementById('pcSidebarCollapseBtn');
+    if (!sidebar) return;
+    sidebar.classList.toggle('collapsed-sidebar');
+    if (sidebar.classList.contains('collapsed-sidebar')) {
+        btn.style.left = '0';
+        btn.textContent = '▶';
+    } else {
+        btn.style.left = '300px';
+        btn.textContent = '◀';
+    }
+}
+
+// Менеджер ім'я (як у пасажирській CRM)
+function getManagerName() { return localStorage.getItem('posylki_manager') || 'OP'; }
+function setManagerName(name) { localStorage.setItem('posylki_manager', name); updateAvatarUI(); }
+function updateAvatarUI() {
+    const name = getManagerName();
+    const avatar = document.querySelector('.user-avatar');
+    if (avatar) avatar.textContent = name.substring(0, 2).toUpperCase();
+}
+function promptManagerName() {
+    const current = getManagerName();
+    const name = prompt('Ваше ім\'я (для відображення):', current);
+    if (name && name.trim()) setManagerName(name.trim());
+}
+
+// Оновлення часу синхронізації
+function updateSyncTime() {
+    const el = document.getElementById('syncIndicator');
+    if (el) el.textContent = '🔄 ' + new Date().toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
+}
+
 function toggleMobileSection(section) {
-    const ids = {direction:'mobileDirectionSection',dates:'mobileDatesSection',vehicles:'mobileVehiclesSection',routes:'mobileRoutesSection',actions:'mobileActionsSection'};
-    const toggles = {direction:'toggleDirection',dates:'toggleDates',vehicles:'toggleVehicles',routes:'toggleRoutes',actions:'toggleActions'};
-    document.getElementById(ids[section])?.classList.toggle('open');
-    document.getElementById(toggles[section])?.classList.toggle('open');
+    const ids = {vehicles:'mobileVehiclesSection',routes:'mobileRoutesList'};
+    const el = document.getElementById(ids[section]);
+    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 // PC Sidebar згортання
@@ -3445,19 +3303,10 @@ function toggleSelectAll() {
 function clearSelection() {
     selectedIds.clear();
     render();
-    // Ховаємо sidebar тільки тут
-    const sidebar = document.getElementById('bulkActionsSidebar');
-    if (sidebar) sidebar.classList.remove('show');
-    const bar = document.getElementById('bulkActionsBar');
-    if (bar) bar.classList.remove('show');
-    document.getElementById('bulkCount').textContent = 0;
-    const sidebarCount = document.getElementById('bulkCountSidebar');
-    if (sidebarCount) sidebarCount.textContent = 0;
-    // Повертаємо PC sidebar
-    const pcSidebar = document.getElementById('pcSidebar');
-    if (pcSidebar) { pcSidebar.classList.remove('collapsed-sidebar'); pcSidebar.style.display = ''; }
-    const contentArea = document.querySelector('.main-content-area');
-    if (contentArea) contentArea.classList.remove('shifted-by-bulk');
+    const toolbar = document.getElementById('bulkToolbar');
+    if (toolbar) toolbar.classList.remove('show');
+    const countEl = document.getElementById('bulkCount');
+    if (countEl) countEl.textContent = '0 обрано';
 }
 
 // Оновлює дані після bulk-дії, але залишає sidebar і вибір
@@ -3475,40 +3324,19 @@ function refreshAfterAction() {
 }
 
 function switchToMenu() {
-    // Ховаємо bulk sidebar, показуємо PC sidebar
-    const bulk = document.getElementById('bulkActionsSidebar');
-    if (bulk) bulk.classList.remove('show');
-    const pcSidebar = document.getElementById('pcSidebar');
-    if (pcSidebar) { pcSidebar.classList.remove('collapsed-sidebar'); pcSidebar.style.display = ''; }
-    const contentArea = document.querySelector('.main-content-area');
-    if (contentArea) contentArea.classList.remove('shifted-by-bulk');
+    clearSelection();
 }
 
 function updateBulkBar() {
-    const bar = document.getElementById('bulkActionsBar');
-    const sidebar = document.getElementById('bulkActionsSidebar');
+    const toolbar = document.getElementById('bulkToolbar');
     const count = selectedIds.size;
-    
-    // Оновлюємо лічильники
-    document.getElementById('bulkCount').textContent = count;
-    const sidebarCount = document.getElementById('bulkCountSidebar');
-    if (sidebarCount) sidebarCount.textContent = count;
-    
-    // Mobile bar - показуємо/ховаємо
-    bar.classList.toggle('show', count > 0);
-    
-    // PC Sidebar - тільки ПОКАЗУЄМО, не ховаємо (ховає clearSelection)
-    if (sidebar && count > 0) {
-        sidebar.classList.add('show');
-        // На PC ховаємо основний сайдбар, зсуваємо контент
-        const pcSidebar = document.getElementById('pcSidebar');
-        const contentArea = document.querySelector('.main-content-area');
-        if (pcSidebar && window.innerWidth >= 1100) {
-            pcSidebar.classList.add('collapsed-sidebar');
-            pcSidebar.style.display = 'none';
-        }
-        if (contentArea) contentArea.classList.add('shifted-by-bulk');
-    }
+
+    // Оновлюємо лічильник
+    const countEl = document.getElementById('bulkCount');
+    if (countEl) countEl.textContent = count + ' обрано';
+
+    // Показуємо/ховаємо toolbar
+    if (toolbar) toolbar.classList.toggle('show', count > 0);
     
     const isRouteView = filters.statusFilter === 'route' && filters.routeVehicle;
     const isArchiveView = filters.showArchive;
@@ -5296,10 +5124,9 @@ function selectAllVisible() {
         // Знімаємо всі галочки (але НЕ ховаємо sidebar)
         visibleUids.forEach(uid => selectedIds.delete(uid));
         render();
-        // Оновлюємо тільки лічильники, НЕ ховаємо панель
-        document.getElementById('bulkCount').textContent = selectedIds.size;
-        const sidebarCount = document.getElementById('bulkCountSidebar');
-        if (sidebarCount) sidebarCount.textContent = selectedIds.size;
+        // Оновлюємо тільки лічильники
+        const countEl = document.getElementById('bulkCount');
+        if (countEl) countEl.textContent = selectedIds.size + ' обрано';
         showToast(`☐ Знято ${visibleUids.length}`);
     } else {
         // Ставимо всі галочки
