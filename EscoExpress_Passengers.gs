@@ -978,16 +978,44 @@ function apiRestorePassenger(params) {
   return { ok: true, restored: restored };
 }
 
-// getArchive — Отримати всі записи з архіву
+// getArchive — Отримати записи з архіву (з пагінацією)
 function apiGetArchive(params) {
+  var offset = parseInt(params.offset) || 0;
+  var limit = parseInt(params.limit) || 0; // 0 = всі (зворотна сумісність)
+
   var archSS = SpreadsheetApp.openById(DB.ARCHIVE);
   var archSheet = archSS.getSheetByName('Архів') || archSS.getSheets()[0];
+  var lastRow = archSheet.getLastRow();
+  var total = lastRow >= DATA_START ? lastRow - DATA_START + 1 : 0;
+
+  if (total === 0) {
+    return { ok: true, rows: [], total: 0, offset: 0, hasMore: false };
+  }
+
+  var headers = getHeaders(archSheet);
+
+  // Якщо limit задано — читаємо тільки потрібний діапазон (швидше)
+  if (limit > 0) {
+    var startRow = DATA_START + offset;
+    var rowsToRead = Math.min(limit, lastRow - startRow + 1);
+    if (startRow > lastRow || rowsToRead <= 0) {
+      return { ok: true, rows: [], total: total, offset: offset, hasMore: false };
+    }
+    var data = archSheet.getRange(startRow, 1, rowsToRead, headers.length).getValues();
+    var rows = [];
+    for (var i = 0; i < data.length; i++) {
+      rows.push(rowToObj(headers, data[i]));
+    }
+    return { ok: true, rows: rows, total: total, offset: offset, hasMore: (offset + limit) < total };
+  }
+
+  // Без limit — повертаємо всі (зворотна сумісність)
   var info = getAllData(archSheet);
   var rows = [];
   for (var i = 0; i < info.data.length; i++) {
     rows.push(rowToObj(info.headers, info.data[i]));
   }
-  return { ok: true, rows: rows, total: rows.length };
+  return { ok: true, rows: rows, total: rows.length, offset: 0, hasMore: false };
 }
 
 // deleteFromArchive — Вимкнено (записи зберігаються в архіві назавжди)
@@ -1516,6 +1544,92 @@ function apiFreeSeat(params) {
 // ROUTES — Читання аркушів маршрутів з Marhrut_crm_v6
 // ══════════════════════════════════════════════════════════════
 
+// getRoutesList — ШВИДКИЙ: тільки імена аркушів + кількість рядків (без даних)
+function apiGetRoutesList(params) {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'routesList_v1';
+  var cached = cache.get(cacheKey);
+  if (cached) {
+    return { ok: true, data: JSON.parse(cached), fromCache: true };
+  }
+
+  var ss = SpreadsheetApp.openById(DB.MARHRUT);
+  var allSheets = ss.getSheets();
+  var result = [];
+
+  for (var s = 0; s < allSheets.length; s++) {
+    var sheet = allSheets[s];
+    var sheetName = sheet.getName();
+    if (/^(Лог|Конфіг|Config|Log|Шаблон|Template)/i.test(sheetName)) continue;
+
+    var lastRow = sheet.getLastRow();
+    var rowCount = lastRow >= 2 ? lastRow - 1 : 0;
+
+    result.push({ sheetName: sheetName, rowCount: rowCount });
+  }
+
+  cache.put(cacheKey, JSON.stringify(result), 300); // кеш 5 хв
+  return { ok: true, data: result };
+}
+
+// getRouteSheet — завантажити дані ОДНОГО аркуша маршруту
+function apiGetRouteSheet(params) {
+  var sheetName = params.sheetName;
+  if (!sheetName) return { ok: false, error: 'sheetName is required' };
+
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'routeSheet_' + sheetName;
+  var cached = cache.get(cacheKey);
+  if (cached) {
+    return { ok: true, data: JSON.parse(cached), fromCache: true };
+  }
+
+  var ss = SpreadsheetApp.openById(DB.MARHRUT);
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return { ok: false, error: 'Sheet not found: ' + sheetName };
+
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastRow < 2 || lastCol < 1) {
+    return { ok: true, data: { sheetName: sheetName, headers: [], rows: [], rowCount: 0 } };
+  }
+
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { return String(h).trim(); });
+  var dataRows = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+
+  var rows = [];
+  for (var i = 0; i < dataRows.length; i++) {
+    var row = dataRows[i];
+    var isEmpty = row.every(function(cell) { return String(cell).trim() === ''; });
+    if (isEmpty) continue;
+
+    var obj = {};
+    for (var j = 0; j < headers.length; j++) {
+      if (headers[j]) {
+        var val = row[j];
+        if (val instanceof Date) {
+          obj[headers[j]] = Utilities.formatDate(val, 'Europe/Kiev', 'dd.MM.yyyy');
+        } else {
+          obj[headers[j]] = String(val !== null && val !== undefined ? val : '');
+        }
+      }
+    }
+    rows.push(obj);
+  }
+
+  var result = {
+    sheetName: sheetName,
+    headers: headers.filter(function(h) { return h !== ''; }),
+    rows: rows,
+    rowCount: rows.length
+  };
+
+  // Кеш на 3 хв (дані маршруту можуть змінюватись частіше)
+  try { cache.put(cacheKey, JSON.stringify(result), 180); } catch(e) { /* занадто великий для кешу */ }
+  return { ok: true, data: result };
+}
+
+// getRoutes — ЗАЛИШАЄМО для зворотної сумісності (але повільний)
 function apiGetRoutes(params) {
   var ss = SpreadsheetApp.openById(DB.MARHRUT);
   var allSheets = ss.getSheets();
@@ -1525,7 +1639,6 @@ function apiGetRoutes(params) {
     var sheet = allSheets[s];
     var sheetName = sheet.getName();
 
-    // Пропускаємо службові аркуші (логи, конфіг тощо)
     if (/^(Лог|Конфіг|Config|Log|Шаблон|Template)/i.test(sheetName)) continue;
 
     var lastRow = sheet.getLastRow();
@@ -1541,7 +1654,6 @@ function apiGetRoutes(params) {
     var rows = [];
     for (var i = 0; i < dataRows.length; i++) {
       var row = dataRows[i];
-      // Пропускаємо повністю порожні рядки
       var isEmpty = row.every(function(cell) { return String(cell).trim() === ''; });
       if (isEmpty) continue;
 
@@ -1549,7 +1661,6 @@ function apiGetRoutes(params) {
       for (var j = 0; j < headers.length; j++) {
         if (headers[j]) {
           var val = row[j];
-          // Форматуємо дати
           if (val instanceof Date) {
             obj[headers[j]] = Utilities.formatDate(val, 'Europe/Kiev', 'dd.MM.yyyy');
           } else {
@@ -1785,6 +1896,8 @@ function doPost(e) {
       case 'duplicateTrip':      result = apiDuplicateTrip(body); break;
 
       // ── ROUTES (Marhrut_crm_v6) ──
+      case 'getRoutesList':      result = apiGetRoutesList(body); break;
+      case 'getRouteSheet':      result = apiGetRouteSheet(body); break;
       case 'getRoutes':          result = apiGetRoutes(body); break;
       case 'addToRoute':         result = apiAddToRoute(body); break;
       case 'createRoute':        result = apiCreateRoute(body); break;

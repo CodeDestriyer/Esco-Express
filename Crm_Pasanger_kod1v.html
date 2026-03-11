@@ -1666,18 +1666,23 @@ async function loadRoutes() {
     const errEl = document.getElementById('routesError');
     const list = document.getElementById('routesList');
     loading.style.display = 'block';
-    loading.textContent = '⏳ Завантаження аркушів маршрутів з Marhrut_crm...';
+    loading.textContent = '⏳ Завантаження списку маршрутів...';
     errEl.style.display = 'none';
     list.innerHTML = '';
 
     try {
-        const res = await apiPost('getRoutes', {});
+        // ШВИДКИЙ запит: тільки імена аркушів + кількість рядків
+        const res = await apiPost('getRoutesList', {});
         loading.style.display = 'none';
         if (res.ok && res.data) {
-            // Зберігаємо ВСІ аркуші (для створення маршрутів тощо)
-            allRouteSheets = res.data;
-            // Фільтруємо: показуємо тільки Маршрут_* (без шаблону)
-            routes = res.data.filter(s => {
+            // Зберігаємо список аркушів (rows ще не завантажені)
+            allRouteSheets = res.data.map(s => ({
+                sheetName: s.sheetName,
+                rowCount: s.rowCount,
+                headers: [],
+                rows: null // null = ще не завантажено
+            }));
+            routes = allRouteSheets.filter(s => {
                 const n = (s.sheetName || '');
                 return n.startsWith('Маршрут_') && n !== 'Маршрут_Шаблон';
             });
@@ -1693,6 +1698,34 @@ async function loadRoutes() {
         loading.style.display = 'none';
         errEl.style.display = 'block';
         errEl.textContent = '❌ Помилка: ' + e.message;
+    }
+}
+
+// Завантажити дані одного аркуша маршруту (lazy loading)
+async function loadRouteSheetData(idx) {
+    const sheet = routes[idx];
+    if (!sheet || sheet.rows !== null) return; // вже завантажено
+
+    const loading = document.getElementById('routesLoading');
+    if (loading) {
+        loading.style.display = 'block';
+        loading.textContent = '⏳ Завантаження даних маршруту ' + (sheet.sheetName || '').replace('Маршрут_', '') + '...';
+    }
+
+    try {
+        const res = await apiPost('getRouteSheet', { sheetName: sheet.sheetName });
+        if (loading) loading.style.display = 'none';
+        if (res.ok && res.data) {
+            sheet.headers = res.data.headers || [];
+            sheet.rows = res.data.rows || [];
+            sheet.rowCount = res.data.rowCount || 0;
+            // Оновити також в allRouteSheets
+            const allIdx = allRouteSheets.findIndex(s => s.sheetName === sheet.sheetName);
+            if (allIdx !== -1) allRouteSheets[allIdx] = sheet;
+        }
+    } catch (e) {
+        if (loading) loading.style.display = 'none';
+        console.error('loadRouteSheetData error:', e);
     }
 }
 
@@ -1717,17 +1750,24 @@ function renderRouteSidebar() {
         } else {
             pcList.innerHTML = routes.map((sheet, idx) => {
                 const name = (sheet.sheetName || '').replace('Маршрут_', '');
-                const rows = sheet.rows || [];
-                const pax = rows.filter(r => (r['Тип запису'] || '').includes('Пасажир')).length;
-                const parcels = rows.filter(r => (r['Тип запису'] || '').includes('Посилк')).length;
+                const rows = sheet.rows;
+                const isLoaded = rows !== null;
                 const isActive = activeRouteIdx === idx && currentView === 'routes';
+                let countLabel = '';
+                if (isLoaded) {
+                    const pax = rows.filter(r => (r['Тип запису'] || '').includes('Пасажир')).length;
+                    const parcels = rows.filter(r => (r['Тип запису'] || '').includes('Посилк')).length;
+                    countLabel = '👤' + pax + ' 📦' + parcels;
+                } else {
+                    countLabel = '📋' + (sheet.rowCount || 0);
+                }
                 return `<div class="pc-sidebar-item route-sidebar-item${isActive ? ' active' : ''}" onclick="openRoute(${idx})" style="position:relative;">
                     <span>
                         <span class="item-icon">🗺️</span>
                         <span class="item-text">${name}</span>
                     </span>
                     <span style="display:flex;align-items:center;gap:4px;">
-                        <span class="item-count" style="font-size:9px;">👤${pax} 📦${parcels}</span>
+                        <span class="item-count" style="font-size:9px;">${countLabel}</span>
                         <button class="route-delete-btn" onclick="event.stopPropagation(); confirmDeleteRoute(${idx})" title="Видалити маршрут">✕</button>
                     </span>
                 </div>`;
@@ -1742,12 +1782,19 @@ function renderRouteSidebar() {
         } else {
             mobList.innerHTML = routes.map((sheet, idx) => {
                 const name = (sheet.sheetName || '').replace('Маршрут_', '');
-                const rows = sheet.rows || [];
-                const pax = rows.filter(r => (r['Тип запису'] || '').includes('Пасажир')).length;
-                const parcels = rows.filter(r => (r['Тип запису'] || '').includes('Посилк')).length;
+                const rows = sheet.rows;
+                const isLoaded = rows !== null;
+                let countLabel = '';
+                if (isLoaded) {
+                    const pax = rows.filter(r => (r['Тип запису'] || '').includes('Пасажир')).length;
+                    const parcels = rows.filter(r => (r['Тип запису'] || '').includes('Посилк')).length;
+                    countLabel = '👤' + pax + ' 📦' + parcels;
+                } else {
+                    countLabel = '📋' + (sheet.rowCount || 0);
+                }
                 return `<div class="side-menu-item" onclick="openRoute(${idx}); closeSideMenu();" style="padding:8px 14px;font-size:12px;">
                     <span class="side-menu-item-left">🗺️ ${name}</span>
-                    <span style="font-size:10px;opacity:0.8;">👤${pax} 📦${parcels}</span>
+                    <span style="font-size:10px;opacity:0.8;">${countLabel}</span>
                 </div>`;
             }).join('') + `<div class="side-menu-item" onclick="promptCreateRoute(); closeSideMenu();" style="color:#7c3aed;padding:8px 14px;font-size:12px;">
                 <span class="side-menu-item-left">➕ Новий маршрут</span>
@@ -1768,8 +1815,12 @@ function toggleMobileRoutesList() {
 }
 
 // ── Відкрити конкретний маршрут ──
-function openRoute(idx) {
+async function openRoute(idx) {
     activeRouteIdx = idx;
+    // Lazy load: завантажити дані аркуша, якщо ще не завантажені
+    if (routes[idx] && routes[idx].rows === null) {
+        await loadRouteSheetData(idx);
+    }
     showRoutesView();
 }
 
@@ -5466,17 +5517,32 @@ async function reorderRouteAfterOptimize() {
 // ================================================================
 let archiveSelectedIds = new Set();
 let archivedPassengers = []; // Окремий масив — дані з Archive_crm_v3
+let archiveTotal = 0;
+let archiveHasMore = false;
+let archiveLoading = false;
+const ARCHIVE_PAGE_SIZE = 50;
 
-async function loadArchive() {
+async function loadArchive(append) {
+    if (archiveLoading) return;
+    archiveLoading = true;
     try {
-        const res = await apiPost('getArchive', {});
+        const offset = append ? archivedPassengers.length : 0;
+        const res = await apiPost('getArchive', { offset: offset, limit: ARCHIVE_PAGE_SIZE });
         if (res.ok) {
-            archivedPassengers = res.rows || [];
-            setCount('pcCountArchive', archivedPassengers.length);
+            if (append) {
+                archivedPassengers = archivedPassengers.concat(res.rows || []);
+            } else {
+                archivedPassengers = res.rows || [];
+            }
+            archiveTotal = res.total || archivedPassengers.length;
+            archiveHasMore = res.hasMore || false;
+            setCount('pcCountArchive', archiveTotal);
             if (currentView === 'archive') renderArchive();
         }
     } catch (e) {
         console.error('loadArchive error:', e);
+    } finally {
+        archiveLoading = false;
     }
 }
 
@@ -5509,14 +5575,14 @@ function renderArchive() {
     if (!list) return;
 
     const archived = getArchivedPassengers();
-    subtitle.textContent = archived.length + ' записів в архіві';
+    subtitle.textContent = (archiveTotal > archived.length ? archived.length + ' з ' + archiveTotal : archived.length) + ' записів в архіві';
 
     if (archived.length === 0) {
         list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);font-size:13px;">📦 Архів порожній</div>';
         return;
     }
 
-    list.innerHTML = archived.map(p => {
+    let cardsHtml = archived.map(p => {
         const id = p['PAX_ID'] || '';
         const name = p['Піб'] || '—';
         const phone = p['Телефон пасажира'] || '—';
@@ -5555,6 +5621,17 @@ function renderArchive() {
             </div>
         </div>`;
     }).join('');
+
+    // Кнопка "Завантажити ще" якщо є ще записи
+    if (archiveHasMore) {
+        cardsHtml += `<div style="text-align:center;padding:16px;">
+            <button onclick="loadArchive(true)" style="padding:8px 24px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text-primary);cursor:pointer;font-size:13px;">
+                Завантажити ще (${archivedPassengers.length} з ${archiveTotal})
+            </button>
+        </div>`;
+    }
+
+    list.innerHTML = cardsHtml;
 
     updateArchiveBulkToolbar();
 }
