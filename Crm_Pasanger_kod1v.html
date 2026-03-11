@@ -743,6 +743,52 @@
             .bottom-sheet { border-radius: 16px; margin-bottom: 20px; }
             .bottom-sheet-overlay.show { align-items: center; }
         }
+        /* ============ OPTIMIZATION STYLES ============ */
+        .optimize-info { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #e3f2fd, #bbdefb); padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; }
+        .optimize-info-icon { font-size: 24px; }
+        .optimize-info-text { font-size: 14px; color: #0d47a1; }
+        .optimize-section { margin-bottom: 16px; }
+        .optimize-label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); font-size: 13px; }
+        .optimize-radio-group { display: flex; flex-direction: column; gap: 8px; }
+        .optimize-radio { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+        .optimize-radio:hover { border-color: var(--primary); background: rgba(15,52,96,0.03); }
+        .optimize-radio.selected { border-color: var(--primary); background: rgba(15,52,96,0.08); }
+        .optimize-radio-icon { font-size: 20px; }
+        .optimize-radio-text { display: flex; flex-direction: column; }
+        .optimize-radio-text strong { font-size: 13px; }
+        .optimize-radio-text small { font-size: 11px; color: var(--text-secondary); }
+        .optimize-input { width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; background: white; }
+        .optimize-input:focus { outline: none; border-color: var(--primary); }
+        .optimize-hint { display: block; font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+        .optimize-method { background: #fff3e0; padding: 10px 14px; border-radius: 8px; font-size: 12px; color: #e65100; text-align: center; }
+        .optimize-loading { text-align: center; padding: 30px; }
+        .optimize-spinner { border: 3px solid var(--border); border-top: 3px solid var(--primary); border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+        .optimize-loading-text { font-weight: 600; color: var(--primary); margin-bottom: 4px; }
+        .optimize-result-header { font-size: 18px; font-weight: 700; color: var(--success); text-align: center; margin-bottom: 16px; }
+        .optimize-stats { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+        .optimize-stat-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+        .optimize-stat-row:last-child { border-bottom: none; }
+        .optimize-stat-label { color: var(--text-secondary); }
+        .optimize-stat-value { font-weight: 600; }
+        .optimize-not-geocoded { background: #fff5f5; border: 1px solid #fecaca; border-radius: 10px; padding: 12px; margin-bottom: 16px; }
+        .optimize-not-geocoded-title { font-size: 13px; font-weight: 600; color: #dc2626; margin-bottom: 8px; }
+        .optimize-not-geocoded-list { font-size: 12px; color: #991b1b; }
+        .optimize-not-geocoded-item { padding: 4px 0; border-bottom: 1px solid #fecaca; }
+        .optimize-not-geocoded-item:last-child { border-bottom: none; }
+        .optimize-map-links { display: flex; flex-direction: column; gap: 8px; }
+        .optimize-map-btn { display: block; padding: 14px; background: linear-gradient(135deg, var(--primary), #1e4976); color: white; text-decoration: none; border-radius: 10px; text-align: center; font-weight: 700; font-size: 14px; transition: transform 0.2s; }
+        .optimize-map-btn:hover { transform: scale(1.02); }
+        /* Route detail table in optimization result */
+        .optimize-route-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
+        .optimize-route-table th { text-align: left; padding: 8px; background: #f8fafc; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; }
+        .optimize-route-table td { padding: 8px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+        .optimize-route-table tr:hover { background: #f0f4f8; }
+        .opt-order-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: var(--primary); color: white; border-radius: 50%; font-size: 11px; font-weight: 700; }
+        .opt-dist-badge { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .opt-time-badge { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .opt-eta-badge { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .bulk-toolbar-btn.optimize { background: var(--purple); color: white; }
+        .bulk-toolbar-btn.optimize:hover { background: #7c3aed; }
     </style>
 </head>
 <body>
@@ -781,6 +827,9 @@
         <div style="height:1px;background:rgba(255,255,255,0.1);margin:8px 0;"></div>
         <div class="side-menu-item" onclick="openAddModal(); closeSideMenu();" style="color:#10b981;">
             <span class="side-menu-item-left">➕ Новий пасажир</span>
+        </div>
+        <div class="side-menu-item" onclick="runOptimization(); closeSideMenu();" style="background:rgba(139,92,246,0.3);">
+            <span class="side-menu-item-left">⚡ Оптимізація маршруту</span>
         </div>
         <div class="side-menu-item" onclick="openNewTripForm(); closeSideMenu();" style="color:var(--orange);">
             <span class="side-menu-item-left">➕ Новий рейс</span>
@@ -895,8 +944,9 @@
 
         <!-- Дії -->
         <div class="pc-sidebar-section">
-            <div style="padding:14px;">
+            <div style="padding:14px;display:flex;flex-direction:column;gap:8px;">
                 <button onclick="openAddModal()" style="width:100%;padding:12px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">➕ Новий пасажир</button>
+                <button onclick="runOptimization()" style="width:100%;padding:12px;background:var(--purple);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⚡ Оптимізація маршруту</button>
             </div>
         </div>
     </aside>
@@ -1159,6 +1209,7 @@
     <button class="bulk-toolbar-btn select-all" onclick="toggleSelectAll()">☑ Вибрати всі</button>
     <button class="bulk-toolbar-btn assign" onclick="openBulkTripDropdown(event)">🚐 Призначити рейс</button>
     <button class="bulk-toolbar-btn route" onclick="openRouteAssignModal()">🗺️ В маршрут</button>
+    <button class="bulk-toolbar-btn optimize" onclick="bulkOptimize()">⚡ Оптимізація</button>
     <button class="bulk-toolbar-btn cancel" onclick="clearSelection()">✕ Скасувати</button>
     <div class="bulk-trip-dd" id="bulkTripDd"></div>
 </div>
@@ -1179,7 +1230,86 @@
     </div>
 </div>
 
+<!-- OPTIMIZE MODAL -->
+<div class="modal-overlay" id="optimizeModal" onclick="if(event.target===this)closeModal('optimizeModal')">
+    <div class="modal" style="max-width:520px">
+        <div class="modal-header">
+            <span class="modal-title">🚀 Оптимізація маршруту</span>
+            <button class="modal-close" onclick="closeModal('optimizeModal')">×</button>
+        </div>
+        <div class="modal-body" id="optimizeFormBody">
+            <div class="optimize-info">
+                <span class="optimize-info-icon">📦</span>
+                <span class="optimize-info-text">Заявок для оптимізації: <strong id="optimizeCount">0</strong></span>
+            </div>
+            <div class="optimize-section">
+                <label class="optimize-label">📋 Оптимізувати по:</label>
+                <div class="optimize-radio-group">
+                    <label class="optimize-radio selected" id="optFrom" onclick="selectOptimizeBy('from')">
+                        <span class="optimize-radio-icon">📍</span>
+                        <span class="optimize-radio-text">
+                            <strong>Адреса ВІДПРАВКИ</strong>
+                            <small>де забирати пасажирів</small>
+                        </span>
+                    </label>
+                    <label class="optimize-radio" id="optTo" onclick="selectOptimizeBy('to')">
+                        <span class="optimize-radio-icon">🏁</span>
+                        <span class="optimize-radio-text">
+                            <strong>Адреса ПРИБУТТЯ</strong>
+                            <small>де висаджувати пасажирів</small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="optimize-section">
+                <label class="optimize-label">📍 Точка старту:</label>
+                <input type="text" class="optimize-input" id="optimizeStart" placeholder="Залиште пустим → Ужгород">
+                <small class="optimize-hint">Звідки починається маршрут</small>
+            </div>
+            <div class="optimize-section">
+                <label class="optimize-label">🏁 Точка закінчення:</label>
+                <input type="text" class="optimize-input" id="optimizeEnd" placeholder="Залиште пустим → остання точка">
+                <small class="optimize-hint">Де закінчується маршрут (необов'язково)</small>
+            </div>
+            <div class="optimize-method">
+                🗺️ Google Directions API — відстань та час до кожної точки
+            </div>
+        </div>
+        <!-- Result -->
+        <div class="modal-body" id="optimizeResultBody" style="display:none"></div>
+        <!-- Loading -->
+        <div class="modal-body" id="optimizeLoadingBody" style="display:none">
+            <div class="optimize-loading">
+                <div class="optimize-spinner"></div>
+                <div class="optimize-loading-text" id="optimizeLoadingText">Оптимізація маршруту...</div>
+                <small id="optimizeLoadingProgress">Це може зайняти 10-30 секунд</small>
+            </div>
+        </div>
+        <div class="modal-footer" id="optimizeFormFooter">
+            <button class="btn-cancel" onclick="closeModal('optimizeModal')">Скасувати</button>
+            <button class="btn-save" onclick="startOptimization()">🚀 Оптимізувати</button>
+        </div>
+        <div class="modal-footer" id="optimizeResultFooter" style="display:none">
+            <button class="btn-cancel" onclick="closeModal('optimizeModal')">Закрити</button>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
+
+<!-- Google Maps API -->
+<script>
+window.mapsApiReady = false;
+window.mapsGeocoder = null;
+window.mapsDirections = null;
+function initMapsAPI() {
+    window.mapsApiReady = true;
+    window.mapsGeocoder = new google.maps.Geocoder();
+    window.mapsDirections = new google.maps.DirectionsService();
+    console.log('Google Maps API ready');
+}
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDbSS6XSCJ3MafbrSp-rIX1-x130bwzevo&callback=initMapsAPI"></script>
 <script>
 // ================================================================
 // CONFIG
@@ -4456,6 +4586,422 @@ document.addEventListener('click', (e) => {
     }
     tcalClickInside = false;
 });
+
+// ================================================================
+// ROUTE OPTIMIZATION WITH DISTANCE & TIME
+// ================================================================
+let optimizePassengersList = [];
+let optimizeBy = 'from'; // 'from' or 'to'
+const OPTIMIZE_MAX_WAYPOINTS = 23;
+
+function _optSleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function runOptimization() {
+    const filtered = getFilteredPassengers();
+    if (!filtered.length) return showToast('Немає заявок для оптимізації');
+    openOptimizeModal(filtered);
+}
+
+function bulkOptimize() {
+    const selected = [...selectedIds].map(id => passengers.find(p => p['PAX_ID'] === id)).filter(Boolean);
+    if (!selected.length) return showToast('Оберіть пасажирів');
+    openOptimizeModal(selected);
+}
+
+function openOptimizeModal(passengersList) {
+    optimizePassengersList = passengersList;
+    optimizeBy = 'from';
+    document.getElementById('optimizeCount').textContent = passengersList.length;
+    document.getElementById('optimizeStart').value = '';
+    document.getElementById('optimizeEnd').value = '';
+    document.getElementById('optFrom').classList.add('selected');
+    document.getElementById('optTo').classList.remove('selected');
+    document.getElementById('optimizeFormBody').style.display = 'block';
+    document.getElementById('optimizeResultBody').style.display = 'none';
+    document.getElementById('optimizeLoadingBody').style.display = 'none';
+    document.getElementById('optimizeFormFooter').style.display = 'flex';
+    document.getElementById('optimizeResultFooter').style.display = 'none';
+    document.getElementById('optimizeModal').classList.add('show');
+}
+
+function selectOptimizeBy(by) {
+    optimizeBy = by;
+    document.getElementById('optFrom').classList.toggle('selected', by === 'from');
+    document.getElementById('optTo').classList.toggle('selected', by === 'to');
+}
+
+// Geocode via Google Maps JS API
+function geocodeClient(address) {
+    return new Promise(resolve => {
+        if (!window.mapsGeocoder) return resolve(null);
+        let settled = false;
+        const timeout = setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, 10000);
+        try {
+            window.mapsGeocoder.geocode({ address }, (results, status) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timeout);
+                if (status === 'OK' && results && results[0]) {
+                    resolve({ lat: results[0].geometry.location.lat(), lng: results[0].geometry.location.lng() });
+                } else {
+                    resolve(null);
+                }
+            });
+        } catch(e) { if (!settled) { settled = true; clearTimeout(timeout); resolve(null); } }
+    });
+}
+
+// Google Directions API — optimize waypoints + get legs (distance/time)
+function optimizeDirectionsClient(geocodedPassengers, startCoords, endCoords) {
+    return new Promise((resolve, reject) => {
+        if (!window.mapsDirections) return reject(new Error('Maps API not ready'));
+        let settled = false;
+        const timeout = setTimeout(() => { if (!settled) { settled = true; reject(new Error('Directions timeout')); } }, 30000);
+
+        const waypoints = geocodedPassengers.map(p => ({
+            location: new google.maps.LatLng(p.coords.lat, p.coords.lng),
+            stopover: true
+        }));
+
+        const origin = new google.maps.LatLng(startCoords.lat, startCoords.lng);
+        let destination, routeWaypoints;
+
+        if (endCoords) {
+            destination = new google.maps.LatLng(endCoords.lat, endCoords.lng);
+            routeWaypoints = waypoints;
+        } else {
+            destination = waypoints[waypoints.length - 1].location;
+            routeWaypoints = waypoints.slice(0, -1);
+        }
+
+        window.mapsDirections.route({
+            origin, destination,
+            waypoints: routeWaypoints,
+            optimizeWaypoints: true,
+            travelMode: google.maps.TravelMode.DRIVING
+        }, (response, status) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeout);
+            if (status === 'OK') {
+                const route = response.routes[0];
+                const order = route.waypoint_order;
+                const legs = route.legs; // legs has distance & duration for each segment
+                let finalOrder;
+                if (endCoords) {
+                    finalOrder = order;
+                } else {
+                    finalOrder = order.slice();
+                    finalOrder.push(geocodedPassengers.length - 1);
+                }
+                resolve({ order: finalOrder, legs });
+            } else {
+                reject(new Error('Directions API: ' + status));
+            }
+        });
+    });
+}
+
+// Fallback: Nearest Neighbor
+function nearestNeighborClient(geocodedPassengers, startCoords) {
+    const n = geocodedPassengers.length;
+    if (n === 0) return [];
+    if (n === 1) return [0];
+
+    function haversine(c1, c2) {
+        const R = 6371;
+        const dLat = (c2.lat - c1.lat) * Math.PI / 180;
+        const dLng = (c2.lng - c1.lng) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(c1.lat*Math.PI/180) * Math.cos(c2.lat*Math.PI/180) * Math.sin(dLng/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    let currentIdx = 0, minDist = Infinity;
+    for (let i = 0; i < n; i++) {
+        const d = haversine(startCoords, geocodedPassengers[i].coords);
+        if (d < minDist) { minDist = d; currentIdx = i; }
+    }
+
+    const visited = Array(n).fill(false);
+    const tour = [currentIdx];
+    visited[currentIdx] = true;
+
+    for (let step = 1; step < n; step++) {
+        let nearest = -1, nearDist = Infinity;
+        for (let j = 0; j < n; j++) {
+            if (!visited[j]) {
+                const d = haversine(geocodedPassengers[currentIdx].coords, geocodedPassengers[j].coords);
+                if (d < nearDist) { nearDist = d; nearest = j; }
+            }
+        }
+        if (nearest === -1) break;
+        tour.push(nearest);
+        visited[nearest] = true;
+        currentIdx = nearest;
+    }
+    return tour;
+}
+
+// Generate Google Maps links (chunks of 25)
+function generateOptimizeMapLinks(orderedPassengers, startAddr, endAddr) {
+    const MAX_PER_MAP = 25;
+    const links = [];
+    if (orderedPassengers.length === 0) return links;
+
+    const perChunk = MAX_PER_MAP - 1;
+    let chunkStart = 0;
+    while (chunkStart < orderedPassengers.length) {
+        const chunkEnd = Math.min(chunkStart + perChunk, orderedPassengers.length);
+        const chunk = orderedPassengers.slice(chunkStart, chunkEnd);
+        const origin = chunkStart === 0 ? (startAddr || 'Ужгород') : orderedPassengers[chunkStart - 1].address;
+        let destination, waypointItems;
+        if (chunkEnd >= orderedPassengers.length && endAddr) {
+            destination = endAddr;
+            waypointItems = chunk;
+        } else {
+            destination = chunk[chunk.length - 1].address;
+            waypointItems = chunk.slice(0, -1);
+        }
+        let url = 'https://www.google.com/maps/dir/' + encodeURIComponent(origin);
+        waypointItems.forEach(p => { url += '/' + encodeURIComponent(p.address); });
+        url += '/' + encodeURIComponent(destination);
+        links.push({ url, from: chunkStart + 1, to: chunkEnd, total: orderedPassengers.length });
+        chunkStart = chunkEnd;
+    }
+    return links;
+}
+
+// Format duration (seconds -> human readable)
+function formatDuration(seconds) {
+    if (!seconds) return '—';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return h + ' год ' + m + ' хв';
+    return m + ' хв';
+}
+
+// Format distance (meters -> km)
+function formatDistance(meters) {
+    if (!meters) return '—';
+    if (meters < 1000) return meters + ' м';
+    return (meters / 1000).toFixed(1) + ' км';
+}
+
+// MAIN OPTIMIZATION
+async function startOptimization() {
+    if (!optimizePassengersList.length) return;
+    if (!window.mapsApiReady || !window.mapsGeocoder) {
+        showToast('Google Maps API не завантажено. Перезавантажте сторінку.');
+        return;
+    }
+
+    // UI -> loading
+    document.getElementById('optimizeFormBody').style.display = 'none';
+    document.getElementById('optimizeLoadingBody').style.display = 'block';
+    document.getElementById('optimizeFormFooter').style.display = 'none';
+
+    function updateOptStatus(text, progress) {
+        const el = document.getElementById('optimizeLoadingText');
+        const pr = document.getElementById('optimizeLoadingProgress');
+        if (el && text) el.textContent = text;
+        if (pr && progress !== undefined) pr.textContent = progress;
+    }
+
+    const startAddress = document.getElementById('optimizeStart').value.trim() || 'Ужгород';
+    const endAddress = document.getElementById('optimizeEnd').value.trim();
+    const addrField = optimizeBy === 'from' ? 'Адреса відправки' : 'Адреса прибуття';
+    const optimizeLabel = optimizeBy === 'from' ? 'Адреса ВІДПРАВКИ' : 'Адреса ПРИБУТТЯ';
+
+    try {
+        // 1. Collect passengers with addresses
+        const allPassengers = optimizePassengersList.map(p => ({
+            paxId: p['PAX_ID'] || '',
+            name: p['Піб'] || '',
+            phone: p['Телефон пасажира'] || '',
+            seats: p['Кількість місць'] || 1,
+            fromAddr: p['Адреса відправки'] || '',
+            toAddr: p['Адреса прибуття'] || '',
+            address: p[addrField] || '',
+            coords: null,
+            _origData: p
+        }));
+
+        const withAddress = allPassengers.filter(p => p.address && p.address.trim());
+        const withoutAddress = allPassengers.filter(p => !p.address || !p.address.trim());
+
+        if (withAddress.length === 0) {
+            throw new Error('Жоден пасажир не має адреси ("' + addrField + '")');
+        }
+
+        // 2. Geocode all addresses
+        updateOptStatus('Геокодування адрес...', '0 / ' + withAddress.length);
+        const geocoded = [];
+        const notGeocodedList = [];
+
+        for (let i = 0; i < withAddress.length; i++) {
+            const shortAddr = withAddress[i].address.length > 30 ? withAddress[i].address.substring(0, 30) + '...' : withAddress[i].address;
+            updateOptStatus('📍 ' + shortAddr, (i + 1) + ' / ' + withAddress.length);
+            const coords = await geocodeClient(withAddress[i].address);
+            if (coords) {
+                withAddress[i].coords = coords;
+                geocoded.push(withAddress[i]);
+            } else {
+                notGeocodedList.push({ paxId: withAddress[i].paxId, name: withAddress[i].name, address: withAddress[i].address });
+            }
+            if (i < withAddress.length - 1) await _optSleep(150);
+        }
+
+        if (geocoded.length === 0) {
+            throw new Error('Жодну адресу не вдалось геокодувати!');
+        }
+
+        // 3. Geocode start & end
+        updateOptStatus('📍 Геокодування старту...', '');
+        const startCoords = await geocodeClient(startAddress) || { lat: 48.6209, lng: 22.2879 };
+        let endCoords = null;
+        if (endAddress) {
+            updateOptStatus('📍 Геокодування фінішу...', '');
+            endCoords = await geocodeClient(endAddress);
+        }
+
+        // 4. Optimize route
+        updateOptStatus('🗺️ Оптимізація маршруту...', geocoded.length + ' точок');
+        let optimizedOrder = null;
+        let legs = null;
+        let method = '';
+
+        if (geocoded.length <= OPTIMIZE_MAX_WAYPOINTS) {
+            try {
+                const result = await optimizeDirectionsClient(geocoded, startCoords, endCoords);
+                optimizedOrder = result.order;
+                legs = result.legs;
+                method = 'Google Directions API (реальні дороги)';
+            } catch(e) {
+                console.warn('Directions fallback:', e.message);
+            }
+        }
+
+        if (!optimizedOrder || optimizedOrder.length === 0) {
+            optimizedOrder = nearestNeighborClient(geocoded, startCoords);
+            method = 'Nearest Neighbor (по прямій)';
+        }
+
+        // 5. Build ordered list with distance/time info
+        const orderedPassengers = optimizedOrder.map(idx => geocoded[idx]);
+        const mapLinks = generateOptimizeMapLinks(orderedPassengers, startAddress, endAddress);
+
+        // Build leg info (distance, duration, cumulative ETA)
+        const legInfo = [];
+        let cumulativeTime = 0;
+        let cumulativeDist = 0;
+        if (legs && legs.length > 0) {
+            for (let i = 0; i < orderedPassengers.length; i++) {
+                const legIdx = i; // leg[0] = start→first point, leg[1] = first→second, etc.
+                if (legIdx < legs.length) {
+                    const dist = legs[legIdx].distance ? legs[legIdx].distance.value : 0;
+                    const dur = legs[legIdx].duration ? legs[legIdx].duration.value : 0;
+                    cumulativeDist += dist;
+                    cumulativeTime += dur;
+                    legInfo.push({
+                        segmentDist: dist,
+                        segmentTime: dur,
+                        totalDist: cumulativeDist,
+                        totalTime: cumulativeTime,
+                        segmentDistText: legs[legIdx].distance ? legs[legIdx].distance.text : '',
+                        segmentTimeText: legs[legIdx].duration ? legs[legIdx].duration.text : ''
+                    });
+                } else {
+                    legInfo.push({ segmentDist: 0, segmentTime: 0, totalDist: cumulativeDist, totalTime: cumulativeTime, segmentDistText: '', segmentTimeText: '' });
+                }
+            }
+        }
+
+        // 6. Show result
+        document.getElementById('optimizeLoadingBody').style.display = 'none';
+        showOptimizationResult({
+            optimizeBy: optimizeLabel,
+            start: startAddress,
+            end: endAddress || '(остання точка)',
+            stats: { total: withAddress.length, geocoded: geocoded.length, optimized: orderedPassengers.length },
+            method,
+            mapLinks,
+            orderedPassengers,
+            legInfo,
+            notGeocodedList,
+            totalDist: cumulativeDist,
+            totalTime: cumulativeTime
+        });
+
+    } catch(err) {
+        console.error('Optimize error:', err);
+        document.getElementById('optimizeFormBody').style.display = 'block';
+        document.getElementById('optimizeLoadingBody').style.display = 'none';
+        document.getElementById('optimizeFormFooter').style.display = 'flex';
+        showToast(err.message);
+    }
+}
+
+function showOptimizationResult(data) {
+    document.getElementById('optimizeResultBody').style.display = 'block';
+    document.getElementById('optimizeResultFooter').style.display = 'flex';
+
+    let html = '<div class="optimize-result-header">✅ Маршрут оптимізовано!</div>';
+
+    // Stats
+    html += '<div class="optimize-stats">';
+    html += '<div class="optimize-stat-row"><span class="optimize-stat-label">📋 По:</span><span class="optimize-stat-value">' + data.optimizeBy + '</span></div>';
+    html += '<div class="optimize-stat-row"><span class="optimize-stat-label">📍 Старт:</span><span class="optimize-stat-value">' + data.start + '</span></div>';
+    html += '<div class="optimize-stat-row"><span class="optimize-stat-label">🏁 Фініш:</span><span class="optimize-stat-value">' + data.end + '</span></div>';
+    html += '<div class="optimize-stat-row"><span class="optimize-stat-label">👥 Пасажирів:</span><span class="optimize-stat-value">' + data.stats.optimized + ' / ' + data.stats.total + '</span></div>';
+    html += '<div class="optimize-stat-row"><span class="optimize-stat-label">🗺️ Метод:</span><span class="optimize-stat-value">' + data.method + '</span></div>';
+    if (data.totalDist > 0) {
+        html += '<div class="optimize-stat-row"><span class="optimize-stat-label">📏 Загальна відстань:</span><span class="optimize-stat-value">' + formatDistance(data.totalDist) + '</span></div>';
+        html += '<div class="optimize-stat-row"><span class="optimize-stat-label">⏱️ Загальний час:</span><span class="optimize-stat-value">' + formatDuration(data.totalTime) + '</span></div>';
+    }
+    html += '</div>';
+
+    // Route table with distance/time per stop
+    html += '<div style="overflow-x:auto;margin-bottom:16px;">';
+    html += '<table class="optimize-route-table">';
+    html += '<thead><tr><th>#</th><th>Пасажир</th><th>Адреса</th><th>Відстань</th><th>Час їзди</th><th>ETA від старту</th></tr></thead>';
+    html += '<tbody>';
+    data.orderedPassengers.forEach((p, i) => {
+        const leg = data.legInfo[i] || {};
+        html += '<tr>';
+        html += '<td><span class="opt-order-num">' + (i + 1) + '</span></td>';
+        html += '<td><strong>' + (p.name || '—') + '</strong><br><small style="color:var(--text-secondary)">' + (p.phone || '') + (p.seats > 1 ? ' · ' + p.seats + 'м' : '') + '</small></td>';
+        html += '<td style="max-width:180px;word-break:break-word;">' + (p.address || '—') + '</td>';
+        html += '<td><span class="opt-dist-badge">' + (leg.segmentDistText || '—') + '</span></td>';
+        html += '<td><span class="opt-time-badge">' + (leg.segmentTimeText || '—') + '</span></td>';
+        html += '<td><span class="opt-eta-badge">' + formatDuration(leg.totalTime) + '</span></td>';
+        html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+
+    // Not geocoded
+    if (data.notGeocodedList && data.notGeocodedList.length > 0) {
+        html += '<div class="optimize-not-geocoded">';
+        html += '<div class="optimize-not-geocoded-title">⚠️ Не вдалось знайти адреси (' + data.notGeocodedList.length + '):</div>';
+        html += '<div class="optimize-not-geocoded-list">';
+        data.notGeocodedList.forEach(item => {
+            html += '<div class="optimize-not-geocoded-item"><strong>' + item.paxId + '</strong> ' + (item.name ? '(' + item.name + ')' : '') + '<br><small>' + item.address + '</small></div>';
+        });
+        html += '</div></div>';
+    }
+
+    // Map links
+    html += '<div class="optimize-map-links">';
+    if (data.mapLinks.length === 1) {
+        html += '<a href="' + data.mapLinks[0].url + '" target="_blank" class="optimize-map-btn">🗺️ Відкрити маршрут на карті</a>';
+    } else {
+        data.mapLinks.forEach((link, i) => {
+            html += '<a href="' + link.url + '" target="_blank" class="optimize-map-btn">🗺️ Частина ' + (i + 1) + ' (точки ' + link.from + '-' + link.to + ')</a>';
+        });
+    }
+    html += '</div>';
+
+    document.getElementById('optimizeResultBody').innerHTML = html;
+}
 </script>
 </body>
 </html>
