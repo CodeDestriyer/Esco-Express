@@ -945,6 +945,20 @@
             </div>
         </div>
 
+        <!-- Архів -->
+        <div class="pc-sidebar-section">
+            <div class="pc-sidebar-header collapsed" onclick="togglePcSection('archive')">
+                <span class="pc-sidebar-title">📦 АРХІВ</span>
+                <span class="pc-sidebar-toggle" id="pcToggleArchive">▼</span>
+            </div>
+            <div class="pc-sidebar-content collapsed" id="pcSectionArchive">
+                <div class="pc-sidebar-item archive" id="pcArchive" onclick="showArchiveView()">
+                    <span><span class="item-icon">📦</span><span class="item-text">Архівовані</span></span>
+                    <span class="item-count" id="pcCountArchive">0</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Дії -->
         <div class="pc-sidebar-section">
             <div style="padding:14px;display:flex;flex-direction:column;gap:8px;">
@@ -1026,13 +1040,37 @@
             <div class="bulk-toolbar" id="routeBulkToolbar">
                 <span class="bulk-toolbar-count" id="routeBulkCount">0 обрано</span>
                 <button class="bulk-toolbar-btn select-all" onclick="toggleRouteSelectAll()">☑ Вибрати всі</button>
+                <button class="bulk-toolbar-btn" style="background:#f3f4f6;color:#6b7280;" onclick="routeBulkArchive()">📦 Архів</button>
                 <button class="bulk-toolbar-btn" style="background:#fee2e2;color:#dc2626;" onclick="routeBulkDeleteFromRoute()">🗑️ З маршруту</button>
+                <button class="bulk-toolbar-btn" style="background:#7f1d1d;color:white;" onclick="routeBulkDeleteFull()">❌ Видалити</button>
                 <button class="bulk-toolbar-btn" style="background:#ede9fe;color:#7c3aed;" onclick="routeBulkTransfer()">🔄 Пересадити</button>
                 <button class="bulk-toolbar-btn cancel" onclick="clearRouteSelection()">✕ Скасувати</button>
             </div>
             <div id="routesLoading" style="display:none;text-align:center;padding:40px;color:var(--text-secondary);font-size:13px;">⏳ Завантаження маршрутів...</div>
             <div id="routesError" style="display:none;text-align:center;padding:40px;color:#dc2626;font-size:13px;"></div>
             <div id="routesList"></div>
+        </div>
+
+        <!-- ARCHIVE VIEW -->
+        <div id="archiveView" style="display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+                <div>
+                    <h2 style="margin:0;font-size:20px;font-weight:800;color:var(--text-primary);">📦 Архів</h2>
+                    <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;" id="archiveSubtitle">0 записів</div>
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <input type="text" id="archiveSearch" placeholder="🔍 Пошук в архіві..." oninput="renderArchive()" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;min-width:180px;">
+                </div>
+            </div>
+            <!-- Archive bulk toolbar -->
+            <div class="bulk-toolbar" id="archiveBulkToolbar">
+                <span class="bulk-toolbar-count" id="archiveBulkCount">0 обрано</span>
+                <button class="bulk-toolbar-btn select-all" onclick="toggleArchiveSelectAll()">☑ Вибрати всі</button>
+                <button class="bulk-toolbar-btn" style="background:#d1fae5;color:#059669;" onclick="archiveBulkRestore()">♻️ Відновити</button>
+                <button class="bulk-toolbar-btn" style="background:#fee2e2;color:#dc2626;" onclick="archiveBulkDelete()">🗑️ Видалити назавжди</button>
+                <button class="bulk-toolbar-btn cancel" onclick="clearArchiveSelection()">✕ Скасувати</button>
+            </div>
+            <div id="archiveList"></div>
         </div>
     </main>
 </div>
@@ -1225,6 +1263,7 @@
     <button class="bulk-toolbar-btn assign" onclick="openBulkTripDropdown(event)">🚐 Призначити рейс</button>
     <button class="bulk-toolbar-btn route" onclick="openRouteAssignModal()">🗺️ В маршрут</button>
     <button class="bulk-toolbar-btn optimize" onclick="bulkOptimize()">⚡ Оптимізація</button>
+    <button class="bulk-toolbar-btn" style="background:#f3f4f6;color:#6b7280;" onclick="bulkArchive()">📦 Архів</button>
     <button class="bulk-toolbar-btn cancel" onclick="clearSelection()">✕ Скасувати</button>
     <div class="bulk-trip-dd" id="bulkTripDd"></div>
 </div>
@@ -1589,6 +1628,7 @@ function showPaxView(dir) {
     document.getElementById('passengersView').classList.remove('hidden');
     document.getElementById('tripsView').classList.remove('active');
     document.getElementById('routesView').style.display = 'none';
+    document.getElementById('archiveView').style.display = 'none';
     updatePcSidebarActive();
     updateMobileSidebarActive();
     updateNavActive('pax');
@@ -1600,6 +1640,7 @@ function showTripsView() {
     document.getElementById('passengersView').classList.add('hidden');
     document.getElementById('tripsView').classList.add('active');
     document.getElementById('routesView').style.display = 'none';
+    document.getElementById('archiveView').style.display = 'none';
     updatePcSidebarActive();
     updateMobileSidebarActive();
     updateNavActive('trips');
@@ -1611,6 +1652,7 @@ function showRoutesView() {
     document.getElementById('passengersView').classList.add('hidden');
     document.getElementById('tripsView').classList.remove('active');
     document.getElementById('routesView').style.display = 'block';
+    document.getElementById('archiveView').style.display = 'none';
     updatePcSidebarActive();
     updateMobileSidebarActive();
     updateNavActive('routes');
@@ -1931,7 +1973,9 @@ function renderRouteCard(r, idx, sheetName) {
                 <button class="btn-card-action btn-call" onclick="event.stopPropagation(); window.open('tel:${cleanPhone}')">📞 Дзвінок</button>
                 <button class="btn-card-action btn-write" onclick="event.stopPropagation(); openMessengerPopup('${cleanPhone}','${smartId}')">✉️ Писати</button>
                 <button class="btn-card-action btn-edit" onclick="event.stopPropagation(); openRouteEditModal('${rteId}','${safeSheet}')">✏️ Редагувати</button>
+                <button class="btn-card-action" style="background:#f3f4f6;color:#6b7280;" onclick="event.stopPropagation(); archiveFromRoute('${rteId}','${safeSheet}','${name.replace(/'/g,"\\'")}')">📦 Архівувати</button>
                 <button class="btn-card-action" style="background:#fee2e2;color:#dc2626;" onclick="event.stopPropagation(); deleteFromRoute('${rteId}','${safeSheet}','${name.replace(/'/g,"\\'")}')">🗑️ З маршруту</button>
+                <button class="btn-card-action" style="background:#7f1d1d;color:white;" onclick="event.stopPropagation(); deleteFromRouteFull('${rteId}','${safeSheet}','${name.replace(/'/g,"\\'")}')">❌ Видалити</button>
                 <button class="btn-card-action" style="background:#ede9fe;color:#7c3aed;" onclick="event.stopPropagation(); transferRouteLeadModal('${rteId}','${safeSheet}')">🔄 Пересадити</button>
             </div>
         </div>
@@ -2301,9 +2345,11 @@ function promptDeleteLinkedSheets(baseName) {
 }
 
 function updatePcSidebarActive() {
-    ['pcAllPax','pcUaEu','pcEuUa','pcTrips'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+    ['pcAllPax','pcUaEu','pcEuUa','pcTrips','pcArchive'].forEach(id => document.getElementById(id)?.classList.remove('active'));
     document.querySelectorAll('.route-sidebar-item').forEach(el => el.classList.remove('active'));
-    if (currentView === 'routes') {
+    if (currentView === 'archive') {
+        document.getElementById('pcArchive')?.classList.add('active');
+    } else if (currentView === 'routes') {
         // active стан встановлюється в renderRouteSidebar
     } else if (currentView === 'trips') {
         document.getElementById('pcTrips')?.classList.add('active');
@@ -2335,6 +2381,7 @@ function updateNavActive(tab) {
 // ================================================================
 function updateAllCounts() {
     const allPax = passengers.filter(p => (p['Статус CRM'] || 'Активний') !== 'Архів');
+    const archivedPax = passengers.filter(p => (p['Статус CRM'] || '') === 'Архів');
     const uaeu = allPax.filter(p => isDir(p, 'ua-eu'));
     const euua = allPax.filter(p => isDir(p, 'eu-ua'));
 
@@ -2342,6 +2389,7 @@ function updateAllCounts() {
     setCount('pcCountUaEu', uaeu.length);
     setCount('pcCountEuUa', euua.length);
     setCount('pcCountTrips', trips.length);
+    setCount('pcCountArchive', archivedPax.length);
     setCount('mobileCountAll', allPax.length);
     setCount('mobileCountUaEu', uaeu.length);
     setCount('mobileCountEuUa', euua.length);
@@ -2557,6 +2605,7 @@ function renderCard(p) {
             <button class="btn-card-action btn-call" onclick="window.open('tel:${phone}')">📞 Дзвінок</button>
             <button class="btn-card-action btn-write" onclick="event.stopPropagation(); openMessengerPopup('${phone}','${smartId}')">✉️ Писати</button>
             <button class="btn-card-action btn-edit" onclick="event.stopPropagation(); openEditPax('${id}')">✏️ Редагувати</button>
+            <button class="btn-card-action" style="background:#f3f4f6;color:#6b7280;" onclick="event.stopPropagation(); archivePax('${id}','${name}')">📦 Архівувати</button>
             <button class="btn-card-action btn-delete" onclick="deletePax('${id}','${p._sheet||''}','${name}')">🗑️ Видалити</button>
         </div>
     </div>`;
@@ -5410,6 +5459,361 @@ async function reorderRouteAfterOptimize() {
         hideLoader();
         showToast('❌ Помилка: ' + e.message);
     }
+}
+
+// ================================================================
+// ARCHIVE VIEW & FUNCTIONS
+// ================================================================
+let archiveSelectedIds = new Set();
+
+function showArchiveView() {
+    currentView = 'archive';
+    document.getElementById('passengersView').classList.add('hidden');
+    document.getElementById('tripsView').classList.remove('active');
+    document.getElementById('routesView').style.display = 'none';
+    document.getElementById('archiveView').style.display = 'block';
+    updatePcSidebarActive();
+    updateMobileSidebarActive();
+    renderArchive();
+}
+
+function getArchivedPassengers() {
+    const search = (document.getElementById('archiveSearch')?.value || '').toLowerCase().trim();
+    return passengers.filter(p => {
+        if ((p['Статус CRM'] || '') !== 'Архів') return false;
+        if (search) {
+            const name = String(p['Піб'] || '').toLowerCase();
+            const phone = String(p['Телефон пасажира'] || '');
+            if (!name.includes(search) && !phone.includes(search)) return false;
+        }
+        return true;
+    });
+}
+
+function renderArchive() {
+    const list = document.getElementById('archiveList');
+    const subtitle = document.getElementById('archiveSubtitle');
+    if (!list) return;
+
+    const archived = getArchivedPassengers();
+    subtitle.textContent = archived.length + ' записів в архіві';
+
+    if (archived.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);font-size:13px;">📦 Архів порожній</div>';
+        return;
+    }
+
+    list.innerHTML = archived.map(p => {
+        const id = p['PAX_ID'] || '';
+        const name = p['Піб'] || '—';
+        const phone = p['Телефон пасажира'] || '—';
+        const from = p['Адреса відправки'] || '';
+        const to = p['Адреса прибуття'] || '';
+        const date = p['Дата виїзду'] || '';
+        const reason = p['ARCHIVE_REASON'] || '';
+        const archDate = p['DATE_ARCHIVE'] || '';
+        const archivedBy = p['ARCHIVED_BY'] || '';
+        const dir = p['Напрям'] || '';
+        const isSelected = archiveSelectedIds.has(id);
+        const dirLabel = dir.includes('ua-eu') || dir.includes('UA→EU') ? 'UA→EU' : dir.includes('eu-ua') || dir.includes('EU→UA') ? 'EU→UA' : '';
+        const dirCls = dirLabel === 'UA→EU' ? 'dir-badge-ua-eu' : dirLabel === 'EU→UA' ? 'dir-badge-eu-ua' : '';
+
+        return `<div class="pax-card ${isSelected ? 'selected' : ''}" style="border-left:3px solid #9ca3af;opacity:0.85;" id="arc-${id}">
+            <div class="card-top">
+                <div class="card-checkbox-wrap" onclick="event.stopPropagation()">
+                    <input class="card-checkbox" type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleArchiveSelect('${id}',this.checked)">
+                </div>
+                ${dirLabel ? '<span class="card-direction ' + dirCls + '">' + dirLabel + '</span>' : ''}
+                <span class="card-phone">${phone}</span>
+                <span class="card-date">${date}</span>
+            </div>
+            <div class="card-info">
+                <span class="card-name">${name}</span>
+                <span style="font-size:9px;background:#f3f4f6;color:#6b7280;padding:2px 6px;border-radius:4px;">📦 Архів</span>
+            </div>
+            ${(from || to) ? '<div class="card-route">📍 ' + (from || '—') + ' → ' + (to || '—') + '</div>' : ''}
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">
+                ${archDate ? '<span style="font-size:10px;color:#6b7280;">📅 ' + archDate + '</span>' : ''}
+                ${archivedBy ? '<span style="font-size:10px;color:#6b7280;">👤 ' + archivedBy + '</span>' : ''}
+                ${reason ? '<span style="font-size:10px;color:#6b7280;">💬 ' + reason + '</span>' : ''}
+            </div>
+            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+                <button class="btn-card-action" style="background:#d1fae5;color:#059669;" onclick="event.stopPropagation(); restorePax('${id}','${name}')">♻️ Відновити</button>
+                <button class="btn-card-action btn-delete" onclick="event.stopPropagation(); deletePaxPermanent('${id}','${p._sheet||''}','${name}')">🗑️ Видалити назавжди</button>
+            </div>
+        </div>`;
+    }).join('');
+
+    updateArchiveBulkToolbar();
+}
+
+// ── Архівування пасажира ──
+function archivePax(paxId, name) {
+    showConfirm('Архівувати пасажира «' + name + '»?', async function(yes) {
+        if (!yes) return;
+        showLoader('Архівування...');
+        const res = await apiPost('archivePassenger', { pax_ids: [paxId], reason: 'Ручне архівування', archived_by: 'Менеджер' });
+        hideLoader();
+        if (res.ok) {
+            const p = passengers.find(x => x['PAX_ID'] === paxId);
+            if (p) p['Статус CRM'] = 'Архів';
+            showToast('✅ Архівовано');
+            render(); updateAllCounts();
+        } else {
+            showToast('❌ ' + (res.error || 'Помилка'));
+        }
+    });
+}
+
+// ── Масове архівування ──
+function bulkArchive() {
+    const ids = Array.from(selectedIds);
+    if (!ids.length) return;
+    showConfirm('Архівувати ' + ids.length + ' пасажир(ів)?', async function(yes) {
+        if (!yes) return;
+        showLoader('Архівування ' + ids.length + ' записів...');
+        const res = await apiPost('archivePassenger', { pax_ids: ids, reason: 'Масове архівування', archived_by: 'Менеджер' });
+        hideLoader();
+        if (res.ok) {
+            ids.forEach(id => {
+                const p = passengers.find(x => x['PAX_ID'] === id);
+                if (p) p['Статус CRM'] = 'Архів';
+            });
+            showToast('✅ Архівовано ' + (res.archived || ids.length) + ' записів');
+            clearSelection();
+            render(); updateAllCounts();
+        } else {
+            showToast('❌ ' + (res.error || 'Помилка'));
+        }
+    });
+}
+
+// ── Відновлення з архіву ──
+function restorePax(paxId, name) {
+    showConfirm('Відновити пасажира «' + name + '»?', async function(yes) {
+        if (!yes) return;
+        showLoader('Відновлення...');
+        const res = await apiPost('restorePassenger', { pax_ids: [paxId] });
+        hideLoader();
+        if (res.ok) {
+            const p = passengers.find(x => x['PAX_ID'] === paxId);
+            if (p) { p['Статус CRM'] = 'Активний'; p['DATE_ARCHIVE'] = ''; p['ARCHIVED_BY'] = ''; p['ARCHIVE_REASON'] = ''; }
+            showToast('✅ Відновлено');
+            renderArchive(); updateAllCounts();
+        } else {
+            showToast('❌ ' + (res.error || 'Помилка'));
+        }
+    });
+}
+
+// ── Повне видалення (з архіву назавжди) ──
+function deletePaxPermanent(paxId, sheet, name) {
+    showConfirm('⚠️ УВАГА! Видалити «' + name + '» НАЗАВЖДИ? Цю дію не можна скасувати!', async function(yes) {
+        if (!yes) return;
+        showLoader('Видалення...');
+        const res = await apiPost('deletePassenger', { sheet, pax_id: paxId });
+        hideLoader();
+        if (res.ok) {
+            passengers = passengers.filter(p => p['PAX_ID'] !== paxId);
+            archiveSelectedIds.delete(paxId);
+            showToast('✅ Видалено назавжди');
+            renderArchive(); updateAllCounts();
+        } else {
+            showToast('❌ ' + (res.error || 'Помилка'));
+        }
+    });
+}
+
+// ── Archive selection ──
+function toggleArchiveSelect(id, checked) {
+    if (checked) archiveSelectedIds.add(id);
+    else archiveSelectedIds.delete(id);
+    updateArchiveBulkToolbar();
+}
+
+function toggleArchiveSelectAll() {
+    const archived = getArchivedPassengers();
+    if (archiveSelectedIds.size === archived.length) {
+        archiveSelectedIds.clear();
+    } else {
+        archived.forEach(p => archiveSelectedIds.add(p['PAX_ID']));
+    }
+    renderArchive();
+}
+
+function clearArchiveSelection() {
+    archiveSelectedIds.clear();
+    updateArchiveBulkToolbar();
+    renderArchive();
+}
+
+function updateArchiveBulkToolbar() {
+    const tb = document.getElementById('archiveBulkToolbar');
+    const ct = document.getElementById('archiveBulkCount');
+    if (!tb) return;
+    if (archiveSelectedIds.size > 0) {
+        tb.classList.add('show');
+        ct.textContent = archiveSelectedIds.size + ' обрано';
+    } else {
+        tb.classList.remove('show');
+    }
+}
+
+// ── Масове відновлення з архіву ──
+function archiveBulkRestore() {
+    const ids = Array.from(archiveSelectedIds);
+    if (!ids.length) return;
+    showConfirm('Відновити ' + ids.length + ' записів з архіву?', async function(yes) {
+        if (!yes) return;
+        showLoader('Відновлення ' + ids.length + ' записів...');
+        const res = await apiPost('restorePassenger', { pax_ids: ids });
+        hideLoader();
+        if (res.ok) {
+            ids.forEach(id => {
+                const p = passengers.find(x => x['PAX_ID'] === id);
+                if (p) { p['Статус CRM'] = 'Активний'; p['DATE_ARCHIVE'] = ''; p['ARCHIVED_BY'] = ''; p['ARCHIVE_REASON'] = ''; }
+            });
+            showToast('✅ Відновлено ' + (res.restored || ids.length) + ' записів');
+            clearArchiveSelection();
+            renderArchive(); updateAllCounts();
+        } else {
+            showToast('❌ ' + (res.error || 'Помилка'));
+        }
+    });
+}
+
+// ── Масове повне видалення з архіву ──
+function archiveBulkDelete() {
+    const ids = Array.from(archiveSelectedIds);
+    if (!ids.length) return;
+    showConfirm('⚠️ УВАГА! Видалити ' + ids.length + ' записів НАЗАВЖДИ? Цю дію не можна скасувати!', async function(yes) {
+        if (!yes) return;
+        showLoader('Видалення ' + ids.length + ' записів...');
+        const res = await apiPost('bulkDelete', { pax_ids: ids });
+        hideLoader();
+        if (res.ok) {
+            passengers = passengers.filter(p => !ids.includes(p['PAX_ID']));
+            showToast('✅ Видалено назавжди ' + (res.deleted || ids.length) + ' записів');
+            clearArchiveSelection();
+            renderArchive(); updateAllCounts();
+        } else {
+            showToast('❌ ' + (res.error || 'Помилка'));
+        }
+    });
+}
+
+// ================================================================
+// ROUTE ARCHIVE & DELETE FUNCTIONS
+// ================================================================
+
+// Архівувати з маршруту (видалити з маршруту + архівувати в CRM)
+async function archiveFromRoute(rteId, sheetName, leadName) {
+    showConfirm('Архівувати «' + leadName + '» і видалити з маршруту?', async function(yes) {
+        if (!yes) return;
+        showLoader('Архівування...');
+        try {
+            // 1. Архівувати в CRM
+            await apiPost('archivePassenger', { pax_ids: [rteId], reason: 'Архівовано з маршруту', archived_by: 'Менеджер' });
+            // 2. Видалити з маршруту
+            await apiPost('deletePassenger', { sheet: sheetName, pax_id: rteId });
+            hideLoader();
+            showToast('✅ Архівовано і видалено з маршруту');
+            const p = passengers.find(x => x['PAX_ID'] === rteId);
+            if (p) p['Статус CRM'] = 'Архів';
+            loadRoutes();
+            updateAllCounts();
+        } catch (e) {
+            hideLoader();
+            showToast('❌ Помилка: ' + e.message);
+        }
+    });
+}
+
+// Повне видалення з маршруту + з CRM
+async function deleteFromRouteFull(rteId, sheetName, leadName) {
+    showConfirm('⚠️ УВАГА! Видалити «' + leadName + '» НАЗАВЖДИ з маршруту І з CRM?', async function(yes) {
+        if (!yes) return;
+        showLoader('Видалення...');
+        try {
+            // 1. Видалити з маршруту
+            await apiPost('deletePassenger', { sheet: sheetName, pax_id: rteId });
+            // 2. Видалити з CRM (знайти sheet пасажира)
+            const p = passengers.find(x => x['PAX_ID'] === rteId);
+            if (p && p._sheet) {
+                await apiPost('deletePassenger', { sheet: p._sheet, pax_id: rteId });
+            }
+            passengers = passengers.filter(x => x['PAX_ID'] !== rteId);
+            hideLoader();
+            showToast('✅ Видалено назавжди з маршруту і CRM');
+            loadRoutes();
+            updateAllCounts();
+        } catch (e) {
+            hideLoader();
+            showToast('❌ Помилка: ' + e.message);
+        }
+    });
+}
+
+// Масове архівування з маршруту
+function routeBulkArchive() {
+    const ids = Array.from(routeSelectedIds);
+    if (!ids.length) return;
+    showConfirm('Архівувати ' + ids.length + ' записів і видалити з маршруту?', async function(yes) {
+        if (!yes) return;
+        if (activeRouteIdx === null) return;
+        const sheet = routes[activeRouteIdx];
+        if (!sheet) return;
+        showLoader('Архівування...');
+        try {
+            await apiPost('archivePassenger', { pax_ids: ids, reason: 'Масове архівування з маршруту', archived_by: 'Менеджер' });
+            for (const rteId of ids) {
+                await apiPost('deletePassenger', { sheet: sheet.sheetName, pax_id: rteId });
+            }
+            ids.forEach(id => {
+                const p = passengers.find(x => x['PAX_ID'] === id);
+                if (p) p['Статус CRM'] = 'Архів';
+            });
+            hideLoader();
+            showToast('✅ Архівовано ' + ids.length + ' записів');
+            clearRouteSelection();
+            loadRoutes();
+            updateAllCounts();
+        } catch (e) {
+            hideLoader();
+            showToast('❌ Помилка: ' + e.message);
+        }
+    });
+}
+
+// Масове повне видалення з маршруту + CRM
+function routeBulkDeleteFull() {
+    const ids = Array.from(routeSelectedIds);
+    if (!ids.length) return;
+    showConfirm('⚠️ УВАГА! Видалити ' + ids.length + ' записів НАЗАВЖДИ з маршруту І з CRM?', async function(yes) {
+        if (!yes) return;
+        if (activeRouteIdx === null) return;
+        const sheet = routes[activeRouteIdx];
+        if (!sheet) return;
+        showLoader('Видалення...');
+        try {
+            for (const rteId of ids) {
+                await apiPost('deletePassenger', { sheet: sheet.sheetName, pax_id: rteId });
+                const p = passengers.find(x => x['PAX_ID'] === rteId);
+                if (p && p._sheet) {
+                    await apiPost('deletePassenger', { sheet: p._sheet, pax_id: rteId });
+                }
+            }
+            passengers = passengers.filter(x => !ids.includes(x['PAX_ID']));
+            hideLoader();
+            showToast('✅ Видалено назавжди ' + ids.length + ' записів');
+            clearRouteSelection();
+            loadRoutes();
+            updateAllCounts();
+        } catch (e) {
+            hideLoader();
+            showToast('❌ Помилка: ' + e.message);
+        }
+    });
 }
 </script>
 </body>
