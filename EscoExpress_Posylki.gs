@@ -878,6 +878,309 @@ function apiCheckNpApiKey(params) {
 
 
 // ══════════════════════════════════════════════════════════════
+// 10. VERIFICATION — Перевірка посилок (УК→Європа)
+// ══════════════════════════════════════════════════════════════
+
+// Статуси перевірки
+var VERIFICATION_STATUSES = [
+  'Нова',
+  'В перевірці',
+  'Готова до маршруту',
+  'Відмова',
+  'В маршруті',
+  'Доставлено'
+];
+
+// Сканування ТТН — пошук посилки по ТТН або створення "невідомої"
+function apiScanTTN(params) {
+  var ttn = String(params.ttn || '').trim();
+  if (!ttn) return { ok: false, error: 'ТТН не вказано' };
+
+  var verifier = params.verifier || '';
+  var sh = getSheet(SHEETS.PKG_UE);
+  if (!sh) return { ok: false, error: 'Аркуш не знайдено' };
+
+  var info = getAllData(sh);
+  var ttnIdx = info.headers.indexOf('Номер ТТН');
+  var dirIdx = info.headers.indexOf('Напрям');
+  if (ttnIdx === -1) return { ok: false, error: 'Колонка Номер ТТН не знайдена' };
+
+  var found = null;
+  var foundRow = -1;
+  for (var i = 0; i < info.data.length; i++) {
+    if (String(info.data[i][ttnIdx]).trim() === ttn) {
+      var dir = String(info.data[i][dirIdx] || '');
+      if (dir === 'УК→ЄВ' || dir === '') {
+        found = info.data[i];
+        foundRow = DATA_START + i;
+        break;
+      }
+    }
+  }
+
+  if (found) {
+    // Тип А — посилка знайдена в базі
+    var obj = pkgObjFromData(info.headers, found, SHEETS.PKG_UE, foundRow);
+
+    // Оновити статус контролю перевірки та дату
+    var ctrlIdx = info.headers.indexOf('Контроль перевірки');
+    var dateIdx = info.headers.indexOf('Дата перевірки');
+    if (ctrlIdx !== -1) sh.getRange(foundRow, ctrlIdx + 1).setValue('В перевірці');
+    if (dateIdx !== -1) sh.getRange(foundRow, dateIdx + 1).setValue(now());
+
+    // Шукаємо дублі по отримувачу
+    var duplicates = findDuplicatesByRecipient(info, obj, foundRow);
+
+    return {
+      ok: true,
+      found: true,
+      type: 'A',
+      package_id: obj['PKG_ID'],
+      ttn: ttn,
+      recipient_name: obj['Піб отримувача'] || '',
+      recipient_phone: obj['Телефон отримувача'] || '',
+      address: obj['Адреса в Європі'] || '',
+      description: obj['Опис'] || '',
+      weight: obj['Кг'] || '',
+      estimated_value: obj['Оціночна вартість'] || '',
+      internal_number: obj['Внутрішній №'] || '',
+      status: 'В перевірці',
+      verification_user: verifier,
+      duplicates: duplicates,
+      data: obj
+    };
+  } else {
+    // Тип Б — ТТН не знайдено, створюємо нову "невідому" посилку
+    var pkgId = genId('PKG');
+    var cols = PKG_UE_COLS;
+    var newObj = {};
+    cols.forEach(function(c) { newObj[c] = ''; });
+
+    newObj['PKG_ID'] = pkgId;
+    newObj['Дата створення'] = today();
+    newObj['SOURCE_SHEET'] = SHEETS.PKG_UE;
+    newObj['Напрям'] = 'УК→ЄВ';
+    newObj['Номер ТТН'] = ttn;
+    newObj['Контроль перевірки'] = 'В перевірці';
+    newObj['Дата перевірки'] = now();
+    newObj['Статус ліда'] = 'Новий';
+    newObj['Статус CRM'] = 'Активний';
+
+    var headers = getHeaders(sh);
+    var row = objToRow(headers, newObj);
+    sh.appendRow(row);
+
+    return {
+      ok: true,
+      found: false,
+      type: 'B',
+      package_id: pkgId,
+      ttn: ttn,
+      status: 'В перевірці',
+      verification_user: verifier,
+      duplicates: [],
+      data: newObj
+    };
+  }
+}
+
+// Пошук дублів по отримувачу (телефон + адреса + ПІБ)
+function findDuplicatesByRecipient(info, pkg, excludeRow) {
+  var phone = String(pkg['Телефон отримувача'] || '').trim();
+  var address = String(pkg['Адреса в Європі'] || '').trim().toLowerCase();
+  var name = String(pkg['Піб отримувача'] || '').trim().toLowerCase();
+
+  if (!phone && !address && !name) return [];
+
+  var phoneIdx = info.headers.indexOf('Телефон отримувача');
+  var addrIdx = info.headers.indexOf('Адреса в Європі');
+  var nameIdx = info.headers.indexOf('Піб отримувача');
+  var ttnIdx = info.headers.indexOf('Номер ТТН');
+  var idIdx = info.headers.indexOf('PKG_ID');
+  var crmIdx = info.headers.indexOf('Статус CRM');
+
+  var duplicates = [];
+  for (var i = 0; i < info.data.length; i++) {
+    var rowNum = DATA_START + i;
+    if (rowNum === excludeRow) continue;
+    if (String(info.data[i][crmIdx] || '') === 'Архів') continue;
+
+    var rPhone = String(info.data[i][phoneIdx] || '').trim();
+    var rAddr = String(info.data[i][addrIdx] || '').trim().toLowerCase();
+    var rName = String(info.data[i][nameIdx] || '').trim().toLowerCase();
+
+    var match = false;
+    // Збіг по телефону + адресі
+    if (phone && rPhone && phone === rPhone && address && rAddr && address === rAddr) match = true;
+    // Збіг по телефону + ПІБ
+    if (phone && rPhone && phone === rPhone && name && rName && name === rName) match = true;
+    // Збіг по адресі + ПІБ
+    if (address && rAddr && address === rAddr && name && rName && name === rName) match = true;
+
+    if (match) {
+      duplicates.push({
+        ttn: String(info.data[i][ttnIdx] || ''),
+        package_id: String(info.data[i][idIdx] || ''),
+        recipient_name: String(info.data[i][nameIdx] || ''),
+        recipient_phone: rPhone
+      });
+    }
+  }
+  return duplicates;
+}
+
+// API для пошуку дублів по отримувачу
+function apiFindDuplicatesByRecipient(params) {
+  var pkgId = params.pkg_id;
+  if (!pkgId) return { ok: false, error: 'pkg_id не вказано' };
+
+  var sh = getSheet(SHEETS.PKG_UE);
+  if (!sh) return { ok: false, error: 'Аркуш не знайдено' };
+
+  var found = findRow(sh, 'PKG_ID', pkgId);
+  if (!found) return { ok: false, error: 'Посилка не знайдена' };
+
+  var obj = rowToObj(found.headers, found.data);
+  var info = getAllData(sh);
+  var duplicates = findDuplicatesByRecipient(info, obj, found.rowNum);
+
+  return { ok: true, duplicates: duplicates };
+}
+
+// Призначення маршруту + авто-генерація Внутрішнього №
+function apiAssignRouteNumber(params) {
+  var pkgId = params.pkg_id;
+  var routeNum = String(params.route_number || '').trim();
+  if (!pkgId) return { ok: false, error: 'pkg_id не вказано' };
+  if (!routeNum) return { ok: false, error: 'route_number не вказано' };
+
+  var sh = getSheet(SHEETS.PKG_UE);
+  if (!sh) return { ok: false, error: 'Аркуш не знайдено' };
+
+  var found = findRow(sh, 'PKG_ID', pkgId);
+  if (!found) return { ok: false, error: 'Посилка не знайдена' };
+
+  // Генерація Внутрішнього №: МАРШРУТ-DDMMYY-NNN
+  var dateStr = Utilities.formatDate(new Date(), 'Europe/Kiev', 'ddMMyy');
+
+  // Рахуємо скільки вже є в цьому маршруті на сьогодні
+  var info = getAllData(sh);
+  var intIdx = info.headers.indexOf('Внутрішній №');
+  var prefix = routeNum + '-' + dateStr + '-';
+  var maxSeq = 0;
+  if (intIdx !== -1) {
+    for (var i = 0; i < info.data.length; i++) {
+      var val = String(info.data[i][intIdx] || '');
+      if (val.indexOf(prefix) === 0) {
+        var seq = parseInt(val.substring(prefix.length)) || 0;
+        if (seq > maxSeq) maxSeq = seq;
+      }
+    }
+  }
+  var nextSeq = maxSeq + 1;
+  var seqStr = ('000' + nextSeq).slice(-3);
+  var internalNumber = prefix + seqStr;
+
+  // Оновити поля
+  var intNumIdx = found.headers.indexOf('Внутрішній №');
+  if (intNumIdx !== -1) sh.getRange(found.rowNum, intNumIdx + 1).setValue(internalNumber);
+
+  return { ok: true, internal_number: internalNumber, route_number: routeNum };
+}
+
+// Завершити перевірку — позначити посилку як "Готова до маршруту"
+function apiCompleteVerification(params) {
+  var pkgId = params.pkg_id;
+  if (!pkgId) return { ok: false, error: 'pkg_id не вказано' };
+
+  var sh = getSheet(SHEETS.PKG_UE);
+  if (!sh) return { ok: false, error: 'Аркуш не знайдено' };
+
+  var found = findRow(sh, 'PKG_ID', pkgId);
+  if (!found) return { ok: false, error: 'Посилка не знайдена' };
+
+  var obj = rowToObj(found.headers, found.data);
+
+  // Перевірки обов'язкових полів
+  var errors = [];
+  if (!obj['Кг'] && !params.skip_validation) errors.push('Вага не заповнена');
+  if (!obj['Оціночна вартість'] && !params.skip_validation) errors.push('Ціна не заповнена');
+  if (!obj['Фото посилки'] && !params.skip_validation) errors.push('Фото не завантажено');
+  if (!obj['Внутрішній №'] && !params.skip_validation) errors.push('Маршрут не призначено');
+  if (errors.length > 0) return { ok: false, error: errors.join('; ') };
+
+  // Оновити контроль перевірки
+  var ctrlIdx = found.headers.indexOf('Контроль перевірки');
+  if (ctrlIdx !== -1) sh.getRange(found.rowNum, ctrlIdx + 1).setValue('Готова до маршруту');
+
+  // Оновити дату перевірки
+  var dateIdx = found.headers.indexOf('Дата перевірки');
+  if (dateIdx !== -1) sh.getRange(found.rowNum, dateIdx + 1).setValue(now());
+
+  return { ok: true };
+}
+
+// Відмова посилки
+function apiRejectVerification(params) {
+  var pkgId = params.pkg_id;
+  var reason = params.reason || '';
+  if (!pkgId) return { ok: false, error: 'pkg_id не вказано' };
+
+  var sh = getSheet(SHEETS.PKG_UE);
+  if (!sh) return { ok: false, error: 'Аркуш не знайдено' };
+
+  var found = findRow(sh, 'PKG_ID', pkgId);
+  if (!found) return { ok: false, error: 'Посилка не знайдена' };
+
+  var ctrlIdx = found.headers.indexOf('Контроль перевірки');
+  if (ctrlIdx !== -1) sh.getRange(found.rowNum, ctrlIdx + 1).setValue('Відмова');
+
+  var dateIdx = found.headers.indexOf('Дата перевірки');
+  if (dateIdx !== -1) sh.getRange(found.rowNum, dateIdx + 1).setValue(now());
+
+  if (reason) {
+    var noteIdx = found.headers.indexOf('Примітка');
+    if (noteIdx !== -1) {
+      var existing = String(found.data[noteIdx] || '');
+      var newNote = (existing ? existing + '; ' : '') + 'Відмова: ' + reason;
+      sh.getRange(found.rowNum, noteIdx + 1).setValue(newNote);
+    }
+  }
+
+  return { ok: true };
+}
+
+// Отримати статистику перевірки
+function apiGetVerificationStats(params) {
+  var sh = getSheet(SHEETS.PKG_UE);
+  if (!sh) return { ok: true, counts: {} };
+
+  var info = getAllData(sh);
+  var ctrlIdx = info.headers.indexOf('Контроль перевірки');
+  var crmIdx = info.headers.indexOf('Статус CRM');
+  var dirIdx = info.headers.indexOf('Напрям');
+
+  var counts = { 'all': 0, 'Нова': 0, 'В перевірці': 0, 'Готова до маршруту': 0, 'Відмова': 0 };
+
+  for (var i = 0; i < info.data.length; i++) {
+    if (String(info.data[i][crmIdx] || '') === 'Архів') continue;
+    var dir = String(info.data[i][dirIdx] || '');
+    if (dir !== 'УК→ЄВ' && dir !== '') continue;
+
+    counts['all']++;
+    var ctrl = String(info.data[i][ctrlIdx] || '').trim();
+    if (!ctrl || ctrl === 'Нова') {
+      counts['Нова']++;
+    } else if (counts[ctrl] !== undefined) {
+      counts[ctrl]++;
+    }
+  }
+
+  return { ok: true, counts: counts };
+}
+
+
+// ══════════════════════════════════════════════════════════════
 // doGet / doPost — UNIVERSAL ROUTER
 // ══════════════════════════════════════════════════════════════
 
@@ -955,8 +1258,16 @@ function doPost(e) {
       case 'trackParcel':        result = apiTrackParcel(body); break;
       case 'checkNpApiKey':      result = apiCheckNpApiKey(body); break;
 
+      // ── VERIFICATION (Перевірка посилок) ──
+      case 'scanTTN':                  result = apiScanTTN(body); break;
+      case 'findDuplicatesByRecipient': result = apiFindDuplicatesByRecipient(body); break;
+      case 'assignRouteNumber':        result = apiAssignRouteNumber(body); break;
+      case 'completeVerification':     result = apiCompleteVerification(body); break;
+      case 'rejectVerification':       result = apiRejectVerification(body); break;
+      case 'getVerificationStats':     result = apiGetVerificationStats(body); break;
+
       default:
-        result = { ok: false, error: 'Unknown action: ' + action + '. Available: getAll, getOne, getStats, checkDuplicates, addParcel, updateField, deleteParcel, getPayments, addPhoto, getPhotos, addToRoute, removeFromRoute, getRoutesList, getOrderInfo, trackParcel, checkNpApiKey' };
+        result = { ok: false, error: 'Unknown action: ' + action };
     }
   } catch (err) {
     result = { ok: false, error: err.message };

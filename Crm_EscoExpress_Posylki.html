@@ -362,6 +362,87 @@
         .side-menu-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0; }
         .side-menu-section-title { font-size: 9px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.4); padding: 6px 12px 2px; letter-spacing: 1px; }
 
+        /* VERIFICATION TABS */
+        .verify-tabs { display: flex; gap: 4px; margin-bottom: 12px; background: white; border-radius: 10px; padding: 4px; box-shadow: var(--shadow); }
+        .verify-tab { flex: 1; padding: 10px 6px; border: none; border-radius: 8px; background: transparent; text-align: center; cursor: pointer; font-size: 11px; font-weight: 700; font-family: inherit; color: var(--text-secondary); transition: all 0.2s; position: relative; }
+        .verify-tab:hover { background: var(--bg-main); color: var(--text-primary); }
+        .verify-tab.active { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(26,58,94,0.3); }
+        .verify-tab .vtab-count { display: block; font-size: 16px; font-weight: 800; margin-bottom: 2px; }
+        .verify-tab .vtab-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .verify-tab.active .vtab-count, .verify-tab.active .vtab-label { color: white; }
+        .verify-tab .vtab-badge { position: absolute; top: 4px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); display: none; }
+        .verify-tab .vtab-badge.pulse { display: block; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } }
+
+        /* SCAN BUTTON */
+        .scan-bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+        .scan-input { flex: 1; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; }
+        .scan-input:focus { border-color: var(--primary); }
+        .scan-btn { padding: 10px 16px; border: none; border-radius: 8px; background: var(--primary); color: white; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.2s; }
+        .scan-btn:hover { background: var(--primary-dark); }
+        .scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* VERIFICATION CARD */
+        .vcard { background: white; border-radius: 10px; box-shadow: var(--shadow); margin-bottom: 8px; overflow: hidden; border-left: 4px solid var(--warning); }
+        .vcard.vcard-ready { border-left-color: var(--success); }
+        .vcard.vcard-unknown { border-left-color: var(--danger); }
+        .vcard.vcard-rejected { border-left-color: #6b7280; background: #f9fafb; }
+        .vcard-header { display: flex; align-items: center; padding: 10px 12px; gap: 10px; cursor: pointer; }
+        .vcard-header:hover { background: #fafbfc; }
+        .vcard-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .vcard-status-dot.dot-checking { background: var(--warning); }
+        .vcard-status-dot.dot-ready { background: var(--success); }
+        .vcard-status-dot.dot-unknown { background: var(--danger); }
+        .vcard-status-dot.dot-waiting { background: var(--info); animation: pulse 1.5s infinite; }
+        .vcard-info { flex: 1; min-width: 0; }
+        .vcard-ttn { font-size: 13px; font-weight: 700; color: var(--primary); }
+        .vcard-recipient { font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .vcard-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+        .vcard-tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600; white-space: nowrap; }
+        .vcard-tag.tag-photo-yes { background: #d1fae5; color: #059669; }
+        .vcard-tag.tag-photo-no { background: #fee2e2; color: #dc2626; }
+        .vcard-tag.tag-data-yes { background: #d1fae5; color: #059669; }
+        .vcard-tag.tag-data-no { background: #fef3c7; color: #92400e; }
+        .vcard-tag.tag-dup { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .vcard-tag.tag-route { background: #dbeafe; color: #1d4ed8; }
+        .vcard-tag.tag-unknown { background: #fee2e2; color: #dc2626; border: 1px solid #ef4444; }
+        .vcard-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+        .vcard-intnum { font-size: 12px; font-weight: 700; color: var(--primary); }
+        .vcard-time { font-size: 10px; color: var(--text-secondary); }
+
+        /* VERIFICATION FORM (EXPANDED) */
+        .vcard-form { display: none; padding: 12px; border-top: 1px solid var(--border); background: #fafbfc; }
+        .vcard-form.show { display: block; }
+        .vform-section { margin-bottom: 12px; }
+        .vform-section-title { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 4px; border-bottom: 2px solid var(--primary); margin-bottom: 8px; }
+        .vform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .vform-field { }
+        .vform-label { font-size: 9px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px; display: block; }
+        .vform-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; }
+        .vform-input:focus { border-color: var(--primary); }
+        .vform-select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; background: white; }
+        .vform-textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; resize: vertical; min-height: 50px; }
+        .vform-full { grid-column: 1 / -1; }
+        .vform-dup-alert { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+        .vform-dup-title { font-size: 11px; font-weight: 700; color: #92400e; margin-bottom: 4px; }
+        .vform-dup-item { font-size: 11px; color: #92400e; padding: 2px 0; }
+        .vform-photo-section { display: flex; align-items: center; gap: 10px; padding: 10px; background: white; border: 1px solid var(--border); border-radius: 8px; }
+        .vform-photo-thumb { width: 60px; height: 60px; border-radius: 6px; object-fit: cover; border: 2px solid var(--border); cursor: pointer; }
+        .vform-photo-placeholder { width: 60px; height: 60px; border: 2px dashed var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-secondary); }
+        .vform-photo-status { flex: 1; font-size: 11px; }
+        .vform-buttons { display: flex; gap: 8px; margin-top: 12px; }
+        .vform-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .vform-btn.btn-ready { background: var(--success); color: white; }
+        .vform-btn.btn-ready:hover { background: #059669; }
+        .vform-btn.btn-ready:disabled { opacity: 0.5; cursor: not-allowed; }
+        .vform-btn.btn-reject { background: #fee2e2; color: #dc2626; }
+        .vform-btn.btn-reject:hover { background: #dc2626; color: white; }
+        .vform-btn.btn-edit { background: var(--bg-main); color: var(--text-primary); }
+
+        /* POLLING INDICATOR */
+        .polling-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); }
+        .polling-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+
         /* RESPONSIVE */
         @media (min-width: 901px) {
             .pc-sidebar-collapse-btn { display: flex; }
@@ -463,6 +544,16 @@
             <span class="side-menu-item-count" id="mobCountPaid">0</span>
         </div>
         <div class="side-menu-divider"></div>
+        <div class="side-menu-section-title">Перевірка</div>
+        <div class="side-menu-item" id="mobVerCheck" onclick="switchToVerification('checking'); closeSideMenu();">
+            <span class="side-menu-item-left">&#128269; Перевірка</span>
+            <span class="side-menu-item-count" id="mobCountVerCheck">0</span>
+        </div>
+        <div class="side-menu-item" id="mobVerReady" onclick="switchToVerification('ready'); closeSideMenu();">
+            <span class="side-menu-item-left">&#9989; Готові</span>
+            <span class="side-menu-item-count" id="mobCountVerReady">0</span>
+        </div>
+        <div class="side-menu-divider"></div>
         <div class="side-menu-item" onclick="openAddForm(); closeSideMenu();">
             <span class="side-menu-item-left">&#10133; Нова посилка</span>
         </div>
@@ -539,6 +630,31 @@
                 </div>
             </div>
         </div>
+        <!-- VERIFICATION SECTION -->
+        <div class="pc-sidebar-section">
+            <div class="pc-sidebar-header collapsed" onclick="togglePcSection('verification')">
+                <span class="pc-sidebar-title">&#128270; ПЕРЕВІРКА</span>
+                <span class="pc-sidebar-toggle" id="pcToggleVerification">&#9660;</span>
+            </div>
+            <div class="pc-sidebar-content collapsed" id="pcSectionVerification">
+                <div class="pc-sidebar-item" id="sideVerAll" onclick="switchToVerification('all')">
+                    <span><span class="item-icon">&#128230;</span><span class="item-text">Всі (УК-ЄВ)</span></span>
+                    <span class="item-count" id="pcCountVerAll">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sideVerNew" onclick="switchToVerification('new')">
+                    <span><span class="item-icon">&#128313;</span><span class="item-text">Нові</span></span>
+                    <span class="item-count" id="pcCountVerNew">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sideVerCheck" onclick="switchToVerification('checking')">
+                    <span><span class="item-icon">&#128269;</span><span class="item-text">Перевірка</span></span>
+                    <span class="item-count" id="pcCountVerCheck">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sideVerReady" onclick="switchToVerification('ready')">
+                    <span><span class="item-icon">&#9989;</span><span class="item-text">Готові</span></span>
+                    <span class="item-count" id="pcCountVerReady">0</span>
+                </div>
+            </div>
+        </div>
         <div class="pc-sidebar-section">
             <div style="padding:14px;display:flex;flex-direction:column;gap:8px;">
                 <button onclick="openAddForm()" style="width:100%;padding:12px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">&#10133; Нова посилка</button>
@@ -570,14 +686,61 @@
             </select>
         </div>
 
-        <!-- Cards list -->
-        <div class="cards-list" id="cardsList"></div>
+        <!-- Cards list (default view) -->
+        <div id="defaultView">
+            <div class="cards-list" id="cardsList"></div>
+            <!-- Empty state -->
+            <div class="empty-state" id="emptyState" style="display:none;">
+                <div class="empty-state-icon">&#128230;</div>
+                <div class="empty-state-title">Немає посилок</div>
+                <div class="empty-state-text">Натисніть + щоб додати нову посилку</div>
+            </div>
+        </div>
 
-        <!-- Empty state -->
-        <div class="empty-state" id="emptyState" style="display:none;">
-            <div class="empty-state-icon">&#128230;</div>
-            <div class="empty-state-title">Немає посилок</div>
-            <div class="empty-state-text">Натисніть + щоб додати нову посилку</div>
+        <!-- VERIFICATION VIEW -->
+        <div id="verificationView" style="display:none;">
+            <!-- Verification tabs -->
+            <div class="verify-tabs">
+                <button class="verify-tab active" id="vtabAll" onclick="setVerifyTab('all')">
+                    <span class="vtab-count" id="vtabCountAll">0</span>
+                    <span class="vtab-label">Всі</span>
+                </button>
+                <button class="verify-tab" id="vtabNew" onclick="setVerifyTab('new')">
+                    <span class="vtab-count" id="vtabCountNew">0</span>
+                    <span class="vtab-label">Нові</span>
+                </button>
+                <button class="verify-tab" id="vtabChecking" onclick="setVerifyTab('checking')">
+                    <span class="vtab-count" id="vtabCountCheck">0</span>
+                    <span class="vtab-label">Перевірка</span>
+                    <span class="vtab-badge" id="vtabCheckBadge"></span>
+                </button>
+                <button class="verify-tab" id="vtabReady" onclick="setVerifyTab('ready')">
+                    <span class="vtab-count" id="vtabCountReady">0</span>
+                    <span class="vtab-label">Готові</span>
+                </button>
+            </div>
+
+            <!-- Scan bar (shown on Перевірка tab) -->
+            <div class="scan-bar" id="scanBar">
+                <input class="scan-input" id="scanTTNInput" placeholder="Введіть або скануйте номер ТТН..." onkeydown="if(event.key==='Enter')doScanTTN()">
+                <button class="scan-btn" onclick="doScanTTN()" id="scanBtn">&#128269; Сканувати</button>
+            </div>
+
+            <!-- Polling indicator -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:11px;font-weight:700;color:var(--text-secondary);" id="verifyResultCount">0 посилок</span>
+                <span class="polling-indicator"><span class="polling-dot"></span> Авто-оновлення</span>
+            </div>
+
+            <!-- Verification cards list -->
+            <div id="verifyCardsList"></div>
+
+            <!-- Empty state for verification -->
+            <div class="empty-state" id="verifyEmptyState" style="display:none;">
+                <div class="empty-state-icon">&#128270;</div>
+                <div class="empty-state-title">Немає посилок</div>
+                <div class="empty-state-text">Скануйте ТТН щоб почати перевірку</div>
+            </div>
         </div>
     </div>
 </div>
@@ -607,9 +770,9 @@
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
     <button class="nav-item active" id="navParcels" onclick="showAllParcels()"><span>📦</span>Посилки</button>
+    <button class="nav-item" id="navVerify" onclick="switchToVerification('checking')"><span>🔍</span>Перевірка</button>
     <button class="nav-item" id="navPax" onclick="window.open('https://script.google.com/macros/s/AKfycbwQBMlsTUhUpoKGCiVXqVPNF9_KZ4N-DFHh7RVGmWMF2UEALNFuJ5Cj04xyFMBuEr6e/exec','_blank')"><span>👥</span>Пасажири</button>
     <button class="nav-item" onclick="silentSync()"><span>🔄</span>Синхр.</button>
-    <button class="nav-item" onclick="openColumnConfigurator()"><span>⚙️</span>Колонки</button>
     <button class="nav-item" onclick="openAddForm()"><span>➕</span>Додати</button>
 </nav>
 
@@ -1755,10 +1918,23 @@ document.addEventListener('change', function(e) {
 
 // ── SHOW ALL PARCELS (reset filters) ──
 function showAllParcels() {
+    // Switch to parcels view if in verification mode
+    if (typeof currentView !== 'undefined' && currentView === 'verification') {
+        currentView = 'parcels';
+        document.getElementById('defaultView').style.display = 'block';
+        document.getElementById('verificationView').style.display = 'none';
+        if (typeof stopPolling === 'function') stopPolling();
+    }
+    // Update bottom nav
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    var navP = document.getElementById('navParcels');
+    if (navP) navP.classList.add('active');
+
     currentFilter = 'all';
     currentPayFilter = 'all';
     searchQuery = '';
     document.getElementById('searchInput').value = '';
+    updateSidebarActive();
     applyFilters();
 }
 
@@ -1829,6 +2005,582 @@ function resetColCfg() {
     colCfgTemp = [...DEFAULT_CARD_COLUMNS];
     renderColCfgList();
 }
+
+// ================================================================
+// VERIFICATION SYSTEM — Перевірка посилок (УК→Європа)
+// ================================================================
+
+let currentView = 'parcels'; // 'parcels' | 'verification'
+let currentVerifyTab = 'all'; // 'all' | 'new' | 'checking' | 'ready'
+let verifyData = [];
+let openVerifyCardId = null;
+let verifyDuplicatesCache = {};
+let pollingTimer = null;
+const POLLING_INTERVAL = 15000; // 15 секунд
+
+// ── Перемикання між видами ──
+function switchToVerification(tab) {
+    currentView = 'verification';
+    currentVerifyTab = tab || 'checking';
+
+    document.getElementById('defaultView').style.display = 'none';
+    document.getElementById('verificationView').style.display = 'block';
+
+    // Update bottom nav
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    var navVerify = document.getElementById('navVerify');
+    if (navVerify) navVerify.classList.add('active');
+
+    // Update sidebar
+    document.querySelectorAll('.pc-sidebar-item').forEach(el => el.classList.remove('active'));
+    var sideId = { 'all': 'sideVerAll', 'new': 'sideVerNew', 'checking': 'sideVerCheck', 'ready': 'sideVerReady' }[currentVerifyTab];
+    if (sideId) document.getElementById(sideId)?.classList.add('active');
+
+    updateVerifyTabs();
+    loadVerificationData();
+    startPolling();
+}
+
+function switchToParcels() {
+    currentView = 'parcels';
+    document.getElementById('defaultView').style.display = 'block';
+    document.getElementById('verificationView').style.display = 'none';
+
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    var navParcels = document.getElementById('navParcels');
+    if (navParcels) navParcels.classList.add('active');
+
+    stopPolling();
+    updateSidebarActive();
+    applyFilters();
+}
+
+// Note: showAllParcels is patched below to also switch view
+
+// ── Verification Tabs ──
+function setVerifyTab(tab) {
+    currentVerifyTab = tab;
+    updateVerifyTabs();
+    renderVerifyCards();
+}
+
+function updateVerifyTabs() {
+    document.querySelectorAll('.verify-tab').forEach(t => t.classList.remove('active'));
+    var tabId = { 'all': 'vtabAll', 'new': 'vtabNew', 'checking': 'vtabChecking', 'ready': 'vtabReady' }[currentVerifyTab];
+    if (tabId) document.getElementById(tabId)?.classList.add('active');
+}
+
+// ── Load & Filter Verification Data ──
+async function loadVerificationData() {
+    // Filter UE data from allData for verification
+    verifyData = allData.filter(p =>
+        p._sheet === 'Реєстрація ТТН УК-єв' &&
+        String(p['Статус CRM']) !== 'Архів'
+    );
+
+    updateVerifyCounts();
+    renderVerifyCards();
+}
+
+function getVerifyFiltered() {
+    var ctrl;
+    return verifyData.filter(p => {
+        ctrl = String(p['Контроль перевірки'] || '').trim();
+        switch (currentVerifyTab) {
+            case 'all': return true;
+            case 'new': return !ctrl || ctrl === 'Нова' || ctrl === '';
+            case 'checking': return ctrl === 'В перевірці';
+            case 'ready': return ctrl === 'Готова до маршруту';
+            default: return true;
+        }
+    });
+}
+
+function updateVerifyCounts() {
+    var counts = { all: 0, new: 0, checking: 0, ready: 0 };
+    verifyData.forEach(p => {
+        var ctrl = String(p['Контроль перевірки'] || '').trim();
+        counts.all++;
+        if (!ctrl || ctrl === 'Нова' || ctrl === '') counts.new++;
+        else if (ctrl === 'В перевірці') counts.checking++;
+        else if (ctrl === 'Готова до маршруту') counts.ready++;
+    });
+
+    document.getElementById('vtabCountAll').textContent = counts.all;
+    document.getElementById('vtabCountNew').textContent = counts.new;
+    document.getElementById('vtabCountCheck').textContent = counts.checking;
+    document.getElementById('vtabCountReady').textContent = counts.ready;
+
+    // Sidebar counts
+    var el;
+    el = document.getElementById('pcCountVerAll'); if (el) el.textContent = counts.all;
+    el = document.getElementById('pcCountVerNew'); if (el) el.textContent = counts.new;
+    el = document.getElementById('pcCountVerCheck'); if (el) el.textContent = counts.checking;
+    el = document.getElementById('pcCountVerReady'); if (el) el.textContent = counts.ready;
+
+    // Mobile counts
+    el = document.getElementById('mobCountVerCheck'); if (el) el.textContent = counts.checking;
+    el = document.getElementById('mobCountVerReady'); if (el) el.textContent = counts.ready;
+
+    // Pulse badge if checking > 0
+    var badge = document.getElementById('vtabCheckBadge');
+    if (badge) badge.className = 'vtab-badge' + (counts.checking > 0 ? ' pulse' : '');
+}
+
+// ── Render Verification Cards ──
+function renderVerifyCards() {
+    var filtered = getVerifyFiltered();
+    var container = document.getElementById('verifyCardsList');
+    var emptyEl = document.getElementById('verifyEmptyState');
+    var countEl = document.getElementById('verifyResultCount');
+
+    if (countEl) countEl.textContent = filtered.length + ' посилок';
+
+    if (filtered.length === 0) {
+        container.innerHTML = '';
+        emptyEl.style.display = 'block';
+        return;
+    }
+    emptyEl.style.display = 'none';
+
+    container.innerHTML = filtered.map(p => renderSingleVerifyCard(p)).join('');
+}
+
+function renderSingleVerifyCard(p) {
+    var pkgId = p['PKG_ID'] || '';
+    var ttn = p['Номер ТТН'] || '';
+    var recipient = p['Піб отримувача'] || '';
+    var phone = p['Телефон отримувача'] || '';
+    var ctrl = String(p['Контроль перевірки'] || '').trim();
+    var photo = p['Фото посилки'] || '';
+    var weight = p['Кг'] || '';
+    var price = p['Оціночна вартість'] || '';
+    var intNum = p['Внутрішній №'] || '';
+    var date = p['Дата перевірки'] || p['Дата створення'] || '';
+    var desc = p['Опис'] || '';
+    var isOpen = openVerifyCardId === pkgId;
+
+    var statusClass = '';
+    var dotClass = 'dot-checking';
+    if (ctrl === 'Готова до маршруту') { statusClass = 'vcard-ready'; dotClass = 'dot-ready'; }
+    else if (ctrl === 'Відмова') { statusClass = 'vcard-rejected'; dotClass = 'dot-checking'; }
+    else if (!recipient && !phone) { statusClass = 'vcard-unknown'; dotClass = 'dot-unknown'; }
+    else if (ctrl === 'В перевірці' && !photo) { dotClass = 'dot-waiting'; }
+
+    var hasData = !!(weight && price);
+    var hasPhoto = !!photo;
+
+    // Check for cached duplicates
+    var dups = verifyDuplicatesCache[pkgId] || [];
+    var hasDups = dups.length > 0;
+
+    var html = '<div class="vcard ' + statusClass + '" id="vcard-' + pkgId + '">';
+
+    // Header
+    html += '<div class="vcard-header" onclick="toggleVerifyCard(\'' + escAttr(pkgId) + '\')">';
+    html += '<div class="vcard-status-dot ' + dotClass + '"></div>';
+    html += '<div class="vcard-info">';
+    html += '<div class="vcard-ttn">TTH: ' + escHtml(ttn || '—') + '</div>';
+    html += '<div class="vcard-recipient">' + (recipient ? escHtml(recipient) + (phone ? ' (' + escHtml(phone) + ')' : '') : '<span style="color:var(--danger);">Невідомий отримувач</span>') + '</div>';
+    html += '<div class="vcard-meta">';
+    html += '<span class="vcard-tag ' + (hasPhoto ? 'tag-photo-yes' : 'tag-photo-no') + '">Фото: ' + (hasPhoto ? '&#9989;' : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + (hasData ? 'tag-data-yes' : 'tag-data-no') + '">Дані: ' + (hasData ? '&#9989;' : '&#10060;') + '</span>';
+    if (hasDups) html += '<span class="vcard-tag tag-dup">&#9888; Дублі: ' + dups.length + '</span>';
+    if (!recipient) html += '<span class="vcard-tag tag-unknown">&#10067; НЕВІДОМИЙ</span>';
+    if (intNum) html += '<span class="vcard-tag tag-route">&#128666; ' + escHtml(intNum) + '</span>';
+    html += '</div></div>';
+    html += '<div class="vcard-right">';
+    if (intNum) html += '<div class="vcard-intnum">' + escHtml(intNum) + '</div>';
+    html += '<div class="vcard-time">' + escHtml(date) + '</div>';
+    html += '</div></div>';
+
+    // Expandable form
+    html += '<div class="vcard-form ' + (isOpen ? 'show' : '') + '" id="vform-' + pkgId + '">';
+    if (isOpen) html += renderVerifyForm(p);
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+}
+
+function toggleVerifyCard(pkgId) {
+    var wasOpen = openVerifyCardId === pkgId;
+    openVerifyCardId = wasOpen ? null : pkgId;
+
+    if (!wasOpen) {
+        // Load duplicates for this package
+        loadDuplicatesForPackage(pkgId);
+    }
+
+    renderVerifyCards();
+
+    if (!wasOpen) {
+        var el = document.getElementById('vcard-' + pkgId);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// ── Render Verification Form ──
+function renderVerifyForm(p) {
+    var pkgId = p['PKG_ID'] || '';
+    var ctrl = String(p['Контроль перевірки'] || '').trim();
+    var isReady = ctrl === 'Готова до маршруту';
+    var photo = p['Фото посилки'] || '';
+    var dups = verifyDuplicatesCache[pkgId] || [];
+
+    var html = '';
+
+    // Duplicates alert
+    if (dups.length > 0) {
+        html += '<div class="vform-dup-alert">';
+        html += '<div class="vform-dup-title">&#9888; ДУБЛІ ЗНАЙДЕНО (' + dups.length + ')</div>';
+        dups.forEach(function(d) {
+            html += '<div class="vform-dup-item">&#8226; TTH: ' + escHtml(d.ttn) + ' — ' + escHtml(d.recipient_name) + ' (' + escHtml(d.package_id) + ')</div>';
+        });
+        html += '</div>';
+    }
+
+    // Recipient section
+    html += '<div class="vform-section">';
+    html += '<div class="vform-section-title">&#128100; Отримувач</div>';
+    html += '<div class="vform-grid">';
+    html += vformField(pkgId, 'Піб отримувача', p['Піб отримувача'], 'text', 'ПІБ отримувача');
+    html += vformField(pkgId, 'Телефон отримувача', p['Телефон отримувача'], 'text', '+41...');
+    html += vformField(pkgId, 'Адреса в Європі', p['Адреса в Європі'], 'text', 'Адреса в Європі', true);
+    html += '</div></div>';
+
+    // Package section
+    html += '<div class="vform-section">';
+    html += '<div class="vform-section-title">&#128230; Посилка</div>';
+    html += '<div class="vform-grid">';
+    html += vformField(pkgId, 'Кг', p['Кг'], 'number', 'Вага (кг)');
+    html += vformField(pkgId, 'Оціночна вартість', p['Оціночна вартість'], 'number', 'Ціна');
+    html += vformField(pkgId, 'Кількість позицій', p['Кількість позицій'], 'number', 'Кількість');
+    html += vformField(pkgId, 'Номер ТТН', p['Номер ТТН'], 'text', 'ТТН');
+    html += vformField(pkgId, 'Опис', p['Опис'], 'text', 'Опис вмісту', true);
+    html += '</div></div>';
+
+    // Route section
+    html += '<div class="vform-section">';
+    html += '<div class="vform-section-title">&#128666; Маршрут</div>';
+    html += '<div class="vform-grid">';
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Номерація маршруту</label>';
+    html += '<select class="vform-select" id="vRouteSelect-' + pkgId + '" onchange="onRouteSelect(\'' + escAttr(pkgId) + '\')">';
+    html += '<option value="">-- Оберіть --</option>';
+    html += '<option value="200"' + (getRouteFromIntNum(p['Внутрішній №']) === '200' ? ' selected' : '') + '>200</option>';
+    html += '<option value="500"' + (getRouteFromIntNum(p['Внутрішній №']) === '500' ? ' selected' : '') + '>500</option>';
+    html += '<option value="custom">Інше...</option>';
+    html += '</select></div>';
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Внутрішній № (авто)</label>';
+    html += '<input class="vform-input" id="vIntNum-' + pkgId + '" value="' + escAttr(p['Внутрішній №'] || '') + '" readonly style="background:#f1f5f9;font-weight:700;">';
+    html += '</div></div></div>';
+
+    // Photo section
+    html += '<div class="vform-section">';
+    html += '<div class="vform-section-title">&#128247; Фото</div>';
+    html += '<div class="vform-photo-section">';
+    if (photo) {
+        html += '<img class="vform-photo-thumb" src="' + escAttr(photo) + '" onclick="viewPhoto(\'' + escAttr(photo) + '\')">';
+        html += '<div class="vform-photo-status"><strong style="color:var(--success);">&#9989; Фото завантажено</strong><br><span style="font-size:10px;color:var(--text-secondary);">Натисніть щоб переглянути</span></div>';
+    } else {
+        html += '<div class="vform-photo-placeholder">&#128247;</div>';
+        html += '<div class="vform-photo-status"><strong style="color:var(--warning);">&#9203; Очікується фото</strong><br><span style="font-size:10px;color:var(--text-secondary);">Від перевіряючого або завантажте самі</span></div>';
+    }
+    html += '<button class="scan-btn" style="padding:8px 12px;font-size:11px;" onclick="startVerifyPhotoUpload(\'' + escAttr(pkgId) + '\')">&#128247; Завантажити</button>';
+    html += '</div></div>';
+
+    // Verification control
+    html += '<div class="vform-section">';
+    html += '<div class="vform-section-title">&#128203; Контроль</div>';
+    html += '<div class="vform-grid">';
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Контроль перевірки</label>';
+    html += '<input class="vform-input" value="' + escAttr(ctrl || 'Нова') + '" readonly style="background:#f1f5f9;">';
+    html += '</div>';
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Дата перевірки</label>';
+    html += '<input class="vform-input" value="' + escAttr(p['Дата перевірки'] || '—') + '" readonly style="background:#f1f5f9;">';
+    html += '</div>';
+    html += '</div></div>';
+
+    // Action buttons
+    var canComplete = !!(p['Кг'] && p['Оціночна вартість'] && p['Внутрішній №'] && photo);
+    html += '<div class="vform-buttons">';
+    if (!isReady) {
+        html += '<button class="vform-btn btn-ready" onclick="completeVerification(\'' + escAttr(pkgId) + '\')" ' + (canComplete ? '' : 'disabled title="Заповніть всі поля, призначте маршрут та завантажте фото"') + '>&#9989; ГОТОВА</button>';
+        html += '<button class="vform-btn btn-reject" onclick="rejectVerification(\'' + escAttr(pkgId) + '\')">&#10060; Відмова</button>';
+    } else {
+        html += '<button class="vform-btn btn-edit" onclick="reopenVerification(\'' + escAttr(pkgId) + '\')">&#9998; Повернути в перевірку</button>';
+    }
+    html += '</div>';
+
+    return html;
+}
+
+function vformField(pkgId, col, value, type, placeholder, fullWidth) {
+    var val = value !== undefined && value !== null ? String(value) : '';
+    var cls = fullWidth ? 'vform-field vform-full' : 'vform-field';
+    return '<div class="' + cls + '">' +
+        '<label class="vform-label">' + escHtml(col) + '</label>' +
+        '<input class="vform-input" type="' + type + '" value="' + escAttr(val) + '" placeholder="' + escAttr(placeholder || '') + '" ' +
+        'onblur="saveVerifyField(\'' + escAttr(pkgId) + '\', \'' + escAttr(col) + '\', this.value)">' +
+        '</div>';
+}
+
+function getRouteFromIntNum(intNum) {
+    if (!intNum) return '';
+    var parts = String(intNum).split('-');
+    return parts[0] || '';
+}
+
+// ── Scan TTN ──
+async function doScanTTN() {
+    var input = document.getElementById('scanTTNInput');
+    var ttn = (input.value || '').trim();
+    if (!ttn) { showToast('Введіть номер ТТН'); return; }
+
+    var btn = document.getElementById('scanBtn');
+    btn.disabled = true;
+    btn.textContent = '&#9203; Сканування...';
+
+    try {
+        var res = await apiPost('scanTTN', { ttn: ttn, verifier: getManagerName() });
+
+        if (res.ok) {
+            // Update local data
+            if (res.found && res.data) {
+                // Update existing record in allData
+                var idx = allData.findIndex(x => x['PKG_ID'] === res.package_id);
+                if (idx !== -1) {
+                    allData[idx]['Контроль перевірки'] = 'В перевірці';
+                    allData[idx]['Дата перевірки'] = res.data['Дата перевірки'] || '';
+                }
+            } else if (!res.found && res.data) {
+                // New unknown package — add to allData
+                var newPkg = res.data;
+                newPkg._sheet = 'Реєстрація ТТН УК-єв';
+                newPkg._rowNum = 0;
+                newPkg['Борг'] = 0;
+                allData.push(newPkg);
+            }
+
+            // Cache duplicates
+            if (res.duplicates && res.duplicates.length > 0) {
+                verifyDuplicatesCache[res.package_id] = res.duplicates;
+            }
+
+            // Switch to checking tab and open the card
+            currentVerifyTab = 'checking';
+            openVerifyCardId = res.package_id;
+            loadVerificationData();
+
+            if (res.found) {
+                showToast('&#9989; Посилка знайдена: ' + (res.recipient_name || ttn) + (res.duplicates && res.duplicates.length > 0 ? ' (&#9888; ' + res.duplicates.length + ' дублів)' : ''));
+            } else {
+                showToast('&#10067; ТТН не знайдено в базі. Створено нову посилку. Заповніть дані.');
+            }
+
+            input.value = '';
+        } else {
+            showToast('Помилка: ' + (res.error || 'невідома'));
+        }
+    } catch (e) {
+        showToast('Помилка: ' + e.message);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '&#128269; Сканувати';
+}
+
+// ── Save Verify Field ──
+async function saveVerifyField(pkgId, col, newValue) {
+    var p = allData.find(x => x['PKG_ID'] === pkgId);
+    if (!p) return;
+    var oldValue = p[col] !== undefined ? String(p[col]) : '';
+    if (newValue === oldValue) return;
+
+    var res = await apiPost('updateField', { pkg_id: pkgId, col: col, value: newValue, manager: getManagerName() });
+    if (res.ok) {
+        p[col] = newValue;
+        // Recalc debt if needed
+        if (col === 'Сума' || col === 'Завдаток') {
+            p['Борг'] = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
+        }
+        showToast('Збережено: ' + col);
+        // Re-render to update status tags
+        loadVerificationData();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Route Assignment ──
+async function onRouteSelect(pkgId) {
+    var select = document.getElementById('vRouteSelect-' + pkgId);
+    var routeNum = select.value;
+
+    if (routeNum === 'custom') {
+        routeNum = prompt('Введіть номер маршруту:');
+        if (!routeNum) { select.value = ''; return; }
+    }
+    if (!routeNum) return;
+
+    showLoader('Призначення маршруту...');
+    var res = await apiPost('assignRouteNumber', { pkg_id: pkgId, route_number: routeNum });
+    hideLoader();
+
+    if (res.ok) {
+        var p = allData.find(x => x['PKG_ID'] === pkgId);
+        if (p) p['Внутрішній №'] = res.internal_number;
+
+        var intNumInput = document.getElementById('vIntNum-' + pkgId);
+        if (intNumInput) intNumInput.value = res.internal_number;
+
+        showToast('Маршрут ' + routeNum + ', Внутрішній №: ' + res.internal_number);
+        loadVerificationData();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Complete Verification ──
+async function completeVerification(pkgId) {
+    var p = allData.find(x => x['PKG_ID'] === pkgId);
+    if (!p) return;
+
+    // Client-side validation
+    var errors = [];
+    if (!p['Кг']) errors.push('Вага');
+    if (!p['Оціночна вартість']) errors.push('Ціна');
+    if (!p['Фото посилки']) errors.push('Фото');
+    if (!p['Внутрішній №']) errors.push('Маршрут');
+
+    if (errors.length > 0) {
+        showToast('Не заповнено: ' + errors.join(', '));
+        return;
+    }
+
+    showLoader('Завершення перевірки...');
+    var res = await apiPost('completeVerification', { pkg_id: pkgId });
+    hideLoader();
+
+    if (res.ok) {
+        p['Контроль перевірки'] = 'Готова до маршруту';
+        openVerifyCardId = null;
+        showToast('&#9989; Посилка готова до маршруту!');
+        loadVerificationData();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Reject Verification ──
+async function rejectVerification(pkgId) {
+    var reason = prompt('Причина відмови:');
+    if (reason === null) return;
+
+    showLoader('Обробка відмови...');
+    var res = await apiPost('rejectVerification', { pkg_id: pkgId, reason: reason });
+    hideLoader();
+
+    if (res.ok) {
+        var p = allData.find(x => x['PKG_ID'] === pkgId);
+        if (p) p['Контроль перевірки'] = 'Відмова';
+        openVerifyCardId = null;
+        showToast('Посилку відхилено');
+        loadVerificationData();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Reopen Verification ──
+async function reopenVerification(pkgId) {
+    showLoader('Повертаємо в перевірку...');
+    var res = await apiPost('updateField', { pkg_id: pkgId, col: 'Контроль перевірки', value: 'В перевірці' });
+    hideLoader();
+
+    if (res.ok) {
+        var p = allData.find(x => x['PKG_ID'] === pkgId);
+        if (p) p['Контроль перевірки'] = 'В перевірці';
+        currentVerifyTab = 'checking';
+        showToast('Посилку повернено в перевірку');
+        loadVerificationData();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Photo Upload for Verification ──
+function startVerifyPhotoUpload(pkgId) {
+    photoTargetPkgId = pkgId;
+    document.getElementById('photoFileInput').click();
+}
+
+// ── Load Duplicates ──
+async function loadDuplicatesForPackage(pkgId) {
+    if (verifyDuplicatesCache[pkgId]) return;
+    var res = await apiPost('findDuplicatesByRecipient', { pkg_id: pkgId });
+    if (res.ok && res.duplicates) {
+        verifyDuplicatesCache[pkgId] = res.duplicates;
+        // Re-render if this card is still open
+        if (openVerifyCardId === pkgId) {
+            var formEl = document.getElementById('vform-' + pkgId);
+            var p = allData.find(x => x['PKG_ID'] === pkgId);
+            if (formEl && p) formEl.innerHTML = renderVerifyForm(p);
+        }
+    }
+}
+
+// ── Polling for Real-time Updates ──
+function startPolling() {
+    stopPolling();
+    pollingTimer = setInterval(async function() {
+        if (currentView !== 'verification') { stopPolling(); return; }
+        try {
+            var res = await apiPost('getAll', { sheet: 'ue', filter: {} });
+            if (res.ok && res.data) {
+                // Merge updated data
+                res.data.forEach(function(serverPkg) {
+                    var idx = allData.findIndex(x => x['PKG_ID'] === serverPkg['PKG_ID']);
+                    if (idx !== -1) {
+                        // Update fields that may have changed
+                        allData[idx]['Контроль перевірки'] = serverPkg['Контроль перевірки'];
+                        allData[idx]['Дата перевірки'] = serverPkg['Дата перевірки'];
+                        allData[idx]['Фото посилки'] = serverPkg['Фото посилки'];
+                        allData[idx]['Внутрішній №'] = serverPkg['Внутрішній №'];
+                        allData[idx]['Кг'] = serverPkg['Кг'];
+                        allData[idx]['Оціночна вартість'] = serverPkg['Оціночна вартість'];
+                    } else {
+                        serverPkg['Борг'] = Math.max(0, (parseFloat(serverPkg['Сума']) || 0) - (parseFloat(serverPkg['Завдаток']) || 0));
+                        allData.push(serverPkg);
+                    }
+                });
+                loadVerificationData();
+            }
+        } catch(e) {
+            // Silent fail on polling
+        }
+    }, POLLING_INTERVAL);
+}
+
+function stopPolling() {
+    if (pollingTimer) {
+        clearInterval(pollingTimer);
+        pollingTimer = null;
+    }
+}
+
+// Patch: after photo upload, also refresh verification view
+const _origPhotoUploadHandler = handlePhotoUpload;
+document.getElementById('photoFileInput').onchange = async function(event) {
+    await _origPhotoUploadHandler(event);
+    if (currentView === 'verification') {
+        loadVerificationData();
+    }
+};
 </script>
 </body>
 </html>
