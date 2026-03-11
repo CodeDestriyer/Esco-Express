@@ -530,12 +530,13 @@ function apiUpdateField(params) {
     if (params.col === 'Завдаток') {
       var oldDep = parseFloat(found.data[found.headers.indexOf('Завдаток')]) || 0;
       var newDep = parseFloat(params.value) || 0;
-      if (newDep !== oldDep && newDep > 0) {
+      var delta = newDep - oldDep;
+      if (delta !== 0) {
         // Зчитуємо актуальні дані рядка після оновлення
         var updatedRow = sh.getRange(found.rowNum, 1, 1, found.headers.length).getValues()[0];
         var paxData = rowToObj(found.headers, updatedRow);
         paxData._sheet = shName;
-        addPayment(paxData, params.manager || '');
+        addPayment(paxData, params.manager || '', delta);
       }
     }
   }
@@ -1865,7 +1866,8 @@ var FINANCE_COLS = [
 
 // addPayment — Додає запис платежу в Finance_crm_v2.Платежі
 // Викликається автоматично з apiUpdateField при зміні Завдаток (S)
-function addPayment(paxData, managerName) {
+// delta — різниця (нова сума - стара). Додатнє = доплата, від'ємне = повернення
+function addPayment(paxData, managerName, delta) {
   var finSS = SpreadsheetApp.openById(DB.FINANCE);
   var finSheet = finSS.getSheetByName(FINANCE_SHEET_NAME);
   if (!finSheet) {
@@ -1875,14 +1877,14 @@ function addPayment(paxData, managerName) {
   }
 
   var payId = genId('PAY');
-  var deposit = parseFloat(paxData['Завдаток']) || 0;
+  var absDelta = Math.abs(delta);
   var debt = calcDebt(paxData);
 
   var payObj = {};
   FINANCE_COLS.forEach(function(c) { payObj[c] = ''; });
 
   payObj['PAY_ID'] = payId;
-  payObj['Дата створення'] = today();
+  payObj['Дата створення'] = now();
   payObj['Хто вніс'] = managerName || '';
   payObj['Роль'] = 'Менеджер';
   payObj['CLI_ID'] = paxData['CLI_ID'] || '';
@@ -1891,11 +1893,11 @@ function addPayment(paxData, managerName) {
   payObj['RTE_ID'] = paxData['RTE_ID'] || '';
   payObj['CAL_ID'] = paxData['CAL_ID'] || '';
   payObj['Ід_смарт'] = paxData['Ід_смарт'] || '';
-  payObj['Тип платежу'] = 'Завдаток';
-  payObj['Сума'] = deposit;
+  payObj['Тип платежу'] = delta > 0 ? 'Завдаток' : 'Повернення';
+  payObj['Сума'] = absDelta;
   payObj['Валюта'] = paxData['Валюта завдатку'] || paxData['Валюта квитка'] || 'UAH';
   payObj['Форма оплати'] = '';
-  payObj['Статус платежу'] = 'Отримано';
+  payObj['Статус платежу'] = delta > 0 ? 'Отримано' : 'Повернено';
   payObj['Борг сума'] = debt;
   payObj['Борг валюта'] = paxData['Валюта квитка'] || 'UAH';
   payObj['Дата погашення'] = '';
@@ -1939,9 +1941,19 @@ function apiGetPayments(params) {
     }
   }
 
-  // Сортування: новіші зверху
+  // Сортування: новіші зверху (формат dd.MM.yyyy HH:mm)
   results.sort(function(a, b) {
-    return String(b['Дата створення']).localeCompare(String(a['Дата створення']));
+    var da = String(a['Дата створення']);
+    var db = String(b['Дата створення']);
+    // Конвертуємо dd.MM.yyyy HH:mm → yyyyMMddHHmm для правильного порівняння
+    function toSortable(s) {
+      var m = s.match(/(\d{2})\.(\d{2})\.(\d{4})\s*(\d{2}):?(\d{2})?/);
+      if (m) return m[3] + m[2] + m[1] + m[4] + (m[5] || '00');
+      var m2 = s.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+      if (m2) return m2[3] + m2[2] + m2[1] + '0000';
+      return s;
+    }
+    return toSortable(db).localeCompare(toSortable(da));
   });
 
   return { ok: true, data: results };
@@ -2060,7 +2072,7 @@ function doPost(e) {
       case 'getPayments':        result = apiGetPayments(body); break;
 
       default:
-        result = { ok: false, error: 'Unknown action: ' + action + '. Available: getAll, getOne, getPassengersByTrip, getStats, checkDuplicates, suggestTrips, addPassenger, clonePassenger, updateField, updatePassenger, bulkUpdateField, assignTrip, unassignTrip, reassignTrip, deletePassenger, bulkDelete, archivePassenger, restorePassenger, moveDirection, getTrips, getTrip, createTrip, updateTrip, archiveTrip, deleteTrip, duplicateTrip, getRoutes, addToRoute, createRoute, deleteRoute, deleteLinkedSheets, getAutopark, getAutoSeats, getSeating, assignSeat, freeSeat' };
+        result = { ok: false, error: 'Unknown action: ' + action + '. Available: getAll, getOne, getPassengersByTrip, getStats, checkDuplicates, suggestTrips, addPassenger, clonePassenger, updateField, updatePassenger, bulkUpdateField, assignTrip, unassignTrip, reassignTrip, deletePassenger, bulkDelete, archivePassenger, restorePassenger, moveDirection, getTrips, getTrip, createTrip, updateTrip, archiveTrip, deleteTrip, duplicateTrip, getRoutes, addToRoute, createRoute, deleteRoute, deleteLinkedSheets, getAutopark, getAutoSeats, getSeating, assignSeat, freeSeat, getPayments' };
     }
   } catch (err) {
     result = { ok: false, error: err.message };

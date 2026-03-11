@@ -2855,13 +2855,14 @@ function renderPaymentsPanel(paxId, payments) {
 
     payments.forEach(p => {
         const sum = parseFloat(p['Сума']) || 0;
-        totalReceived += sum;
+        const isReturn = p['Тип платежу'] === 'Повернення';
+        totalReceived += isReturn ? -sum : sum;
         lastDebt = parseFloat(p['Борг сума']) || 0;
         lastCurrency = p['Борг валюта'] || p['Валюта'] || '';
 
         html += `<tr>
             <td>${p['Дата створення'] || '—'}</td>
-            <td style="font-weight:700;color:var(--success)">${sum}</td>
+            <td style="font-weight:700;color:${isReturn ? 'var(--danger)' : 'var(--success)'}">${isReturn ? '-' : '+'}${sum}</td>
             <td>${p['Валюта'] || '—'}</td>
             <td>${p['Тип платежу'] || '—'}</td>
             <td>${p['Хто вніс'] || '—'}</td>
