@@ -4601,15 +4601,17 @@ async function confirmTripAssign() {
     var mode = tmMode;
     var callback = tmFormCallback;
 
-    closeTripModal();
-
-    // Якщо з форми додавання — callback
+    // Якщо з форми додавання — callback і закриваємо
     if (mode === 'form' && callback) {
+        closeTripModal();
         callback(calId);
         return;
     }
 
+    // Показуємо лоадер ДО закриття модалки
     showLoader('Призначаю рейс...');
+    closeTripModal();
+
     var res = await apiPost('assignTrip', { cal_id: calId, pax_ids: paxIds });
 
     if (res.ok) {
@@ -4621,9 +4623,18 @@ async function confirmTripAssign() {
                 if (p['Статус ліда'] === 'Новий') p['Статус ліда'] = 'В роботі';
             }
         });
+        // Оновлюємо free_seats в рейсі
+        var trip = trips.find(function(t) { return t.cal_id === calId; });
+        if (trip) {
+            var assigned = passengers.filter(function(px) { return px['CAL_ID'] === calId; });
+            var usedSeats = 0;
+            assigned.forEach(function(px) { usedSeats += parseInt(px['Кількість місць']) || 1; });
+            trip.free_seats = Math.max(0, (parseInt(trip.max_seats) || 0) - usedSeats);
+        }
         hideLoader();
         showToast('✅ Рейс призначено');
-        renderCards();
+        render();
+        updateAllCounts();
         silentSync();
     } else {
         hideLoader();
@@ -4635,19 +4646,32 @@ async function confirmTripAssign() {
 async function doUnassignTrip() {
     // Зберігаємо ДО закриття
     var paxId = tmPaxIds.length > 0 ? tmPaxIds[0] : '';
-    closeTripModal();
     if (!paxId) return;
 
     var p = passengers.find(function(x) { return x['PAX_ID'] === paxId; });
     if (!p) return;
 
+    var oldCalId = p['CAL_ID'];
     showLoader('Знімаю з рейсу...');
+    closeTripModal();
+
     var res = await apiPost('unassignTrip', { pax_ids: [paxId] });
     if (res.ok) {
         p['CAL_ID'] = '';
+        // Оновлюємо free_seats у рейсі
+        if (oldCalId) {
+            var trip = trips.find(function(t) { return t.cal_id === oldCalId; });
+            if (trip) {
+                var assigned = passengers.filter(function(px) { return px['CAL_ID'] === oldCalId; });
+                var usedSeats = 0;
+                assigned.forEach(function(px) { usedSeats += parseInt(px['Кількість місць']) || 1; });
+                trip.free_seats = Math.max(0, (parseInt(trip.max_seats) || 0) - usedSeats);
+            }
+        }
         hideLoader();
         showToast('✅ Знято з рейсу');
-        renderCards();
+        render();
+        updateAllCounts();
         silentSync();
     } else {
         hideLoader();
