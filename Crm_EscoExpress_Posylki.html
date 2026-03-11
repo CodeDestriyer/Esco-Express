@@ -1,0 +1,2591 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>EscoExpress CRM Посилки v3</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a3a5e;
+            --primary-dark: #0d1f3c;
+            --accent: #d90d0d;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --purple: #8b5cf6;
+            --orange: #f97316;
+            --pink: #ec4899;
+            --teal: #14b8a6;
+            --bg-main: #f5f7fa;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg-main); color: var(--text-primary); min-height: 100vh; }
+
+        /* HEADER */
+        .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 10px 12px; position: sticky; top: 0; z-index: 100; }
+        .header-top { display: flex; align-items: center; gap: 10px; }
+        .burger-btn { display: none; width: 32px; height: 32px; background: rgba(255,255,255,0.15); border: none; border-radius: 6px; color: white; font-size: 18px; cursor: pointer; align-items: center; justify-content: center; }
+        .logo { font-size: 13px; font-weight: 800; color: white; white-space: nowrap; }
+        .logo span { color: var(--accent); }
+        .search-box { flex: 1; position: relative; }
+        .search-input { width: 100%; padding: 8px 12px 8px 32px; border: none; border-radius: 6px; background: rgba(255,255,255,0.15); color: white; font-family: inherit; font-size: 12px; outline: none; }
+        .search-input::placeholder { color: rgba(255,255,255,0.6); }
+        .search-input:focus { background: rgba(255,255,255,0.25); }
+        .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: 0.7; }
+        .header-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+        .sync-indicator { color: rgba(255,255,255,0.6); font-size: 10px; white-space: nowrap; }
+        .user-avatar { width: 30px; height: 30px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 11px; flex-shrink: 0; cursor: pointer; }
+
+        /* MAIN LAYOUT */
+        .main-layout { display: flex; min-height: calc(100vh - 52px); }
+
+        /* PC SIDEBAR */
+        .pc-sidebar {
+            width: 300px; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+            flex-shrink: 0; overflow-y: auto; display: block; position: sticky;
+            top: 52px; height: calc(100vh - 52px); box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            transition: width 0.3s ease, min-width 0.3s ease; min-width: 300px;
+        }
+        .pc-sidebar.collapsed-sidebar { width: 0; min-width: 0; overflow: hidden; padding: 0; box-shadow: none; }
+        .pc-sidebar-section { margin: 0; border-bottom: 1px solid var(--border); }
+        .pc-sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; background: white; transition: all 0.3s ease; }
+        .pc-sidebar-header:hover { background: #f0f4f8; }
+        .pc-sidebar-title { font-size: 13px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 10px; }
+        .pc-sidebar-toggle { font-size: 12px; color: var(--text-secondary); transition: transform 0.3s ease; }
+        .pc-sidebar-header.collapsed .pc-sidebar-toggle { transform: rotate(-90deg); }
+        .pc-sidebar-content { padding: 10px 14px 14px; background: #fafbfc; max-height: 500px; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s ease, opacity 0.3s ease; opacity: 1; }
+        .pc-sidebar-content.collapsed { max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; }
+        .pc-sidebar-item { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: 'Montserrat', sans-serif; letter-spacing: 0.2px; color: var(--text-primary); margin-bottom: 5px; background: white; border: 1px solid transparent; transition: all 0.2s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+        .pc-sidebar-item:hover { border-color: var(--primary); background: white; box-shadow: 0 3px 10px rgba(26,58,94,0.12); transform: translateX(3px); }
+        .pc-sidebar-item.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 3px 12px rgba(26,58,94,0.3); }
+        .pc-sidebar-item .item-icon { margin-right: 10px; font-size: 15px; }
+        .pc-sidebar-item .item-text { font-weight: 600; letter-spacing: 0.3px; }
+        .pc-sidebar-item .item-count { background: var(--bg-main); color: var(--primary); padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; min-width: 32px; text-align: center; }
+        .pc-sidebar-item.active .item-count { background: rgba(255,255,255,0.25); color: white; }
+        .pc-sidebar-add { display: flex; align-items: center; justify-content: center; padding: 11px; border: 2px dashed var(--border); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; color: var(--info); margin-top: 8px; background: white; transition: all 0.2s ease; }
+        .pc-sidebar-add:hover { border-color: var(--info); background: #eff6ff; }
+        .pc-sidebar-item.pc-dir-ue.active { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; border-color: #2563eb; }
+        .pc-sidebar-item.pc-dir-ue.active .item-count { background: rgba(37,99,235,0.15); color: #1d4ed8; }
+        .pc-sidebar-item.pc-dir-eu.active { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; border-color: #059669; }
+        .pc-sidebar-item.pc-dir-eu.active .item-count { background: rgba(5,150,105,0.15); color: #047857; }
+
+        /* SIDE MENU (Mobile) */
+        .side-menu-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; }
+        .side-menu-overlay.show { display: block; }
+        .side-menu { position: fixed; top: 0; left: -200px; width: 200px; height: 100%; background: linear-gradient(180deg, #1e3a5f 0%, #0f2744 100%); z-index: 201; transition: left 0.3s ease; display: flex; flex-direction: column; box-shadow: 4px 0 20px rgba(0,0,0,0.3); }
+        .side-menu.open { left: 0; }
+        .side-menu-header { background: rgba(255,255,255,0.1); color: white; padding: 14px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .side-menu-title { font-size: 13px; font-weight: 700; color: white; }
+        .side-menu-close { background: rgba(255,255,255,0.15); border: none; color: white; width: 26px; height: 26px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+        .side-menu-content { flex: 1; overflow-y: auto; padding: 8px; }
+        .side-menu-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: rgba(255,255,255,0.08); border: none; border-radius: 6px; margin-bottom: 3px; cursor: pointer; transition: all 0.2s ease; }
+        .side-menu-item:hover { background: rgba(255,255,255,0.15); transform: translateX(3px); }
+        .side-menu-item.active { background: rgba(255,255,255,0.25); }
+        .side-menu-item-left { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: white; }
+        .side-menu-item-count { background: rgba(255,255,255,0.2); color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px; font-weight: 700; }
+
+        /* Main content area */
+        .main-content-area { flex: 1; padding: 12px; overflow-y: auto; }
+
+        /* DIRECTION TABS */
+        .dir-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+        .dir-tab { flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: 10px; background: white; text-align: center; cursor: pointer; font-size: 12px; font-weight: 700; font-family: inherit; transition: all 0.2s; }
+        .dir-tab:hover { border-color: var(--primary); }
+        .dir-tab.active-ue { border-color: #2563eb; background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+        .dir-tab.active-eu { border-color: #059669; background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
+        .dir-tab .dir-count { font-size: 16px; font-weight: 800; display: block; }
+
+        /* FILTER BAR */
+        .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+        .filter-select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 20px; background: white; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 22px; }
+        .filter-select:focus { outline: none; border-color: var(--primary); }
+
+        /* CARDS */
+        .cards-list { display: flex; flex-direction: column; gap: 8px; }
+        .lead-card { background: white; border-radius: 8px; box-shadow: var(--shadow); border-left: 4px solid var(--border); position: relative; }
+        .lead-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+        .lead-card.status-new { border-left-color: var(--warning); }
+        .lead-card.status-work { border-left-color: var(--info); }
+        .lead-card.status-confirmed { border-left-color: var(--success); }
+        .lead-card.status-refused { border-left-color: var(--danger); background: #fef2f2; }
+
+        .card-header { display: flex; flex-direction: column; padding: 0; cursor: default; border-radius: 8px 8px 0 0; overflow: visible; }
+        .card-header-top { display: flex; align-items: stretch; }
+        .card-checkbox-wrap { display: flex; align-items: center; justify-content: center; padding: 10px 8px; background: var(--bg-main); border-right: 1px solid var(--border); flex-shrink: 0; }
+        .card-checkbox { width: 18px; height: 18px; cursor: pointer; }
+        .card-body { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; overflow: hidden; cursor: pointer; }
+        .card-body:hover { background: #fafbfc; }
+
+        .card-top-row { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; min-height: 24px; }
+        .card-direction { font-size: 11px; font-weight: 900; flex-shrink: 0; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; }
+        .dir-badge-ua-eu { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+        .dir-badge-eu-ua { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
+        .card-phone { font-size: 14px; font-weight: 700; color: var(--primary); letter-spacing: 0.3px; white-space: nowrap; }
+        .card-weight { background: var(--purple); color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+        .card-price-wrap { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; margin-left: auto; }
+        .card-price { font-size: 14px; font-weight: 700; color: var(--success); flex-shrink: 0; }
+        .card-deposit { font-size: 10px; color: #999; font-weight: 500; line-height: 1.2; }
+        .card-deposit.has-deposit { color: #e89a1d; }
+
+        .card-row2-wrap { display: flex; flex-direction: column; gap: 3px; }
+        .card-info-row { display: flex; align-items: center; gap: 6px; min-height: 18px; flex-wrap: wrap; }
+        .card-id { font-size: 10px; color: var(--text-secondary); font-weight: 500; background: var(--bg-main); padding: 1px 4px; border-radius: 3px; flex-shrink: 0; }
+        .card-name { font-size: 11px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        .card-route { font-size: 10px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        .card-route-icon { color: var(--orange); font-weight: 700; }
+        .card-meta-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .card-meta-tag { font-size: 9px; color: var(--text-secondary); background: var(--bg-main); padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+
+        .card-right-section { display: flex; align-items: center; justify-content: center; padding: 6px 8px; border-left: 1px solid var(--border); flex-shrink: 0; }
+        .card-actions-toggle { width: 28px; height: 28px; border: none; border-radius: 6px; background: var(--bg-main); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; margin-top: auto; color: var(--text-secondary); }
+        .card-actions-toggle:hover { background: var(--primary); color: white; }
+        .card-actions-toggle.open { transform: rotate(180deg); background: var(--primary); color: white; }
+
+        /* Route strip */
+        .card-route-strip { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-top: 1px solid var(--border); font-size: 11px; }
+        .card-route-strip.has-route { background: #f0fdf4; border-top: 1px solid #bbf7d0; }
+        .card-route-strip.no-route { background: #fffbeb; border-top: 1px dashed #fbbf24; }
+        .card-route-icon2 { font-size: 14px; flex-shrink: 0; }
+        .card-route-text { font-weight: 700; color: var(--text-primary); flex: 1; }
+        .card-route-text.empty { color: var(--warning); font-weight: 600; }
+
+        /* Details panel */
+        .card-details { display: none; padding: 0; background: #f8fafc; border-top: 1px solid var(--border); }
+        .card-details.show { display: block; }
+
+        .detail-accordion-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 10px; background: #f1f5f9; border-bottom: 1px solid var(--border); }
+        .detail-tab { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 16px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--text-secondary); transition: all 0.15s; white-space: nowrap; }
+        .detail-tab:hover { border-color: var(--primary); color: var(--primary); background: #eef2ff; }
+        .detail-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .detail-tab .tab-count { font-size: 9px; font-weight: 700; background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 8px; }
+        .detail-tab.active .tab-count { background: rgba(255,255,255,0.25); }
+        .detail-tab-panel { display: none; padding: 10px 12px; }
+        .detail-tab-panel.active { display: block; }
+        .details-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+
+        .detail-section-title { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin: 12px 0 6px; padding-bottom: 4px; border-bottom: 2px solid var(--primary); }
+        .detail-section-title:first-child { margin-top: 0; }
+        .detail-block { background: white; border: 1px solid var(--border); border-left: 3px solid var(--primary); border-radius: 6px; padding: 8px 10px; position: relative; }
+        .detail-block-label { font-size: 9px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px; }
+        .detail-block-value { font-size: 12px; font-weight: 600; color: var(--text-primary); word-break: break-word; }
+        .detail-block-value.empty { color: var(--text-secondary); opacity: 0.5; }
+        .detail-block-actions { position: absolute; top: 4px; right: 4px; display: flex; gap: 2px; opacity: 0.5; transition: opacity 0.15s; }
+        .detail-block:hover .detail-block-actions { opacity: 1; }
+        .detail-micro-btn { width: 20px; height: 20px; border: none; border-radius: 4px; background: var(--bg-main); color: var(--text-secondary); font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .detail-micro-btn:hover { background: var(--primary); color: white; }
+        .detail-inline-edit { width: 100%; border: 1px solid var(--primary); border-radius: 4px; padding: 2px 4px; font-size: 12px; font-weight: 600; font-family: inherit; outline: none; background: white; }
+        select.detail-inline-edit { padding: 3px 4px; cursor: pointer; appearance: auto; }
+
+        /* PAYMENTS TAB */
+        .payments-loading { text-align: center; padding: 24px; color: var(--text-secondary); font-size: 12px; }
+        .payments-loading .pay-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+        .payments-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .payments-table th { text-align: left; padding: 6px 8px; background: #f1f5f9; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; white-space: nowrap; }
+        .payments-table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; }
+        .payments-table tr:hover td { background: #f8fafc; }
+        .payments-summary { display: flex; gap: 16px; padding: 10px 12px; background: #f0fdf4; border-radius: 8px; margin-top: 10px; font-size: 12px; font-weight: 600; flex-wrap: wrap; }
+        .payments-summary .pay-sum-item { display: flex; align-items: center; gap: 4px; }
+        .payments-summary .pay-sum-label { color: var(--text-secondary); font-weight: 500; }
+        .payments-summary .pay-sum-value { color: var(--success); font-weight: 800; }
+        .payments-summary .pay-sum-debt { color: var(--danger); font-weight: 800; }
+        .payments-empty { text-align: center; padding: 24px; color: var(--text-secondary); font-size: 12px; }
+
+        /* ACTION BUTTONS */
+        .card-actions { display: none; gap: 6px; padding: 0 12px; background: white; }
+        .card-actions.show { display: flex; padding: 10px 12px; border-top: 1px solid var(--border); }
+        .card-actions .btn-card-action { flex: 1; min-width: 0; }
+        .btn-card-action { padding: 10px 6px; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .btn-card-action.btn-call { background: var(--primary); color: white; }
+        .btn-card-action.btn-write { background: #dbeafe; color: #1d4ed8; }
+        .btn-card-action.btn-write:hover { background: #1d4ed8; color: white; }
+        .btn-card-action.btn-track { background: #fef3c7; color: #92400e; }
+        .btn-card-action.btn-track:hover { background: #f59e0b; color: white; }
+        .btn-card-action.btn-delete { background: #fee2e2; color: #dc2626; }
+        .btn-card-action.btn-delete:hover { background: #dc2626; color: white; }
+        .btn-card-action.btn-route { background: #d1fae5; color: #059669; }
+        .btn-card-action.btn-route:hover { background: #059669; color: white; }
+
+        /* STATUS BADGES */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+        .badge-new { background: #dbeafe; color: #2563eb; }
+        .badge-work { background: #fef3c7; color: #d97706; }
+        .badge-confirmed { background: #d1fae5; color: #059669; }
+        .badge-refused { background: #fee2e2; color: #dc2626; }
+        .badge-paid { background: #d1fae5; color: #059669; }
+        .badge-partial { background: #fef3c7; color: #d97706; }
+        .badge-unpaid { background: #fee2e2; color: #dc2626; }
+        .badge-debt { background: #fee2e2; color: #dc2626; font-weight: 800; }
+
+        /* MESSENGER POPUP */
+        .messenger-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 200; align-items: center; justify-content: center; }
+        .messenger-overlay.show { display: flex; }
+        .messenger-popup { background: white; border-radius: 14px; padding: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); min-width: 240px; max-width: 300px; }
+        .messenger-popup-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; text-align: center; }
+        .messenger-popup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .messenger-popup-item { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 8px; border: 1px solid var(--border); border-radius: 10px; background: white; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: all 0.15s; }
+        .messenger-popup-item:hover { background: var(--bg-main); border-color: var(--primary); }
+        .messenger-popup-cancel { display: block; width: 100%; margin-top: 10px; padding: 10px; border: none; border-radius: 10px; background: var(--bg-main); color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+        /* BOTTOM SHEET (forms) */
+        .bottom-sheet-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 500; display: none; }
+        .bottom-sheet-overlay.show { display: flex; align-items: flex-end; justify-content: center; }
+        .bottom-sheet { background: white; border-radius: 16px 16px 0 0; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; padding: 20px; }
+        .bottom-sheet-handle { width: 36px; height: 4px; background: #d1d5db; border-radius: 2px; margin: 0 auto 16px; }
+        .bs-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 16px; }
+        .bs-field { margin-bottom: 12px; }
+        .bs-label { font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .bs-label .required { color: var(--danger); }
+        .bs-input { width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; }
+        .bs-input:focus { border-color: var(--primary); }
+        .bs-select { width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; background: white; }
+        .bs-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .bs-btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .bs-btn.primary { background: var(--primary); color: white; }
+        .bs-btn.primary:hover { background: var(--primary-dark); }
+        .bs-btn.cancel { background: var(--bg-main); color: var(--text-secondary); }
+        .bs-btn.cancel:hover { background: var(--border); }
+        .bs-footer { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+
+        /* DUPLICATE WARNING */
+        .duplicate-warning { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 12px; margin-bottom: 12px; display: none; }
+        .duplicate-warning.show { display: block; }
+        .duplicate-warning-title { font-size: 12px; font-weight: 700; color: #92400e; margin-bottom: 4px; }
+        .duplicate-warning-text { font-size: 11px; color: #92400e; }
+
+        /* PHOTO SECTION */
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 8px; }
+        .photo-thumb { width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover; border: 2px solid var(--border); cursor: pointer; transition: all 0.2s; }
+        .photo-thumb:hover { border-color: var(--primary); transform: scale(1.05); }
+        .photo-upload-btn { width: 100%; aspect-ratio: 1; border: 2px dashed var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 24px; color: var(--text-secondary); transition: all 0.2s; background: white; }
+        .photo-upload-btn:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
+
+        /* RATING */
+        .rating-stars { display: flex; gap: 4px; }
+        .rating-star { font-size: 20px; cursor: pointer; color: #d1d5db; transition: color 0.15s; }
+        .rating-star.active { color: #f59e0b; }
+        .rating-star:hover { color: #f59e0b; }
+
+        /* ROUTE MODAL */
+        .route-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 600; align-items: center; justify-content: center; }
+        .route-modal-overlay.show { display: flex; }
+        .route-modal { background: white; border-radius: 16px; padding: 20px; max-width: 400px; width: 90%; max-height: 70vh; overflow-y: auto; }
+        .route-modal-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 12px; }
+        .route-item { padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
+        .route-item:hover { border-color: var(--primary); background: #eff6ff; }
+        .route-item-name { font-size: 13px; font-weight: 700; }
+        .route-item-count { font-size: 11px; color: var(--text-secondary); }
+
+        /* PHOTO VIEWER */
+        .photo-viewer-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 700; align-items: center; justify-content: center; }
+        .photo-viewer-overlay.show { display: flex; }
+        .photo-viewer-img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+        .photo-viewer-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; }
+
+        /* TOAST */
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--primary-dark); color: white; padding: 10px 20px; border-radius: 10px; font-size: 12px; font-weight: 600; z-index: 1000; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 90vw; text-align: center; }
+        .toast.show { display: block; animation: toastIn 0.3s ease; }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+        /* LOADER */
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 999; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+        .loader-overlay.show { display: flex; }
+        .loader-spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; }
+        .loader-text { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* EMPTY STATE */
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+        .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+        .empty-state-text { font-size: 12px; }
+
+        /* FAB */
+        .fab { position: fixed; bottom: 70px; right: 20px; width: 56px; height: 56px; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 4px 20px rgba(26,58,94,0.4); z-index: 50; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .fab:hover { transform: scale(1.1); background: var(--primary-dark); }
+
+        /* SIDEBAR COLLAPSE BUTTON */
+        .pc-sidebar-collapse-btn { display: none; position: fixed; top: 60px; left: 300px; z-index: 150; width: 24px; height: 48px; background: white; border: 1px solid var(--border); border-left: none; border-radius: 0 8px 8px 0; cursor: pointer; align-items: center; justify-content: center; font-size: 12px; color: var(--text-secondary); box-shadow: 2px 0 8px rgba(0,0,0,0.08); transition: left 0.3s ease, background 0.2s; }
+        .pc-sidebar-collapse-btn:hover { background: var(--bg-main); color: var(--primary); }
+
+        /* BOTTOM NAV */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); padding: 6px 10px; z-index: 100; display: flex; justify-content: space-around; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 12px; border: none; background: none; font-family: inherit; font-size: 9px; color: var(--text-secondary); cursor: pointer; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item span:first-child { font-size: 18px; }
+
+        /* DIRECTION POPUP */
+        .direction-popup { position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%); background: white; border-radius: 12px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); padding: 8px; display: none; z-index: 150; min-width: 220px; }
+        .direction-popup.show { display: block; }
+        .direction-option { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-primary); }
+        .direction-option:hover { background: var(--bg-main); }
+        .direction-option.active-ue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; font-weight: 700; }
+        .direction-option.active-eu { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; font-weight: 700; }
+        .dir-count-popup { margin-left: auto; background: rgba(0,0,0,0.08); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+
+        /* COLUMN CONFIGURATOR */
+        .col-cfg-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 700; display: none; align-items: center; justify-content: center; }
+        .col-cfg-overlay.show { display: flex; }
+        .col-cfg-modal { background: white; border-radius: 16px; padding: 20px; max-width: 380px; width: 90%; max-height: 70vh; overflow-y: auto; }
+        .col-cfg-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+        .col-cfg-subtitle { font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; }
+        .col-cfg-list { display: flex; flex-direction: column; gap: 4px; max-height: 45vh; overflow-y: auto; }
+        .col-cfg-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg-main); border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .col-cfg-item:hover { background: #e8ecf0; }
+        .col-cfg-item.checked { background: #dbeafe; border-color: #3b82f6; }
+        .col-cfg-check { width: 22px; height: 22px; border-radius: 6px; background: white; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; flex-shrink: 0; }
+        .col-cfg-item.checked .col-cfg-check { background: #3b82f6; border-color: #3b82f6; }
+        .col-cfg-name { font-size: 12px; font-weight: 600; }
+        .col-cfg-footer { display: flex; gap: 8px; margin-top: 14px; }
+
+        /* BULK TOOLBAR */
+        .bulk-toolbar { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 10px 16px; border-radius: 12px; z-index: 90; display: none; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-size: 12px; font-weight: 600; max-width: 95vw; flex-direction: row; }
+        .bulk-toolbar.show { display: flex; }
+        .bulk-toolbar-count { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .bulk-toolbar-btn { padding: 8px 14px; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.2s; }
+        .bulk-toolbar-btn.select-all { background: rgba(255,255,255,0.2); color: white; }
+        .bulk-toolbar-btn.select-all:hover { background: rgba(255,255,255,0.35); }
+        .bulk-toolbar-btn.route { background: #7c3aed; color: white; }
+        .bulk-toolbar-btn.route:hover { background: #6d28d9; }
+        .bulk-toolbar-btn.archive { background: #f3f4f6; color: #6b7280; }
+        .bulk-toolbar-btn.archive:hover { background: #e5e7eb; }
+        .bulk-toolbar-btn.cancel { background: rgba(255,255,255,0.15); color: white; }
+        .bulk-toolbar-btn.cancel:hover { background: rgba(255,255,255,0.25); }
+
+        /* SIDE MENU DIVIDER */
+        .side-menu-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0; }
+        .side-menu-section-title { font-size: 9px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.4); padding: 6px 12px 2px; letter-spacing: 1px; }
+
+        /* VERIFICATION TABS */
+        .verify-tabs { display: flex; gap: 4px; margin-bottom: 12px; background: white; border-radius: 10px; padding: 4px; box-shadow: var(--shadow); }
+        .verify-tab { flex: 1; padding: 10px 6px; border: none; border-radius: 8px; background: transparent; text-align: center; cursor: pointer; font-size: 11px; font-weight: 700; font-family: inherit; color: var(--text-secondary); transition: all 0.2s; position: relative; }
+        .verify-tab:hover { background: var(--bg-main); color: var(--text-primary); }
+        .verify-tab.active { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(26,58,94,0.3); }
+        .verify-tab .vtab-count { display: block; font-size: 16px; font-weight: 800; margin-bottom: 2px; }
+        .verify-tab .vtab-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .verify-tab.active .vtab-count, .verify-tab.active .vtab-label { color: white; }
+        .verify-tab .vtab-badge { position: absolute; top: 4px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); display: none; }
+        .verify-tab .vtab-badge.pulse { display: block; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } }
+
+        /* SCAN BUTTON */
+        .scan-bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+        .scan-input { flex: 1; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; }
+        .scan-input:focus { border-color: var(--primary); }
+        .scan-btn { padding: 10px 16px; border: none; border-radius: 8px; background: var(--primary); color: white; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.2s; }
+        .scan-btn:hover { background: var(--primary-dark); }
+        .scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* VERIFICATION CARD */
+        .vcard { background: white; border-radius: 10px; box-shadow: var(--shadow); margin-bottom: 8px; overflow: hidden; border-left: 4px solid var(--warning); }
+        .vcard.vcard-ready { border-left-color: var(--success); }
+        .vcard.vcard-unknown { border-left-color: var(--danger); }
+        .vcard.vcard-rejected { border-left-color: #6b7280; background: #f9fafb; }
+        .vcard-header { display: flex; align-items: center; padding: 10px 12px; gap: 10px; cursor: pointer; }
+        .vcard-header:hover { background: #fafbfc; }
+        .vcard-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .vcard-status-dot.dot-checking { background: var(--warning); }
+        .vcard-status-dot.dot-ready { background: var(--success); }
+        .vcard-status-dot.dot-unknown { background: var(--danger); }
+        .vcard-status-dot.dot-waiting { background: var(--info); animation: pulse 1.5s infinite; }
+        .vcard-info { flex: 1; min-width: 0; }
+        .vcard-ttn { font-size: 13px; font-weight: 700; color: var(--primary); }
+        .vcard-recipient { font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .vcard-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+        .vcard-tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600; white-space: nowrap; }
+        .vcard-tag.tag-photo-yes { background: #d1fae5; color: #059669; }
+        .vcard-tag.tag-photo-no { background: #fee2e2; color: #dc2626; }
+        .vcard-tag.tag-data-yes { background: #d1fae5; color: #059669; }
+        .vcard-tag.tag-data-no { background: #fef3c7; color: #92400e; }
+        .vcard-tag.tag-dup { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .vcard-tag.tag-route { background: #dbeafe; color: #1d4ed8; }
+        .vcard-tag.tag-unknown { background: #fee2e2; color: #dc2626; border: 1px solid #ef4444; }
+        .vcard-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+        .vcard-intnum { font-size: 12px; font-weight: 700; color: var(--primary); }
+        .vcard-time { font-size: 10px; color: var(--text-secondary); }
+
+        /* VERIFICATION FORM (EXPANDED) */
+        .vcard-form { display: none; padding: 12px; border-top: 1px solid var(--border); background: #fafbfc; }
+        .vcard-form.show { display: block; }
+        .vform-section { margin-bottom: 12px; }
+        .vform-section-title { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 4px; border-bottom: 2px solid var(--primary); margin-bottom: 8px; }
+        .vform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .vform-field { }
+        .vform-label { font-size: 9px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px; display: block; }
+        .vform-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; }
+        .vform-input:focus { border-color: var(--primary); }
+        .vform-select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; background: white; }
+        .vform-textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; resize: vertical; min-height: 50px; }
+        .vform-full { grid-column: 1 / -1; }
+        .vform-dup-alert { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+        .vform-dup-title { font-size: 11px; font-weight: 700; color: #92400e; margin-bottom: 4px; }
+        .vform-dup-item { font-size: 11px; color: #92400e; padding: 2px 0; }
+        .vform-photo-section { display: flex; align-items: center; gap: 10px; padding: 10px; background: white; border: 1px solid var(--border); border-radius: 8px; }
+        .vform-photo-thumb { width: 60px; height: 60px; border-radius: 6px; object-fit: cover; border: 2px solid var(--border); cursor: pointer; }
+        .vform-photo-placeholder { width: 60px; height: 60px; border: 2px dashed var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-secondary); }
+        .vform-photo-status { flex: 1; font-size: 11px; }
+        .vform-buttons { display: flex; gap: 8px; margin-top: 12px; }
+        .vform-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .vform-btn.btn-ready { background: var(--success); color: white; }
+        .vform-btn.btn-ready:hover { background: #059669; }
+        .vform-btn.btn-ready:disabled { opacity: 0.5; cursor: not-allowed; }
+        .vform-btn.btn-reject { background: #fee2e2; color: #dc2626; }
+        .vform-btn.btn-reject:hover { background: #dc2626; color: white; }
+        .vform-btn.btn-edit { background: var(--bg-main); color: var(--text-primary); }
+
+        /* POLLING INDICATOR */
+        .polling-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); }
+        .polling-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+
+        /* RESPONSIVE */
+        @media (min-width: 901px) {
+            .pc-sidebar-collapse-btn { display: flex; }
+            .bulk-toolbar { position: fixed; left: 0; top: 52px; bottom: auto; transform: none; width: 300px; max-width: 300px; border-radius: 0; flex-direction: column; align-items: stretch; padding: 16px; gap: 10px; height: calc(100vh - 52px); box-shadow: 4px 0 20px rgba(0,0,0,0.15); z-index: 160; }
+            .bulk-toolbar-count { text-align: center; padding: 8px 12px; font-size: 13px; border-radius: 10px; }
+            .bulk-toolbar-btn { padding: 12px 16px; font-size: 13px; border-radius: 10px; text-align: center; }
+        }
+        @media (min-width: 769px) {
+            .burger-btn { display: none !important; }
+            .pc-sidebar { display: block !important; }
+            .bottom-nav { display: flex; }
+            .filter-bar { display: none !important; }
+            .fab { bottom: 70px; }
+            .main-content-area { padding-bottom: 60px; }
+        }
+        @media (max-width: 768px) {
+            .burger-btn { display: flex; }
+            .pc-sidebar { display: none !important; }
+            .pc-sidebar-collapse-btn { display: none !important; }
+            .main-content-area { padding: 8px; padding-bottom: 60px; }
+            .details-grid { grid-template-columns: 1fr 1fr; }
+            .bs-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .details-grid { grid-template-columns: 1fr; }
+            .card-top-row { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-top">
+        <button class="burger-btn" onclick="openSideMenu()">&#9776;</button>
+        <div class="logo">Esco<span>Express</span> Posylki</div>
+        <div class="search-box">
+            <span class="search-icon">&#128269;</span>
+            <input class="search-input" id="searchInput" placeholder="Пошук по імені, телефону, ТТН..." oninput="onSearchInput()">
+        </div>
+        <div class="header-right">
+            <span class="sync-indicator" id="syncIndicator"></span>
+            <div class="user-avatar" id="userAvatar" onclick="promptManagerName()" title="Натисніть щоб змінити ім'я">M</div>
+        </div>
+    </div>
+</div>
+
+<!-- MOBILE SIDE MENU -->
+<div class="side-menu-overlay" id="sideMenuOverlay" onclick="closeSideMenu()"></div>
+<div class="side-menu" id="sideMenu">
+    <div class="side-menu-header">
+        <span class="side-menu-title">&#128203; Меню</span>
+        <button class="side-menu-close" onclick="closeSideMenu()">&#10005;</button>
+    </div>
+    <div class="side-menu-content">
+        <div class="side-menu-section-title">Напрямок</div>
+        <div class="side-menu-item active" id="mobDirUE" onclick="setDirection('ue'); closeSideMenu();">
+            <span class="side-menu-item-left">&#127482;&#127462;&#8594;&#127466;&#127482; Україна-Європа</span>
+            <span class="side-menu-item-count" id="mobCountUE">0</span>
+        </div>
+        <div class="side-menu-item" id="mobDirEU" onclick="setDirection('eu'); closeSideMenu();">
+            <span class="side-menu-item-left">&#127466;&#127482;&#8594;&#127482;&#127462; Європа-Україна</span>
+            <span class="side-menu-item-count" id="mobCountEU">0</span>
+        </div>
+        <div class="side-menu-divider"></div>
+        <div class="side-menu-section-title">Посилки</div>
+        <div class="side-menu-item active" id="mobAll" onclick="setFilter('all'); closeSideMenu();">
+            <span class="side-menu-item-left">&#128230; Всі посилки</span>
+            <span class="side-menu-item-count" id="mobCountAll">0</span>
+        </div>
+        <div class="side-menu-item" id="mobNew" onclick="setFilter('Новий'); closeSideMenu();">
+            <span class="side-menu-item-left">&#128313; Нові</span>
+            <span class="side-menu-item-count" id="mobCountNew">0</span>
+        </div>
+        <div class="side-menu-item" id="mobWork" onclick="setFilter('В роботі'); closeSideMenu();">
+            <span class="side-menu-item-left">&#128736; В роботі</span>
+            <span class="side-menu-item-count" id="mobCountWork">0</span>
+        </div>
+        <div class="side-menu-item" id="mobConfirmed" onclick="setFilter('Підтверджено'); closeSideMenu();">
+            <span class="side-menu-item-left">&#9989; Підтверджено</span>
+            <span class="side-menu-item-count" id="mobCountConfirmed">0</span>
+        </div>
+        <div class="side-menu-item" id="mobRefused" onclick="setFilter('Відмова'); closeSideMenu();">
+            <span class="side-menu-item-left">&#10060; Відмова</span>
+            <span class="side-menu-item-count" id="mobCountRefused">0</span>
+        </div>
+        <div class="side-menu-divider"></div>
+        <div class="side-menu-section-title">Фінанси</div>
+        <div class="side-menu-item" id="mobUnpaid" onclick="setPayFilter('Не оплачено'); closeSideMenu();">
+            <span class="side-menu-item-left">&#128308; Не оплачено</span>
+            <span class="side-menu-item-count" id="mobCountUnpaid">0</span>
+        </div>
+        <div class="side-menu-item" id="mobPartial" onclick="setPayFilter('Частково'); closeSideMenu();">
+            <span class="side-menu-item-left">&#128992; Частково</span>
+            <span class="side-menu-item-count" id="mobCountPartial">0</span>
+        </div>
+        <div class="side-menu-item" id="mobPaid" onclick="setPayFilter('Оплачено'); closeSideMenu();">
+            <span class="side-menu-item-left">&#128994; Оплачено</span>
+            <span class="side-menu-item-count" id="mobCountPaid">0</span>
+        </div>
+        <div class="side-menu-divider"></div>
+        <div class="side-menu-section-title">Перевірка</div>
+        <div class="side-menu-item" id="mobVerCheck" onclick="switchToVerification('checking'); closeSideMenu();">
+            <span class="side-menu-item-left">&#128269; Перевірка</span>
+            <span class="side-menu-item-count" id="mobCountVerCheck">0</span>
+        </div>
+        <div class="side-menu-item" id="mobVerReady" onclick="switchToVerification('ready'); closeSideMenu();">
+            <span class="side-menu-item-left">&#9989; Готові</span>
+            <span class="side-menu-item-count" id="mobCountVerReady">0</span>
+        </div>
+        <div class="side-menu-divider"></div>
+        <div class="side-menu-item" onclick="openAddForm(); closeSideMenu();">
+            <span class="side-menu-item-left">&#10133; Нова посилка</span>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-layout">
+    <!-- PC SIDEBAR -->
+    <div class="pc-sidebar" id="pcSidebar">
+        <!-- DIRECTION SECTION -->
+        <div class="pc-sidebar-section">
+            <div class="pc-sidebar-header" onclick="togglePcSection('direction')">
+                <span class="pc-sidebar-title">&#129517; НАПРЯМОК</span>
+                <span class="pc-sidebar-toggle" id="pcToggleDirection">&#9660;</span>
+            </div>
+            <div class="pc-sidebar-content" id="pcSectionDirection">
+                <div class="pc-sidebar-item pc-dir-ue active" id="sideDirUE" onclick="setDirection('ue')">
+                    <span><span class="item-icon">&#127482;&#127462;&#8594;&#127466;&#127482;</span><span class="item-text">Україна-Європа</span></span>
+                    <span class="item-count" id="pcCountUE">0</span>
+                </div>
+                <div class="pc-sidebar-item pc-dir-eu" id="sideDirEU" onclick="setDirection('eu')">
+                    <span><span class="item-icon">&#127466;&#127482;&#8594;&#127482;&#127462;</span><span class="item-text">Європа-Україна</span></span>
+                    <span class="item-count" id="pcCountEU">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="pc-sidebar-section">
+            <div class="pc-sidebar-header collapsed" onclick="togglePcSection('leads')">
+                <span class="pc-sidebar-title">&#128230; ПОСИЛКИ</span>
+                <span class="pc-sidebar-toggle" id="pcToggleLeads">&#9660;</span>
+            </div>
+            <div class="pc-sidebar-content collapsed" id="pcSectionLeads">
+                <div class="pc-sidebar-item active" id="sideAll" onclick="setFilter('all')">
+                    <span><span class="item-icon">&#128230;</span><span class="item-text">Всі посилки</span></span>
+                    <span class="item-count" id="pcCountAll">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sideNew" onclick="setFilter('Новий')">
+                    <span><span class="item-icon">&#128313;</span><span class="item-text">Нові</span></span>
+                    <span class="item-count" id="pcCountNew">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sideWork" onclick="setFilter('В роботі')">
+                    <span><span class="item-icon">&#128736;</span><span class="item-text">В роботі</span></span>
+                    <span class="item-count" id="pcCountWork">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sideConfirmed" onclick="setFilter('Підтверджено')">
+                    <span><span class="item-icon">&#9989;</span><span class="item-text">Підтверджено</span></span>
+                    <span class="item-count" id="pcCountConfirmed">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sideRefused" onclick="setFilter('Відмова')">
+                    <span><span class="item-icon">&#10060;</span><span class="item-text">Відмова</span></span>
+                    <span class="item-count" id="pcCountRefused">0</span>
+                </div>
+                <div class="pc-sidebar-add" onclick="openAddForm()">+ Нова посилка</div>
+            </div>
+        </div>
+        <div class="pc-sidebar-section">
+            <div class="pc-sidebar-header collapsed" onclick="togglePcSection('finance')">
+                <span class="pc-sidebar-title">&#128176; ФІНАНСИ</span>
+                <span class="pc-sidebar-toggle" id="pcToggleFinance">&#9660;</span>
+            </div>
+            <div class="pc-sidebar-content collapsed" id="pcSectionFinance">
+                <div class="pc-sidebar-item" id="sideUnpaid" onclick="setPayFilter('Не оплачено')">
+                    <span><span class="item-icon">&#128308;</span><span class="item-text">Не оплачено</span></span>
+                    <span class="item-count" id="pcCountUnpaid">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sidePartial" onclick="setPayFilter('Частково')">
+                    <span><span class="item-icon">&#128992;</span><span class="item-text">Частково</span></span>
+                    <span class="item-count" id="pcCountPartial">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sidePaid" onclick="setPayFilter('Оплачено')">
+                    <span><span class="item-icon">&#128994;</span><span class="item-text">Оплачено</span></span>
+                    <span class="item-count" id="pcCountPaid">0</span>
+                </div>
+            </div>
+        </div>
+        <!-- VERIFICATION SECTION -->
+        <div class="pc-sidebar-section">
+            <div class="pc-sidebar-header collapsed" onclick="togglePcSection('verification')">
+                <span class="pc-sidebar-title">&#128270; ПЕРЕВІРКА</span>
+                <span class="pc-sidebar-toggle" id="pcToggleVerification">&#9660;</span>
+            </div>
+            <div class="pc-sidebar-content collapsed" id="pcSectionVerification">
+                <div class="pc-sidebar-item" id="sideVerAll" onclick="switchToVerification('all')">
+                    <span><span class="item-icon">&#128230;</span><span class="item-text">Всі (УК-ЄВ)</span></span>
+                    <span class="item-count" id="pcCountVerAll">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sideVerNew" onclick="switchToVerification('new')">
+                    <span><span class="item-icon">&#128313;</span><span class="item-text">Нові</span></span>
+                    <span class="item-count" id="pcCountVerNew">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sideVerCheck" onclick="switchToVerification('checking')">
+                    <span><span class="item-icon">&#128269;</span><span class="item-text">Перевірка</span></span>
+                    <span class="item-count" id="pcCountVerCheck">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sideVerReady" onclick="switchToVerification('ready')">
+                    <span><span class="item-icon">&#9989;</span><span class="item-text">Готові</span></span>
+                    <span class="item-count" id="pcCountVerReady">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="pc-sidebar-section">
+            <div style="padding:14px;display:flex;flex-direction:column;gap:8px;">
+                <button onclick="openAddForm()" style="width:100%;padding:12px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">&#10133; Нова посилка</button>
+            </div>
+        </div>
+    </div>
+    <button class="pc-sidebar-collapse-btn" id="pcSidebarCollapseBtn" onclick="togglePcSidebar()" title="Згорнути/розгорнути меню">&#9664;</button>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content-area" id="mainContent">
+        <!-- Direction counts (hidden, used by JS) -->
+        <span id="countUE" style="display:none;">0</span>
+        <span id="countEU" style="display:none;">0</span>
+
+        <!-- Filter bar -->
+        <div class="filter-bar">
+            <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+                <option value="all">Статус посилки</option>
+                <option value="Прийнято">Прийнято</option>
+                <option value="В дорозі">В дорозі</option>
+                <option value="Доставлено">Доставлено</option>
+                <option value="Видано">Видано</option>
+            </select>
+            <select class="filter-select" id="filterPayStatus" onchange="applyFilters()">
+                <option value="all">Статус оплати</option>
+                <option value="Не оплачено">Не оплачено</option>
+                <option value="Частково">Частково</option>
+                <option value="Оплачено">Оплачено</option>
+            </select>
+        </div>
+
+        <!-- Cards list (default view) -->
+        <div id="defaultView">
+            <div class="cards-list" id="cardsList"></div>
+            <!-- Empty state -->
+            <div class="empty-state" id="emptyState" style="display:none;">
+                <div class="empty-state-icon">&#128230;</div>
+                <div class="empty-state-title">Немає посилок</div>
+                <div class="empty-state-text">Натисніть + щоб додати нову посилку</div>
+            </div>
+        </div>
+
+        <!-- VERIFICATION VIEW -->
+        <div id="verificationView" style="display:none;">
+            <!-- Verification tabs -->
+            <div class="verify-tabs">
+                <button class="verify-tab active" id="vtabAll" onclick="setVerifyTab('all')">
+                    <span class="vtab-count" id="vtabCountAll">0</span>
+                    <span class="vtab-label">Всі</span>
+                </button>
+                <button class="verify-tab" id="vtabNew" onclick="setVerifyTab('new')">
+                    <span class="vtab-count" id="vtabCountNew">0</span>
+                    <span class="vtab-label">Нові</span>
+                </button>
+                <button class="verify-tab" id="vtabChecking" onclick="setVerifyTab('checking')">
+                    <span class="vtab-count" id="vtabCountCheck">0</span>
+                    <span class="vtab-label">Перевірка</span>
+                    <span class="vtab-badge" id="vtabCheckBadge"></span>
+                </button>
+                <button class="verify-tab" id="vtabReady" onclick="setVerifyTab('ready')">
+                    <span class="vtab-count" id="vtabCountReady">0</span>
+                    <span class="vtab-label">Готові</span>
+                </button>
+            </div>
+
+            <!-- Scan bar (shown on Перевірка tab) -->
+            <div class="scan-bar" id="scanBar">
+                <input class="scan-input" id="scanTTNInput" placeholder="Введіть або скануйте номер ТТН..." onkeydown="if(event.key==='Enter')doScanTTN()">
+                <button class="scan-btn" onclick="doScanTTN()" id="scanBtn">&#128269; Сканувати</button>
+            </div>
+
+            <!-- Polling indicator -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:11px;font-weight:700;color:var(--text-secondary);" id="verifyResultCount">0 посилок</span>
+                <span class="polling-indicator"><span class="polling-dot"></span> Авто-оновлення</span>
+            </div>
+
+            <!-- Verification cards list -->
+            <div id="verifyCardsList"></div>
+
+            <!-- Empty state for verification -->
+            <div class="empty-state" id="verifyEmptyState" style="display:none;">
+                <div class="empty-state-icon">&#128270;</div>
+                <div class="empty-state-title">Немає посилок</div>
+                <div class="empty-state-text">Скануйте ТТН щоб почати перевірку</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn" onclick="openAddForm()">+</button>
+
+<!-- BULK TOOLBAR -->
+<div class="bulk-toolbar" id="bulkToolbar">
+    <span class="bulk-toolbar-count" id="bulkCount">0 обрано</span>
+    <button class="bulk-toolbar-btn select-all" onclick="toggleSelectAll()">&#9745; Вибрати всі</button>
+    <button class="bulk-toolbar-btn route" onclick="bulkRouteAssign()">&#128666; В маршрут</button>
+    <button class="bulk-toolbar-btn archive" onclick="bulkArchive()">&#128230; Архів</button>
+    <button class="bulk-toolbar-btn cancel" onclick="clearSelection()">&#10005; Скасувати</button>
+</div>
+
+<!-- DIRECTION POPUP -->
+<div class="direction-popup" id="directionPopup">
+    <div class="direction-option active-ue" data-dir="ue" onclick="setDirectionFromPopup('ue')">
+        <span>&#127482;&#127462;&#8594;&#127466;&#127482;</span> Україна-Європа <span class="dir-count-popup" id="countDirUE">0</span>
+    </div>
+    <div class="direction-option" data-dir="eu" onclick="setDirectionFromPopup('eu')">
+        <span>&#127466;&#127482;&#8594;&#127482;&#127462;</span> Європа-Україна <span class="dir-count-popup" id="countDirEU">0</span>
+    </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+    <button class="nav-item active" id="navParcels" onclick="showAllParcels()"><span>📦</span>Посилки</button>
+    <button class="nav-item" id="navVerify" onclick="switchToVerification('checking')"><span>🔍</span>Перевірка</button>
+    <button class="nav-item" id="navPax" onclick="window.open('https://script.google.com/macros/s/AKfycbwQBMlsTUhUpoKGCiVXqVPNF9_KZ4N-DFHh7RVGmWMF2UEALNFuJ5Cj04xyFMBuEr6e/exec','_blank')"><span>👥</span>Пасажири</button>
+    <button class="nav-item" onclick="silentSync()"><span>🔄</span>Синхр.</button>
+    <button class="nav-item" onclick="openAddForm()"><span>➕</span>Додати</button>
+</nav>
+
+<!-- COLUMN CONFIGURATOR MODAL -->
+<div class="col-cfg-overlay" id="colCfgOverlay" onclick="if(event.target===this)closeColumnConfigurator()">
+    <div class="col-cfg-modal" onclick="event.stopPropagation()">
+        <div class="col-cfg-title">⚙️ Колонки картки</div>
+        <div class="col-cfg-subtitle">Оберіть які поля показувати на картці посилки</div>
+        <div class="col-cfg-list" id="colCfgList"></div>
+        <div class="col-cfg-footer">
+            <button class="bs-btn cancel" onclick="resetColCfg()">🔄 Скинути</button>
+            <button class="bs-btn primary" onclick="saveColCfg()">💾 Зберегти</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LOADER -->
+<div class="loader-overlay" id="loader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text" id="loaderText">Завантаження...</div>
+</div>
+
+<!-- ADD PARCEL FORM -->
+<div class="bottom-sheet-overlay" id="addFormOverlay">
+    <div class="bottom-sheet">
+        <div class="bottom-sheet-handle"></div>
+        <div class="bs-title" id="addFormTitle">&#128230; Нова посилка</div>
+        <div class="duplicate-warning" id="duplicateWarning">
+            <div class="duplicate-warning-title">&#9888; Можливий дублікат</div>
+            <div class="duplicate-warning-text" id="duplicateText"></div>
+        </div>
+        <div class="bs-field">
+            <label class="bs-label">Піб відправника <span class="required">*</span></label>
+            <input class="bs-input" id="fSender" placeholder="Прізвище Ім'я">
+        </div>
+        <div class="bs-field">
+            <label class="bs-label">Телефон реєстратора <span class="required">*</span></label>
+            <input class="bs-input" id="fPhone" placeholder="+380..." oninput="checkDuplicatesDebounced()">
+        </div>
+        <div class="bs-field">
+            <label class="bs-label">Адреса відправки <span class="required">*</span></label>
+            <input class="bs-input" id="fAddressFrom" placeholder="Адреса">
+        </div>
+        <div class="bs-field">
+            <label class="bs-label">Піб отримувача <span class="required">*</span></label>
+            <input class="bs-input" id="fReceiver" placeholder="Прізвище Ім'я">
+        </div>
+        <div class="bs-field">
+            <label class="bs-label">Телефон отримувача <span class="required">*</span></label>
+            <input class="bs-input" id="fPhoneReceiver" placeholder="+380...">
+        </div>
+        <div class="bs-field" id="fAddressToWrap">
+            <label class="bs-label">Адреса в Європі <span class="required">*</span></label>
+            <input class="bs-input" id="fAddressTo" placeholder="Адреса в Європі">
+        </div>
+        <div class="bs-field" id="fCityNPWrap" style="display:none;">
+            <label class="bs-label">Місто Нова Пошта <span class="required">*</span></label>
+            <input class="bs-input" id="fCityNP" placeholder="Місто">
+        </div>
+        <div class="bs-field" id="fTTNWrap">
+            <label class="bs-label">Номер ТТН</label>
+            <input class="bs-input" id="fTTN" placeholder="Номер ТТН">
+        </div>
+        <div class="bs-row">
+            <div class="bs-field">
+                <label class="bs-label">Опис</label>
+                <input class="bs-input" id="fDescription" placeholder="Опис вмісту">
+            </div>
+            <div class="bs-field">
+                <label class="bs-label">Кг</label>
+                <input class="bs-input" id="fWeight" placeholder="0" type="number">
+            </div>
+        </div>
+        <div class="bs-row">
+            <div class="bs-field">
+                <label class="bs-label">Кількість позицій</label>
+                <input class="bs-input" id="fQty" placeholder="1" type="number">
+            </div>
+            <div class="bs-field">
+                <label class="bs-label">Оціночна вартість</label>
+                <input class="bs-input" id="fEstValue" placeholder="0" type="number">
+            </div>
+        </div>
+        <div class="bs-row">
+            <div class="bs-field">
+                <label class="bs-label">Сума</label>
+                <input class="bs-input" id="fSum" placeholder="0" type="number">
+            </div>
+            <div class="bs-field">
+                <label class="bs-label">Валюта</label>
+                <select class="bs-select" id="fCurrency">
+                    <option value="UAH">UAH</option>
+                    <option value="EUR">EUR</option>
+                    <option value="CHF">CHF</option>
+                    <option value="USD">USD</option>
+                    <option value="PLN">PLN</option>
+                    <option value="CZK">CZK</option>
+                </select>
+            </div>
+        </div>
+        <div class="bs-field">
+            <label class="bs-label">Примітка</label>
+            <input class="bs-input" id="fNote" placeholder="Примітка">
+        </div>
+        <div class="bs-footer">
+            <button class="bs-btn cancel" onclick="closeAddForm()">Скасувати</button>
+            <button class="bs-btn primary" onclick="saveParcel()">Зберегти</button>
+        </div>
+    </div>
+</div>
+
+<!-- MESSENGER POPUP -->
+<div class="messenger-overlay" id="messengerOverlay" onclick="closeMessenger()">
+    <div class="messenger-popup" onclick="event.stopPropagation()">
+        <div class="messenger-popup-title">&#128172; Написати</div>
+        <div class="messenger-popup-grid">
+            <button class="messenger-popup-item" onclick="openMessenger('viber')">Viber</button>
+            <button class="messenger-popup-item" onclick="openMessenger('telegram')">Telegram</button>
+            <button class="messenger-popup-item" onclick="openMessenger('whatsapp')">WhatsApp</button>
+            <button class="messenger-popup-item" onclick="openMessenger('sms')">SMS</button>
+        </div>
+        <button class="messenger-popup-cancel" onclick="closeMessenger()">Скасувати</button>
+    </div>
+</div>
+
+<!-- ROUTE MODAL -->
+<div class="route-modal-overlay" id="routeModalOverlay" onclick="closeRouteModal()">
+    <div class="route-modal" onclick="event.stopPropagation()">
+        <div class="route-modal-title">&#128666; Вибрати маршрут</div>
+        <div id="routeModalContent">Завантаження...</div>
+        <button class="bs-btn cancel" style="width:100%;margin-top:12px;" onclick="closeRouteModal()">Скасувати</button>
+    </div>
+</div>
+
+<!-- PHOTO VIEWER -->
+<div class="photo-viewer-overlay" id="photoViewer" onclick="closePhotoViewer()">
+    <button class="photo-viewer-close" onclick="closePhotoViewer()">&#10005;</button>
+    <img class="photo-viewer-img" id="photoViewerImg" src="">
+</div>
+
+<!-- HIDDEN FILE INPUT -->
+<input type="file" id="photoFileInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handlePhotoUpload(event)">
+<script>
+// ================================================================
+// EscoExpress Posylki CRM — JavaScript Logic
+// ================================================================
+
+// ── CONFIG ──
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbx_is-HxS4EeHOs4CtS1yfDGmQOiyJwBYLaIwhrg5d6cEWUAb8NU-hNIngV0mSm3fhXOg/exec';
+const UPLOAD_URL = 'https://botisystem.com/uploads/upload.php';
+
+// ── STATE ──
+let allData = [];
+let filteredData = [];
+let currentDirection = 'ue'; // 'ue' | 'eu'
+let currentFilter = 'all';
+let currentPayFilter = 'all';
+let searchQuery = '';
+let openCardId = null;
+let activeDetailTab = {};
+let messengerPhone = '';
+let routeTargetPkgId = '';
+let photoTargetPkgId = '';
+let hasNpApiKey = false;
+let dupCheckTimer = null;
+let stats = { total: 0, ue: 0, eu: 0, byStatus: {}, byPay: {}, totalDebt: 0 };
+
+// ── API ──
+async function apiPost(action, data) {
+    const payload = Object.assign({ action: action }, data || {});
+    try {
+        const resp = await fetch(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+        return await resp.json();
+    } catch (e) {
+        console.error('API error:', e);
+        return { ok: false, error: e.message };
+    }
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', async function() {
+    showLoader('Завантаження посилок...');
+    try {
+        const [allRes, statsRes, npRes] = await Promise.all([
+            apiPost('getAll', { sheet: 'all', filter: {} }),
+            apiPost('getStats', {}),
+            apiPost('checkNpApiKey', {})
+        ]);
+        if (allRes.ok) allData = allRes.data || [];
+        if (statsRes.ok) stats = statsRes;
+        if (npRes.ok) hasNpApiKey = npRes.hasKey || false;
+        updateSidebar();
+        applyFilters();
+    } catch (e) {
+        showToast('Помилка завантаження: ' + e.message);
+    }
+    hideLoader();
+});
+
+// ── DIRECTION POPUP ──
+function toggleDirectionPopup() {
+    document.getElementById('directionPopup').classList.toggle('show');
+}
+
+function setDirectionFromPopup(dir) {
+    setDirection(dir);
+    document.getElementById('directionPopup').classList.remove('show');
+}
+
+// Close popup on outside click
+document.addEventListener('click', function(e) {
+    const popup = document.getElementById('directionPopup');
+    const btn = document.getElementById('navDirection');
+    if (popup && !popup.contains(e.target) && btn && !btn.contains(e.target)) {
+        popup.classList.remove('show');
+    }
+});
+
+// ── FILTERS ──
+function setDirection(dir) {
+    currentDirection = dir;
+    // Update bottom nav label
+    var navLabel = document.getElementById('navDirectionLabel');
+    if (navLabel) navLabel.innerHTML = dir === 'ue' ? '\u{1F1FA}\u{1F1E6}\u2192\u{1F1EA}\u{1F1FA}' : '\u{1F1EA}\u{1F1FA}\u2192\u{1F1FA}\u{1F1E6}';
+    // Update popup active states
+    document.querySelectorAll('.direction-option').forEach(function(el) {
+        el.className = 'direction-option' + (el.dataset.dir === dir ? (dir === 'ue' ? ' active-ue' : ' active-eu') : '');
+    });
+    // Update PC sidebar direction
+    var sUE = document.getElementById('sideDirUE');
+    var sEU = document.getElementById('sideDirEU');
+    if (sUE) sUE.className = 'pc-sidebar-item pc-dir-ue' + (dir === 'ue' ? ' active' : '');
+    if (sEU) sEU.className = 'pc-sidebar-item pc-dir-eu' + (dir === 'eu' ? ' active' : '');
+    // Update mobile side menu direction
+    var mUE = document.getElementById('mobDirUE');
+    var mEU = document.getElementById('mobDirEU');
+    if (mUE) { mUE.classList.toggle('active', dir === 'ue'); }
+    if (mEU) { mEU.classList.toggle('active', dir === 'eu'); }
+    updateFormForDirection();
+    updateSidebar();
+    applyFilters();
+}
+
+function setFilter(status) {
+    currentFilter = status;
+    currentPayFilter = 'all';
+    document.getElementById('filterPayStatus').value = 'all';
+    updateSidebarActive();
+    applyFilters();
+}
+
+function setPayFilter(status) {
+    currentPayFilter = status;
+    currentFilter = 'all';
+    updateSidebarActive();
+    applyFilters();
+}
+
+function updateSidebarActive() {
+    document.querySelectorAll('.pc-sidebar-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.side-menu-item').forEach(el => el.classList.remove('active'));
+    if (currentFilter === 'all' && currentPayFilter === 'all') { document.getElementById('sideAll')?.classList.add('active'); document.getElementById('mobAll')?.classList.add('active'); }
+    else if (currentFilter === 'Новий') { document.getElementById('sideNew')?.classList.add('active'); document.getElementById('mobNew')?.classList.add('active'); }
+    else if (currentFilter === 'В роботі') { document.getElementById('sideWork')?.classList.add('active'); document.getElementById('mobWork')?.classList.add('active'); }
+    else if (currentFilter === 'Підтверджено') { document.getElementById('sideConfirmed')?.classList.add('active'); document.getElementById('mobConfirmed')?.classList.add('active'); }
+    else if (currentFilter === 'Відмова') { document.getElementById('sideRefused')?.classList.add('active'); document.getElementById('mobRefused')?.classList.add('active'); }
+    else if (currentPayFilter === 'Не оплачено') { document.getElementById('sideUnpaid')?.classList.add('active'); document.getElementById('mobUnpaid')?.classList.add('active'); }
+    else if (currentPayFilter === 'Частково') { document.getElementById('sidePartial')?.classList.add('active'); document.getElementById('mobPartial')?.classList.add('active'); }
+    else if (currentPayFilter === 'Оплачено') { document.getElementById('sidePaid')?.classList.add('active'); document.getElementById('mobPaid')?.classList.add('active'); }
+}
+
+function onSearchInput() {
+    searchQuery = document.getElementById('searchInput').value.trim();
+    applyFilters();
+}
+
+function applyFilters() {
+    const sheetName = currentDirection === 'ue' ? 'Реєстрація ТТН УК-єв' : 'Виклик Курєра ЄВ-ук';
+    const statusFilter = document.getElementById('filterStatus').value;
+    const payFilter = document.getElementById('filterPayStatus').value;
+
+    filteredData = allData.filter(p => {
+        if (p._sheet !== sheetName) return false;
+        if (String(p['Статус CRM']) === 'Архів') return false;
+
+        if (currentFilter !== 'all' && p['Статус ліда'] !== currentFilter) return false;
+        if (currentPayFilter !== 'all' && p['Статус оплати'] !== currentPayFilter) return false;
+        if (statusFilter !== 'all' && p['Статус посилки'] !== statusFilter) return false;
+        if (payFilter !== 'all' && p['Статус оплати'] !== payFilter) return false;
+
+        if (searchQuery) {
+            const s = searchQuery.toLowerCase();
+            const fields = [p['Піб відправника'], p['Піб отримувача'], p['Телефон реєстратора'], p['Телефон отримувача'], p['PKG_ID'], p['Номер ТТН']];
+            if (!fields.some(f => String(f || '').toLowerCase().includes(s))) return false;
+        }
+        return true;
+    });
+
+    renderCards();
+}
+
+// ── SIDEBAR COUNTS ──
+function updateSidebar() {
+    const ueData = allData.filter(p => p._sheet === 'Реєстрація ТТН УК-єв' && p['Статус CRM'] !== 'Архів');
+    const euData = allData.filter(p => p._sheet === 'Виклик Курєра ЄВ-ук' && p['Статус CRM'] !== 'Архів');
+    const curData = currentDirection === 'ue' ? ueData : euData;
+
+    document.getElementById('countUE').textContent = ueData.length;
+    document.getElementById('countEU').textContent = euData.length;
+
+    const counts = { all: curData.length, 'Новий': 0, 'В роботі': 0, 'Підтверджено': 0, 'Відмова': 0 };
+    const payCounts = { 'Не оплачено': 0, 'Частково': 0, 'Оплачено': 0 };
+
+    curData.forEach(p => {
+        const st = p['Статус ліда'] || 'Новий';
+        if (counts[st] !== undefined) counts[st]++;
+        const pay = p['Статус оплати'] || 'Не оплачено';
+        if (payCounts[pay] !== undefined) payCounts[pay]++;
+    });
+
+    document.getElementById('pcCountAll').textContent = counts.all;
+    document.getElementById('pcCountNew').textContent = counts['Новий'];
+    document.getElementById('pcCountWork').textContent = counts['В роботі'];
+    document.getElementById('pcCountConfirmed').textContent = counts['Підтверджено'];
+    document.getElementById('pcCountRefused').textContent = counts['Відмова'];
+    document.getElementById('pcCountUnpaid').textContent = payCounts['Не оплачено'];
+    document.getElementById('pcCountPartial').textContent = payCounts['Частково'];
+    document.getElementById('pcCountPaid').textContent = payCounts['Оплачено'];
+
+    // Mobile counts
+    document.getElementById('mobCountAll').textContent = counts.all;
+    document.getElementById('mobCountNew').textContent = counts['Новий'];
+    document.getElementById('mobCountWork').textContent = counts['В роботі'];
+    document.getElementById('mobCountConfirmed').textContent = counts['Підтверджено'];
+    document.getElementById('mobCountRefused').textContent = counts['Відмова'];
+    document.getElementById('mobCountUnpaid').textContent = payCounts['Не оплачено'];
+    document.getElementById('mobCountPartial').textContent = payCounts['Частково'];
+    document.getElementById('mobCountPaid').textContent = payCounts['Оплачено'];
+
+    // Direction counts (popup + PC sidebar + mobile menu)
+    var dUE = document.getElementById('countDirUE');
+    var dEU = document.getElementById('countDirEU');
+    if (dUE) dUE.textContent = ueData.length;
+    if (dEU) dEU.textContent = euData.length;
+    var pcUE = document.getElementById('pcCountUE');
+    var pcEU = document.getElementById('pcCountEU');
+    if (pcUE) pcUE.textContent = ueData.length;
+    if (pcEU) pcEU.textContent = euData.length;
+    var mobUE = document.getElementById('mobCountUE');
+    var mobEU = document.getElementById('mobCountEU');
+    if (mobUE) mobUE.textContent = ueData.length;
+    if (mobEU) mobEU.textContent = euData.length;
+}
+
+// ── RENDER CARDS ──
+function renderCards() {
+    const container = document.getElementById('cardsList');
+    const empty = document.getElementById('emptyState');
+    const isUE = currentDirection === 'ue';
+
+    if (filteredData.length === 0) {
+        container.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+
+    const visCols = getVisibleCardColumns();
+
+    container.innerHTML = filteredData.map(p => {
+        const pkgId = p['PKG_ID'] || '';
+        const sender = p['Піб відправника'] || '';
+        const phone = p['Телефон реєстратора'] || '';
+        const receiver = p['Піб отримувача'] || '';
+        const phoneRec = p['Телефон отримувача'] || '';
+        const addressFrom = p['Адреса відправки'] || '';
+        const addressTo = isUE ? (p['Адреса в Європі'] || '') : (p['Місто Нова Пошта'] || '');
+        const weight = p['Кг'] || '';
+        const sum = parseFloat(p['Сума']) || 0;
+        const deposit = parseFloat(p['Завдаток']) || 0;
+        const debt = Math.max(0, sum - deposit);
+        const currency = p['Валюта оплати'] || 'UAH';
+        const status = p['Статус ліда'] || 'Новий';
+        const pkgStatus = p['Статус посилки'] || '';
+        const rteId = p['RTE_ID'] || '';
+        const ttn = isUE ? (p['Номер ТТН'] || '') : '';
+        const date = p['Дата створення'] || '';
+        const tag = p['Тег'] || '';
+
+        const v = key => visCols.includes(key);
+
+        const statusClass = status === 'Новий' ? 'status-new' : status === 'В роботі' ? 'status-work' : status === 'Підтверджено' ? 'status-confirmed' : status === 'Відмова' ? 'status-refused' : '';
+        const dirBadge = isUE ? 'dir-badge-ua-eu' : 'dir-badge-eu-ua';
+        const dirText = isUE ? 'УК&#8594;ЄВ' : 'ЄВ&#8594;УК';
+        const isOpen = openCardId === pkgId;
+
+        let routeStrip = '';
+        if (rteId) {
+            routeStrip = '<div class="card-route-strip has-route"><span class="card-route-icon2">&#9989;</span><span class="card-route-text">В маршруті: ' + rteId + '</span></div>';
+        }
+
+        return '<div class="lead-card ' + statusClass + '" id="card-' + pkgId + '">' +
+            '<div class="card-header"><div class="card-header-top">' +
+            '<div class="card-checkbox-wrap"><input type="checkbox" class="card-checkbox" value="' + pkgId + '"></div>' +
+            '<div class="card-body" onclick="toggleCard(\'' + pkgId + '\')">' +
+            '<div class="card-top-row">' +
+            '<span class="card-direction ' + dirBadge + '">' + dirText + '</span>' +
+            (v('phone') ? '<span class="card-phone">' + escHtml(phone) + '</span>' : '') +
+            (v('weight') && weight ? '<span class="card-weight">' + weight + ' кг</span>' : '') +
+            '<div class="card-price-wrap">' +
+            (v('sum') ? '<span class="card-price">' + sum + ' ' + currency + '</span>' : '') +
+            (v('deposit') && deposit > 0 ? '<span class="card-deposit has-deposit">завд: ' + deposit + '</span>' : '') +
+            (v('debt') && debt > 0 ? '<span class="card-deposit" style="color:#ef4444;font-weight:700;">борг: ' + debt + '</span>' : '') +
+            '</div></div>' +
+            '<div class="card-row2-wrap">' +
+            '<div class="card-info-row">' + (v('pkgId') ? '<span class="card-id">' + pkgId + '</span>' : '') + (v('sender') || v('receiver') ? '<span class="card-name">&#128100; ' + (v('sender') ? escHtml(sender) : '') + (v('sender') && v('receiver') ? ' &#8594; ' : '') + (v('receiver') ? escHtml(receiver) : '') + '</span>' : '') + '</div>' +
+            (v('address') ? '<div class="card-route"><span class="card-route-icon">&#128205;</span> ' + escHtml(addressFrom) + ' &#8594; ' + escHtml(addressTo) + '</div>' : '') +
+            '<div class="card-meta-row">' +
+            (v('date') && date ? '<span class="card-meta-tag">&#128197; ' + date + '</span>' : '') +
+            (v('pkgStatus') && pkgStatus ? '<span class="card-meta-tag">' + escHtml(pkgStatus) + '</span>' : '') +
+            (v('ttn') && ttn ? '<span class="card-meta-tag">TTH: ' + escHtml(ttn) + '</span>' : '') +
+            (v('tag') && tag ? '<span class="card-meta-tag" style="background:#f3e8ff;color:#7c3aed;">' + escHtml(tag) + '</span>' : '') +
+            '</div></div></div>' +
+            '<div class="card-right-section"><button class="card-actions-toggle ' + (isOpen ? 'open' : '') + '" onclick="toggleCard(\'' + pkgId + '\')">&#9660;</button></div>' +
+            '</div></div>' +
+            routeStrip +
+            '<div class="card-details ' + (isOpen ? 'show' : '') + '" id="details-' + pkgId + '">' +
+            (isOpen ? renderDetailsContent(p) : '') +
+            '</div>' +
+            '<div class="card-actions ' + (isOpen ? 'show' : '') + '" id="actions-' + pkgId + '">' +
+            '<button class="btn-card-action btn-call" onclick="callPhone(\'' + escAttr(phone) + '\')">&#128222; Дзвінок</button>' +
+            '<button class="btn-card-action btn-write" onclick="openMessengerPopup(\'' + escAttr(phone) + '\')">&#128172; Писати</button>' +
+            (isUE && ttn ? '<button class="btn-card-action btn-track" onclick="trackTTN(\'' + escAttr(pkgId) + '\', \'' + escAttr(ttn) + '\')">&#128230; Трекінг</button>' : '') +
+            '<button class="btn-card-action btn-route" onclick="openRouteModal(\'' + escAttr(pkgId) + '\')">&#128666; Маршрут</button>' +
+            '<button class="btn-card-action btn-delete" onclick="deleteParcel(\'' + escAttr(pkgId) + '\')">&#128465;</button>' +
+            '</div></div>';
+    }).join('');
+
+    updateSidebar();
+}
+
+// ── TOGGLE CARD ──
+function toggleCard(pkgId) {
+    const wasOpen = openCardId === pkgId;
+    openCardId = wasOpen ? null : pkgId;
+    // Re-render to update details
+    renderCards();
+    if (!wasOpen) {
+        const el = document.getElementById('card-' + pkgId);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// ── RENDER DETAILS CONTENT ──
+function renderDetailsContent(p) {
+    const isUE = p._sheet === 'Реєстрація ТТН УК-єв';
+    const pkgId = p['PKG_ID'];
+    const activeTab = activeDetailTab[pkgId] || 'basic';
+
+    const tabs = [
+        { id: 'basic', label: '&#128196; Основне' },
+        { id: 'parcel', label: '&#128230; Посилка' },
+        ...(isUE ? [{ id: 'np', label: '&#128176; НП' }] : []),
+        { id: 'finance', label: '&#128176; Фінанси' },
+        { id: 'route', label: '&#128666; Рейс' },
+        { id: 'payments', label: '&#128179; Платежі' },
+        { id: 'system', label: '&#9881; Системні' }
+    ];
+
+    let tabsHtml = '<div class="detail-accordion-tabs">' +
+        tabs.map(t => '<span class="detail-tab ' + (activeTab === t.id ? 'active' : '') + '" onclick="switchDetailTab(\'' + pkgId + '\', \'' + t.id + '\')">' + t.label + '</span>').join('') +
+        '</div>';
+
+    let panelHtml = '';
+
+    if (activeTab === 'basic') {
+        panelHtml = '<div class="detail-tab-panel active"><div class="details-grid">' +
+            detailBlock(pkgId, 'Піб відправника', p['Піб відправника']) +
+            detailBlock(pkgId, 'Телефон реєстратора', p['Телефон реєстратора']) +
+            detailBlock(pkgId, 'Адреса відправки', p['Адреса відправки']) +
+            detailBlock(pkgId, 'Піб отримувача', p['Піб отримувача']) +
+            detailBlock(pkgId, 'Телефон отримувача', p['Телефон отримувача']) +
+            detailBlock(pkgId, isUE ? 'Адреса в Європі' : 'Місто Нова Пошта', isUE ? p['Адреса в Європі'] : p['Місто Нова Пошта']) +
+            detailBlock(pkgId, 'Статус ліда', p['Статус ліда'], ['Новий', 'В роботі', 'Підтверджено', 'Відмова']) +
+            detailBlock(pkgId, 'Тег', p['Тег']) +
+            '</div></div>';
+    } else if (activeTab === 'parcel') {
+        const photoUrl = p['Фото посилки'] || '';
+        panelHtml = '<div class="detail-tab-panel active"><div class="details-grid">' +
+            detailBlock(pkgId, 'Опис', p['Опис']) +
+            detailBlock(pkgId, 'Деталі', p['Деталі']) +
+            detailBlock(pkgId, 'Кількість позицій', p['Кількість позицій']) +
+            detailBlock(pkgId, 'Кг', p['Кг']) +
+            detailBlock(pkgId, 'Оціночна вартість', p['Оціночна вартість']) +
+            (isUE ? detailBlock(pkgId, 'Номер ТТН', p['Номер ТТН']) : '') +
+            detailBlock(pkgId, 'Внутрішній №', p['Внутрішній №']) +
+            detailBlock(pkgId, 'Статус посилки', p['Статус посилки'], ['Прийнято', 'В дорозі', 'На складі', 'Доставлено', 'Видано']) +
+            '</div>' +
+            // Photo section
+            '<div class="detail-section-title">Фото</div>' +
+            '<div class="photo-grid">' +
+            (photoUrl ? '<img class="photo-thumb" src="' + escAttr(photoUrl) + '" onclick="viewPhoto(\'' + escAttr(photoUrl) + '\')">' : '') +
+            '<div class="photo-upload-btn" onclick="startPhotoUpload(\'' + escAttr(pkgId) + '\')">+</div>' +
+            '</div>' +
+            // TTN Tracking
+            (isUE && p['Номер ТТН'] ? '<div style="margin-top:12px;"><button class="bs-btn primary" style="padding:8px 16px;font-size:11px;" onclick="trackTTN(\'' + escAttr(pkgId) + '\', \'' + escAttr(p['Номер ТТН']) + '\')">&#128230; Відстежити ТТН</button>' +
+            (hasNpApiKey ? ' <button class="bs-btn cancel" style="padding:8px 16px;font-size:11px;" onclick="autoTrackTTN(\'' + escAttr(pkgId) + '\', \'' + escAttr(p['Номер ТТН']) + '\')">&#128260; Оновити статус</button>' : '') +
+            '</div>' : '') +
+            // Rating
+            '<div class="detail-section-title">Рейтинг</div>' +
+            renderRating(pkgId, p['Рейтинг'], p['Коментар рейтингу']) +
+            '</div>';
+    } else if (activeTab === 'np' && isUE) {
+        panelHtml = '<div class="detail-tab-panel active"><div class="details-grid">' +
+            detailBlock(pkgId, 'Сума НП', p['Сума НП']) +
+            detailBlock(pkgId, 'Валюта НП', p['Валюта НП'], ['UAH', 'EUR', 'CHF', 'USD']) +
+            detailBlock(pkgId, 'Форма НП', p['Форма НП'], ['Готівка', 'Безготівкова', 'Картка']) +
+            detailBlock(pkgId, 'Статус НП', p['Статус НП'], ['Очікує', 'Отримано', 'Відправлено']) +
+            '</div></div>';
+    } else if (activeTab === 'finance') {
+        panelHtml = '<div class="detail-tab-panel active"><div class="details-grid">' +
+            detailBlock(pkgId, 'Сума', p['Сума']) +
+            detailBlock(pkgId, 'Валюта оплати', p['Валюта оплати'], ['UAH', 'EUR', 'CHF', 'USD', 'PLN', 'CZK']) +
+            detailBlock(pkgId, 'Завдаток', p['Завдаток']) +
+            detailBlock(pkgId, 'Валюта завдатку', p['Валюта завдатку'], ['UAH', 'EUR', 'CHF', 'USD', 'PLN', 'CZK']) +
+            detailBlock(pkgId, 'Форма оплати', p['Форма оплати'], ['Готівка', 'Безготівкова', 'Картка']) +
+            detailBlock(pkgId, 'Статус оплати', p['Статус оплати'], ['Не оплачено', 'Частково', 'Оплачено']) +
+            '<div class="detail-block" style="border-left-color:var(--danger)"><div class="detail-block-label">БОРГ</div><div class="detail-block-value" style="color:var(--danger);font-size:16px;font-weight:800;">' + (p['Борг'] || 0) + '</div></div>' +
+            detailBlock(pkgId, 'Примітка оплати', p['Примітка оплати']) +
+            '</div></div>';
+    } else if (activeTab === 'route') {
+        panelHtml = '<div class="detail-tab-panel active"><div class="details-grid">' +
+            detailBlock(pkgId, 'Дата відправки', p['Дата відправки']) +
+            detailBlock(pkgId, 'Таймінг', p['Таймінг']) +
+            detailBlock(pkgId, 'Номер авто', p['Номер авто']) +
+            '<div class="detail-block"><div class="detail-block-label">RTE_ID</div><div class="detail-block-value">' + escHtml(p['RTE_ID'] || '—') + '</div></div>' +
+            detailBlock(pkgId, 'Дата отримання', p['Дата отримання']) +
+            '</div>' +
+            (p['RTE_ID'] ? '<div style="margin-top:10px;"><button class="bs-btn cancel" style="padding:8px 16px;font-size:11px;color:var(--danger);" onclick="removeFromRoute(\'' + escAttr(pkgId) + '\')">&#10060; Відв\'язати від маршруту</button></div>' : '<div style="margin-top:10px;"><button class="bs-btn primary" style="padding:8px 16px;font-size:11px;" onclick="openRouteModal(\'' + escAttr(pkgId) + '\')">&#128666; В маршрут</button></div>') +
+            // Order info
+            (p['ORDER_ID'] ? '<div class="detail-section-title">Замовлення клієнта</div><div style="padding:8px 12px;background:#eff6ff;border-radius:8px;font-size:12px;">&#128241; Замовлення: <strong>' + escHtml(p['ORDER_ID']) + '</strong></div>' : '') +
+            '</div>';
+    } else if (activeTab === 'payments') {
+        panelHtml = '<div class="detail-tab-panel active"><div class="payments-loading" id="pay-' + pkgId + '"><span class="pay-spinner"></span> Завантаження платежів...</div></div>';
+        loadPayments(pkgId);
+    } else if (activeTab === 'system') {
+        panelHtml = '<div class="detail-tab-panel active"><div class="details-grid">' +
+            '<div class="detail-block"><div class="detail-block-label">PKG_ID</div><div class="detail-block-value">' + escHtml(pkgId) + '</div></div>' +
+            '<div class="detail-block"><div class="detail-block-label">Ід смарт</div><div class="detail-block-value">' + escHtml(p['Ід_смарт'] || '—') + '</div></div>' +
+            '<div class="detail-block"><div class="detail-block-label">Дата створення</div><div class="detail-block-value">' + escHtml(p['Дата створення'] || '—') + '</div></div>' +
+            '<div class="detail-block"><div class="detail-block-label">SOURCE_SHEET</div><div class="detail-block-value">' + escHtml(p['SOURCE_SHEET'] || '—') + '</div></div>' +
+            '<div class="detail-block"><div class="detail-block-label">CLI_ID</div><div class="detail-block-value">' + escHtml(p['CLI_ID'] || '—') + '</div></div>' +
+            '<div class="detail-block"><div class="detail-block-label">ORDER_ID</div><div class="detail-block-value">' + escHtml(p['ORDER_ID'] || '—') + '</div></div>' +
+            detailBlock(pkgId, 'Статус CRM', p['Статус CRM'], ['Активний', 'Архів']) +
+            detailBlock(pkgId, 'Примітка', p['Примітка']) +
+            detailBlock(pkgId, 'Примітка СМС', p['Примітка СМС']) +
+            '</div></div>';
+    }
+
+    return tabsHtml + panelHtml;
+}
+
+// ── DETAIL BLOCK ──
+function detailBlock(pkgId, label, value, options) {
+    const val = value !== undefined && value !== null && value !== '' ? String(value) : '';
+    const isEmpty = !val;
+    const escapedVal = escHtml(val || '—');
+    const id = 'db-' + pkgId + '-' + label.replace(/\s/g, '_');
+
+    let editBtn = '<div class="detail-block-actions"><button class="detail-micro-btn" onclick="startInlineEdit(\'' + escAttr(pkgId) + '\', \'' + escAttr(label) + '\', this)" title="Редагувати">&#9998;</button></div>';
+
+    return '<div class="detail-block" id="' + id + '">' +
+        '<div class="detail-block-label">' + escHtml(label) + '</div>' +
+        '<div class="detail-block-value ' + (isEmpty ? 'empty' : '') + '">' + escapedVal + '</div>' +
+        editBtn + '</div>';
+}
+
+function switchDetailTab(pkgId, tabId) {
+    activeDetailTab[pkgId] = tabId;
+    const p = allData.find(x => x['PKG_ID'] === pkgId);
+    if (p) {
+        const detailEl = document.getElementById('details-' + pkgId);
+        if (detailEl) detailEl.innerHTML = renderDetailsContent(p);
+    }
+}
+
+// ── INLINE EDIT ──
+function startInlineEdit(pkgId, col, btn) {
+    const block = btn.closest('.detail-block');
+    const valueEl = block.querySelector('.detail-block-value');
+    const p = allData.find(x => x['PKG_ID'] === pkgId);
+    if (!p) return;
+
+    const currentVal = p[col] !== undefined ? String(p[col]) : '';
+
+    // Check if there are predefined options for selects
+    const selectOptions = getFieldOptions(col);
+
+    if (selectOptions) {
+        valueEl.innerHTML = '<select class="detail-inline-edit" onchange="saveInlineEdit(\'' + escAttr(pkgId) + '\', \'' + escAttr(col) + '\', this.value)" onblur="cancelInlineEdit(\'' + escAttr(pkgId) + '\')">' +
+            selectOptions.map(o => '<option value="' + escAttr(o) + '" ' + (o === currentVal ? 'selected' : '') + '>' + escHtml(o) + '</option>').join('') +
+            '</select>';
+        block.querySelector('select')?.focus();
+    } else {
+        valueEl.innerHTML = '<input class="detail-inline-edit" value="' + escAttr(currentVal) + '" onkeydown="if(event.key===\'Enter\')saveInlineEdit(\'' + escAttr(pkgId) + '\', \'' + escAttr(col) + '\', this.value);if(event.key===\'Escape\')cancelInlineEdit(\'' + escAttr(pkgId) + '\');" onblur="saveInlineEdit(\'' + escAttr(pkgId) + '\', \'' + escAttr(col) + '\', this.value)">';
+        block.querySelector('input')?.focus();
+    }
+}
+
+function getFieldOptions(col) {
+    const opts = {
+        'Статус ліда': ['Новий', 'В роботі', 'Підтверджено', 'Відмова'],
+        'Статус оплати': ['Не оплачено', 'Частково', 'Оплачено'],
+        'Статус посилки': ['Прийнято', 'В дорозі', 'На складі', 'Доставлено', 'Видано'],
+        'Статус CRM': ['Активний', 'Архів'],
+        'Валюта оплати': ['UAH', 'EUR', 'CHF', 'USD', 'PLN', 'CZK'],
+        'Валюта завдатку': ['UAH', 'EUR', 'CHF', 'USD', 'PLN', 'CZK'],
+        'Валюта НП': ['UAH', 'EUR', 'CHF', 'USD'],
+        'Форма НП': ['Готівка', 'Безготівкова', 'Картка'],
+        'Статус НП': ['Очікує', 'Отримано', 'Відправлено'],
+        'Форма оплати': ['Готівка', 'Безготівкова', 'Картка']
+    };
+    return opts[col] || null;
+}
+
+async function saveInlineEdit(pkgId, col, newValue) {
+    const p = allData.find(x => x['PKG_ID'] === pkgId);
+    if (!p) return;
+    const oldValue = p[col] !== undefined ? String(p[col]) : '';
+    if (newValue === oldValue) { cancelInlineEdit(pkgId); return; }
+
+    showLoader('Збереження...');
+    const res = await apiPost('updateField', { pkg_id: pkgId, col: col, value: newValue });
+    hideLoader();
+
+    if (res.ok) {
+        p[col] = newValue;
+        // Recalc debt
+        if (col === 'Сума' || col === 'Завдаток') {
+            p['Борг'] = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
+            const dep = parseFloat(p['Завдаток']) || 0;
+            if (dep > 0 && p['Борг'] > 0) p['Статус оплати'] = 'Частково';
+            else if (dep > 0 && p['Борг'] === 0) p['Статус оплати'] = 'Оплачено';
+            else p['Статус оплати'] = 'Не оплачено';
+        }
+        showToast('Збережено');
+        renderCards();
+    } else {
+        showToast('Помилка: ' + (res.error || 'невідома'));
+        cancelInlineEdit(pkgId);
+    }
+}
+
+function cancelInlineEdit(pkgId) {
+    renderCards();
+}
+
+// ── PAYMENTS ──
+async function loadPayments(pkgId) {
+    const res = await apiPost('getPayments', { pkg_id: pkgId });
+    const container = document.getElementById('pay-' + pkgId);
+    if (!container) return;
+
+    if (!res.ok || !res.data || res.data.length === 0) {
+        container.innerHTML = '<div class="payments-empty">Платежів ще немає</div>';
+        return;
+    }
+
+    let totalPaid = 0;
+    let html = '<table class="payments-table"><thead><tr><th>Дата</th><th>Тип</th><th>Сума</th><th>Валюта</th><th>Статус</th></tr></thead><tbody>';
+    res.data.forEach(pay => {
+        const sum = parseFloat(pay['Сума']) || 0;
+        totalPaid += sum;
+        html += '<tr><td>' + escHtml(pay['Дата створення'] || '') + '</td><td>' + escHtml(pay['Тип платежу'] || '') + '</td><td style="font-weight:700;">' + sum + '</td><td>' + escHtml(pay['Валюта'] || '') + '</td><td>' + escHtml(pay['Статус платежу'] || '') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+
+    const p = allData.find(x => x['PKG_ID'] === pkgId);
+    const debt = p ? (p['Борг'] || 0) : 0;
+    html += '<div class="payments-summary"><div class="pay-sum-item"><span class="pay-sum-label">Всього сплачено:</span><span class="pay-sum-value">' + totalPaid + '</span></div><div class="pay-sum-item"><span class="pay-sum-label">Борг:</span><span class="pay-sum-debt">' + debt + '</span></div></div>';
+
+    container.innerHTML = html;
+}
+
+// ── RATING ──
+function renderRating(pkgId, rating, comment) {
+    const r = parseInt(rating) || 0;
+    const c = comment || '';
+    let stars = '<div class="rating-stars">';
+    for (let i = 1; i <= 5; i++) {
+        stars += '<span class="rating-star ' + (i <= r ? 'active' : '') + '" onclick="setRating(\'' + escAttr(pkgId) + '\', ' + i + ')">&#9733;</span>';
+    }
+    stars += '</div>';
+    if (c) stars += '<div style="margin-top:4px;font-size:11px;color:var(--text-secondary);">' + escHtml(c) + '</div>';
+    stars += '<div style="margin-top:6px;"><input class="bs-input" style="padding:6px 8px;font-size:11px;" placeholder="Коментар рейтингу" value="' + escAttr(c) + '" onblur="saveRatingComment(\'' + escAttr(pkgId) + '\', this.value)"></div>';
+    return stars;
+}
+
+async function setRating(pkgId, value) {
+    const res = await apiPost('updateField', { pkg_id: pkgId, col: 'Рейтинг', value: value });
+    if (res.ok) {
+        const p = allData.find(x => x['PKG_ID'] === pkgId);
+        if (p) p['Рейтинг'] = value;
+        renderCards();
+        showToast('Рейтинг збережено');
+    }
+}
+
+async function saveRatingComment(pkgId, value) {
+    const p = allData.find(x => x['PKG_ID'] === pkgId);
+    if (p && p['Коментар рейтингу'] === value) return;
+    const res = await apiPost('updateField', { pkg_id: pkgId, col: 'Коментар рейтингу', value: value });
+    if (res.ok && p) p['Коментар рейтингу'] = value;
+}
+
+// ── ADD PARCEL FORM ──
+function openAddForm() {
+    document.getElementById('addFormOverlay').classList.add('show');
+    updateFormForDirection();
+    clearForm();
+}
+
+function closeAddForm() {
+    document.getElementById('addFormOverlay').classList.remove('show');
+    clearForm();
+}
+
+function updateFormForDirection() {
+    const isUE = currentDirection === 'ue';
+    document.getElementById('fAddressToWrap').style.display = isUE ? 'block' : 'none';
+    document.getElementById('fCityNPWrap').style.display = isUE ? 'none' : 'block';
+    document.getElementById('fTTNWrap').style.display = isUE ? 'block' : 'none';
+    document.getElementById('addFormTitle').innerHTML = isUE ? '&#128230; Нова посилка УК&#8594;ЄВ' : '&#128230; Нова посилка ЄВ&#8594;УК';
+}
+
+function clearForm() {
+    ['fSender', 'fPhone', 'fAddressFrom', 'fReceiver', 'fPhoneReceiver', 'fAddressTo', 'fCityNP', 'fTTN', 'fDescription', 'fWeight', 'fQty', 'fEstValue', 'fSum', 'fNote'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('fCurrency').value = 'UAH';
+    document.getElementById('duplicateWarning').classList.remove('show');
+}
+
+async function saveParcel() {
+    const isUE = currentDirection === 'ue';
+    const sender = document.getElementById('fSender').value.trim();
+    const phone = document.getElementById('fPhone').value.trim();
+    const addressFrom = document.getElementById('fAddressFrom').value.trim();
+    const receiver = document.getElementById('fReceiver').value.trim();
+    const phoneReceiver = document.getElementById('fPhoneReceiver').value.trim();
+
+    // Validate required
+    if (!sender || !phone || !addressFrom || !receiver || !phoneReceiver) {
+        showToast('Заповніть всі обов\'язкові поля');
+        return;
+    }
+    if (isUE && !document.getElementById('fAddressTo').value.trim()) {
+        showToast('Вкажіть адресу в Європі');
+        return;
+    }
+    if (!isUE && !document.getElementById('fCityNP').value.trim()) {
+        showToast('Вкажіть місто Нова Пошта');
+        return;
+    }
+
+    const data = {
+        sender: sender,
+        phone: phone,
+        addressFrom: addressFrom,
+        receiver: receiver,
+        phoneReceiver: phoneReceiver,
+        addressTo: isUE ? document.getElementById('fAddressTo').value.trim() : '',
+        cityNP: !isUE ? document.getElementById('fCityNP').value.trim() : '',
+        ttn: isUE ? document.getElementById('fTTN').value.trim() : '',
+        description: document.getElementById('fDescription').value.trim(),
+        weight: document.getElementById('fWeight').value.trim(),
+        qty: document.getElementById('fQty').value.trim(),
+        estimatedValue: document.getElementById('fEstValue').value.trim(),
+        sum: document.getElementById('fSum').value.trim(),
+        currency: document.getElementById('fCurrency').value,
+        note: document.getElementById('fNote').value.trim()
+    };
+
+    showLoader('Збереження посилки...');
+    closeAddForm();
+
+    const res = await apiPost('addParcel', { sheet: currentDirection, data: data });
+    hideLoader();
+
+    if (res.ok) {
+        showToast('Посилку додано: ' + res.pkg_id);
+        await reloadData();
+    } else {
+        showToast('Помилка: ' + (res.error || 'невідома'));
+    }
+}
+
+// ── DUPLICATE CHECK ──
+function checkDuplicatesDebounced() {
+    clearTimeout(dupCheckTimer);
+    dupCheckTimer = setTimeout(checkDuplicates, 500);
+}
+
+async function checkDuplicates() {
+    const pib = document.getElementById('fSender').value.trim();
+    const phone = document.getElementById('fPhone').value.trim();
+    if (!pib || !phone) return;
+
+    const res = await apiPost('checkDuplicates', { pib: pib, phone: phone });
+    const warning = document.getElementById('duplicateWarning');
+    if (res.soft || res.exact) {
+        document.getElementById('duplicateText').textContent = 'Знайдено збіг: ' + (res.match?.pib || '') + ' (' + (res.match?.phone || '') + ') — ' + (res.match?.pkg_id || '');
+        warning.classList.add('show');
+    } else {
+        warning.classList.remove('show');
+    }
+}
+
+// ── DELETE ──
+async function deleteParcel(pkgId) {
+    if (!confirm('Видалити посилку ' + pkgId + '?')) return;
+    showLoader('Видалення...');
+    const res = await apiPost('deleteParcel', { pkg_id: pkgId });
+    hideLoader();
+    if (res.ok) {
+        showToast('Посилку видалено');
+        allData = allData.filter(p => p['PKG_ID'] !== pkgId);
+        openCardId = null;
+        applyFilters();
+    } else {
+        showToast('Помилка: ' + (res.error || 'невідома'));
+    }
+}
+
+// ── TRACKING ──
+function trackTTN(pkgId, ttn) {
+    window.open('https://novaposhta.ua/tracking/?cargo=' + encodeURIComponent(ttn), '_blank');
+}
+
+async function autoTrackTTN(pkgId, ttn) {
+    showLoader('Оновлення статусу ТТН...');
+    const res = await apiPost('trackParcel', { pkg_id: pkgId, ttn: ttn });
+    hideLoader();
+    if (res.ok) {
+        showToast('Статус: ' + (res.status || 'Невідомий'));
+        const p = allData.find(x => x['PKG_ID'] === pkgId);
+        if (p && res.status) p['Статус посилки'] = res.status;
+        renderCards();
+    } else {
+        showToast('Помилка: ' + (res.error || 'невідома'));
+    }
+}
+
+// ── PHOTOS ──
+function startPhotoUpload(pkgId) {
+    photoTargetPkgId = pkgId;
+    document.getElementById('photoFileInput').click();
+}
+
+async function handlePhotoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { showToast('Файл занадто великий (макс 5MB)'); return; }
+
+    showLoader('Завантаження фото...');
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('PKG_ID', photoTargetPkgId);
+
+    try {
+        const resp = await fetch(UPLOAD_URL, { method: 'POST', body: formData });
+        const result = await resp.json();
+        if (result.ok && result.url) {
+            // Save to GAS
+            await apiPost('addPhoto', { pkg_id: photoTargetPkgId, url: result.url, type: 'Загальне' });
+            const p = allData.find(x => x['PKG_ID'] === photoTargetPkgId);
+            if (p) p['Фото посилки'] = result.url;
+            showToast('Фото завантажено');
+            renderCards();
+        } else {
+            showToast('Помилка завантаження: ' + (result.error || ''));
+        }
+    } catch (e) {
+        showToast('Помилка: ' + e.message);
+    }
+    hideLoader();
+    event.target.value = '';
+}
+
+function viewPhoto(url) {
+    document.getElementById('photoViewerImg').src = url;
+    document.getElementById('photoViewer').classList.add('show');
+}
+
+function closePhotoViewer() {
+    document.getElementById('photoViewer').classList.remove('show');
+}
+
+// ── ROUTE ──
+async function openRouteModal(pkgId) {
+    routeTargetPkgId = pkgId;
+    document.getElementById('routeModalOverlay').classList.add('show');
+    document.getElementById('routeModalContent').innerHTML = 'Завантаження маршрутів...';
+
+    const res = await apiPost('getRoutesList', {});
+    if (res.ok && res.data) {
+        if (res.data.length === 0) {
+            document.getElementById('routeModalContent').innerHTML = '<div class="payments-empty">Немає доступних маршрутів</div>';
+            return;
+        }
+        document.getElementById('routeModalContent').innerHTML = res.data.map(r =>
+            '<div class="route-item" onclick="selectRoute(\'' + escAttr(r.sheetName) + '\')">' +
+            '<div class="route-item-name">' + escHtml(r.sheetName) + '</div>' +
+            '<div class="route-item-count">' + r.rowCount + ' записів</div>' +
+            '</div>'
+        ).join('');
+    } else {
+        document.getElementById('routeModalContent').innerHTML = '<div class="payments-empty">Помилка: ' + (res.error || '') + '</div>';
+    }
+}
+
+function closeRouteModal() {
+    document.getElementById('routeModalOverlay').classList.remove('show');
+}
+
+async function selectRoute(sheetName) {
+    closeRouteModal();
+    showLoader('Додаємо в маршрут...');
+    const res = await apiPost('addToRoute', { pkg_id: routeTargetPkgId, sheet_name: sheetName, rte_id: sheetName });
+    hideLoader();
+    if (res.ok) {
+        showToast('Посилку додано в ' + sheetName);
+        const p = allData.find(x => x['PKG_ID'] === routeTargetPkgId);
+        if (p) p['RTE_ID'] = sheetName;
+        renderCards();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+async function removeFromRoute(pkgId) {
+    if (!confirm('Відв\'язати посилку від маршруту?')) return;
+    showLoader('Відв\'язуємо...');
+    const res = await apiPost('removeFromRoute', { pkg_id: pkgId });
+    hideLoader();
+    if (res.ok) {
+        showToast('Посилку відв\'язано від маршруту');
+        const p = allData.find(x => x['PKG_ID'] === pkgId);
+        if (p) { p['RTE_ID'] = ''; p['Номер авто'] = ''; p['Дата відправки'] = ''; }
+        renderCards();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── MESSENGER ──
+function openMessengerPopup(phone) {
+    messengerPhone = phone;
+    document.getElementById('messengerOverlay').classList.add('show');
+}
+
+function closeMessenger() {
+    document.getElementById('messengerOverlay').classList.remove('show');
+}
+
+function openMessenger(type) {
+    const phone = messengerPhone.replace(/[^+\d]/g, '');
+    closeMessenger();
+    if (type === 'viber') window.open('viber://chat?number=' + encodeURIComponent(phone));
+    else if (type === 'telegram') window.open('https://t.me/' + phone);
+    else if (type === 'whatsapp') window.open('https://wa.me/' + phone.replace('+', ''));
+    else if (type === 'sms') window.open('sms:' + phone);
+}
+
+function callPhone(phone) {
+    window.open('tel:' + phone);
+}
+
+// ── RELOAD DATA ──
+async function reloadData() {
+    showLoader('Оновлення...');
+    const [allRes, statsRes] = await Promise.all([
+        apiPost('getAll', { sheet: 'all', filter: {} }),
+        apiPost('getStats', {})
+    ]);
+    if (allRes.ok) allData = allRes.data || [];
+    if (statsRes.ok) stats = statsRes;
+    updateSidebar();
+    applyFilters();
+    hideLoader();
+}
+
+// ── UI HELPERS ──
+function openSideMenu() { document.getElementById('sideMenu').classList.add('open'); document.getElementById('sideMenuOverlay').classList.add('show'); }
+function closeSideMenu() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('sideMenuOverlay').classList.remove('show'); }
+
+function togglePcSection(section) {
+    const content = document.getElementById('pcSection' + section.charAt(0).toUpperCase() + section.slice(1));
+    const header = content?.previousElementSibling;
+    if (content) content.classList.toggle('collapsed');
+    if (header) header.classList.toggle('collapsed');
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function showLoader(text) {
+    document.getElementById('loaderText').textContent = text || 'Завантаження...';
+    document.getElementById('loader').classList.add('show');
+}
+
+function hideLoader() {
+    document.getElementById('loader').classList.remove('show');
+}
+
+function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = String(s || '');
+    return d.innerHTML;
+}
+
+function escAttr(s) {
+    return String(s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+// ── SIDEBAR COLLAPSE ──
+function togglePcSidebar() {
+    const sidebar = document.getElementById('pcSidebar');
+    const btn = document.getElementById('pcSidebarCollapseBtn');
+    const isCollapsed = sidebar.classList.toggle('collapsed-sidebar');
+    btn.textContent = isCollapsed ? '\u25B6' : '\u25C0';
+    btn.style.left = isCollapsed ? '0px' : '300px';
+}
+
+// ── MANAGER NAME ──
+function getManagerName() {
+    return localStorage.getItem('esco_manager_name') || '';
+}
+
+function setManagerName(name) {
+    localStorage.setItem('esco_manager_name', name);
+    updateAvatarUI();
+}
+
+function updateAvatarUI() {
+    const name = getManagerName();
+    const avatar = document.getElementById('userAvatar');
+    if (avatar && name) {
+        const parts = name.trim().split(/\s+/);
+        avatar.textContent = parts.map(p => p[0]).join('').substring(0, 2).toUpperCase();
+        avatar.title = name;
+    }
+}
+
+function promptManagerName() {
+    const current = getManagerName();
+    const name = prompt('Введіть ваше ім\'я (менеджер):', current);
+    if (name !== null && name.trim()) {
+        setManagerName(name.trim());
+    }
+}
+
+// Init avatar on load
+document.addEventListener('DOMContentLoaded', function() { updateAvatarUI(); });
+
+// ── SILENT SYNC ──
+async function silentSync() {
+    showLoader('Синхронізація...');
+    await reloadData();
+    showToast('Дані оновлено');
+}
+
+// ── BULK ACTIONS ──
+function getSelectedIds() {
+    return Array.from(document.querySelectorAll('.card-checkbox:checked')).map(cb => cb.value);
+}
+
+function updateBulkToolbar() {
+    const selected = getSelectedIds();
+    const toolbar = document.getElementById('bulkToolbar');
+    if (selected.length > 0) {
+        toolbar.classList.add('show');
+        document.getElementById('bulkCount').textContent = selected.length + ' обрано';
+    } else {
+        toolbar.classList.remove('show');
+    }
+}
+
+function toggleSelectAll() {
+    const checkboxes = document.querySelectorAll('.card-checkbox');
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
+    updateBulkToolbar();
+}
+
+function clearSelection() {
+    document.querySelectorAll('.card-checkbox').forEach(cb => cb.checked = false);
+    updateBulkToolbar();
+}
+
+async function bulkRouteAssign() {
+    const ids = getSelectedIds();
+    if (ids.length === 0) return;
+    // Use same route modal but for bulk
+    routeTargetPkgId = ids[0]; // Will handle bulk in selectRoute
+    openRouteModal(ids[0]);
+}
+
+async function bulkArchive() {
+    const ids = getSelectedIds();
+    if (ids.length === 0) return;
+    if (!confirm('Архівувати ' + ids.length + ' посилок?')) return;
+    showLoader('Архівуємо...');
+    for (const id of ids) {
+        await apiPost('updateField', { pkg_id: id, col: 'Статус CRM', value: 'Архів' });
+        const p = allData.find(x => x['PKG_ID'] === id);
+        if (p) p['Статус CRM'] = 'Архів';
+    }
+    hideLoader();
+    clearSelection();
+    applyFilters();
+    showToast(ids.length + ' посилок архівовано');
+}
+
+// Add checkbox event delegation
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('card-checkbox')) {
+        updateBulkToolbar();
+    }
+});
+
+// ── SHOW ALL PARCELS (reset filters) ──
+function showAllParcels() {
+    // Switch to parcels view if in verification mode
+    if (typeof currentView !== 'undefined' && currentView === 'verification') {
+        currentView = 'parcels';
+        document.getElementById('defaultView').style.display = 'block';
+        document.getElementById('verificationView').style.display = 'none';
+        if (typeof stopPolling === 'function') stopPolling();
+    }
+    // Update bottom nav
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    var navP = document.getElementById('navParcels');
+    if (navP) navP.classList.add('active');
+
+    currentFilter = 'all';
+    currentPayFilter = 'all';
+    searchQuery = '';
+    document.getElementById('searchInput').value = '';
+    updateSidebarActive();
+    applyFilters();
+}
+
+// ── COLUMN CONFIGURATOR ──
+const ALL_CARD_COLUMNS = [
+    { key: 'phone', label: '📞 Телефон' },
+    { key: 'weight', label: '⚖️ Вага (кг)' },
+    { key: 'sum', label: '💰 Сума' },
+    { key: 'deposit', label: '💵 Завдаток' },
+    { key: 'debt', label: '🔴 Борг' },
+    { key: 'sender', label: '👤 Відправник' },
+    { key: 'receiver', label: '👤 Отримувач' },
+    { key: 'address', label: '📍 Адреси' },
+    { key: 'date', label: '📅 Дата' },
+    { key: 'pkgStatus', label: '📦 Статус посилки' },
+    { key: 'ttn', label: '🔢 Номер ТТН' },
+    { key: 'tag', label: '🏷️ Тег' },
+    { key: 'pkgId', label: '🆔 PKG_ID' }
+];
+const DEFAULT_CARD_COLUMNS = ['phone', 'weight', 'sum', 'deposit', 'debt', 'sender', 'receiver', 'address', 'date', 'pkgStatus', 'ttn', 'tag', 'pkgId'];
+let colCfgTemp = [];
+
+function getVisibleCardColumns() {
+    try {
+        const saved = localStorage.getItem('esco_posylki_card_cols');
+        if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return [...DEFAULT_CARD_COLUMNS];
+}
+
+function openColumnConfigurator() {
+    colCfgTemp = getVisibleCardColumns();
+    renderColCfgList();
+    document.getElementById('colCfgOverlay').classList.add('show');
+}
+
+function closeColumnConfigurator() {
+    document.getElementById('colCfgOverlay').classList.remove('show');
+}
+
+function renderColCfgList() {
+    const list = document.getElementById('colCfgList');
+    list.innerHTML = ALL_CARD_COLUMNS.map(col => {
+        const checked = colCfgTemp.includes(col.key);
+        return '<div class="col-cfg-item ' + (checked ? 'checked' : '') + '" onclick="toggleColCfgItem(\'' + col.key + '\')">' +
+            '<div class="col-cfg-check">' + (checked ? '✓' : '') + '</div>' +
+            '<div class="col-cfg-name">' + col.label + '</div>' +
+            '</div>';
+    }).join('');
+}
+
+function toggleColCfgItem(key) {
+    const idx = colCfgTemp.indexOf(key);
+    if (idx >= 0) colCfgTemp.splice(idx, 1);
+    else colCfgTemp.push(key);
+    renderColCfgList();
+}
+
+function saveColCfg() {
+    if (colCfgTemp.length === 0) { alert('Оберіть хоча б одне поле'); return; }
+    localStorage.setItem('esco_posylki_card_cols', JSON.stringify(colCfgTemp));
+    closeColumnConfigurator();
+    renderCards();
+    showToast('Колонки збережено ✓');
+}
+
+function resetColCfg() {
+    colCfgTemp = [...DEFAULT_CARD_COLUMNS];
+    renderColCfgList();
+}
+
+// ================================================================
+// VERIFICATION SYSTEM — Перевірка посилок (УК→Європа)
+// ================================================================
+
+let currentView = 'parcels'; // 'parcels' | 'verification'
+let currentVerifyTab = 'all'; // 'all' | 'new' | 'checking' | 'ready'
+let verifyData = [];
+let openVerifyCardId = null;
+let verifyDuplicatesCache = {};
+let pollingTimer = null;
+const POLLING_INTERVAL = 15000; // 15 секунд
+
+// ── Перемикання між видами ──
+function switchToVerification(tab) {
+    currentView = 'verification';
+    currentVerifyTab = tab || 'checking';
+
+    document.getElementById('defaultView').style.display = 'none';
+    document.getElementById('verificationView').style.display = 'block';
+
+    // Update bottom nav
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    var navVerify = document.getElementById('navVerify');
+    if (navVerify) navVerify.classList.add('active');
+
+    // Update sidebar
+    document.querySelectorAll('.pc-sidebar-item').forEach(el => el.classList.remove('active'));
+    var sideId = { 'all': 'sideVerAll', 'new': 'sideVerNew', 'checking': 'sideVerCheck', 'ready': 'sideVerReady' }[currentVerifyTab];
+    if (sideId) document.getElementById(sideId)?.classList.add('active');
+
+    updateVerifyTabs();
+    loadVerificationData();
+    startPolling();
+}
+
+function switchToParcels() {
+    currentView = 'parcels';
+    document.getElementById('defaultView').style.display = 'block';
+    document.getElementById('verificationView').style.display = 'none';
+
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    var navParcels = document.getElementById('navParcels');
+    if (navParcels) navParcels.classList.add('active');
+
+    stopPolling();
+    updateSidebarActive();
+    applyFilters();
+}
+
+// Note: showAllParcels is patched below to also switch view
+
+// ── Verification Tabs ──
+function setVerifyTab(tab) {
+    currentVerifyTab = tab;
+    updateVerifyTabs();
+    renderVerifyCards();
+}
+
+function updateVerifyTabs() {
+    document.querySelectorAll('.verify-tab').forEach(t => t.classList.remove('active'));
+    var tabId = { 'all': 'vtabAll', 'new': 'vtabNew', 'checking': 'vtabChecking', 'ready': 'vtabReady' }[currentVerifyTab];
+    if (tabId) document.getElementById(tabId)?.classList.add('active');
+}
+
+// ── Load & Filter Verification Data ──
+async function loadVerificationData() {
+    // Filter UE data from allData for verification
+    verifyData = allData.filter(p =>
+        p._sheet === 'Реєстрація ТТН УК-єв' &&
+        String(p['Статус CRM']) !== 'Архів'
+    );
+
+    updateVerifyCounts();
+    renderVerifyCards();
+}
+
+function getVerifyFiltered() {
+    var ctrl;
+    return verifyData.filter(p => {
+        ctrl = String(p['Контроль перевірки'] || '').trim();
+        switch (currentVerifyTab) {
+            case 'all': return true;
+            case 'new': return !ctrl || ctrl === 'Нова' || ctrl === '';
+            case 'checking': return ctrl === 'В перевірці';
+            case 'ready': return ctrl === 'Готова до маршруту';
+            default: return true;
+        }
+    });
+}
+
+function updateVerifyCounts() {
+    var counts = { all: 0, new: 0, checking: 0, ready: 0 };
+    verifyData.forEach(p => {
+        var ctrl = String(p['Контроль перевірки'] || '').trim();
+        counts.all++;
+        if (!ctrl || ctrl === 'Нова' || ctrl === '') counts.new++;
+        else if (ctrl === 'В перевірці') counts.checking++;
+        else if (ctrl === 'Готова до маршруту') counts.ready++;
+    });
+
+    document.getElementById('vtabCountAll').textContent = counts.all;
+    document.getElementById('vtabCountNew').textContent = counts.new;
+    document.getElementById('vtabCountCheck').textContent = counts.checking;
+    document.getElementById('vtabCountReady').textContent = counts.ready;
+
+    // Sidebar counts
+    var el;
+    el = document.getElementById('pcCountVerAll'); if (el) el.textContent = counts.all;
+    el = document.getElementById('pcCountVerNew'); if (el) el.textContent = counts.new;
+    el = document.getElementById('pcCountVerCheck'); if (el) el.textContent = counts.checking;
+    el = document.getElementById('pcCountVerReady'); if (el) el.textContent = counts.ready;
+
+    // Mobile counts
+    el = document.getElementById('mobCountVerCheck'); if (el) el.textContent = counts.checking;
+    el = document.getElementById('mobCountVerReady'); if (el) el.textContent = counts.ready;
+
+    // Pulse badge if checking > 0
+    var badge = document.getElementById('vtabCheckBadge');
+    if (badge) badge.className = 'vtab-badge' + (counts.checking > 0 ? ' pulse' : '');
+}
+
+// ── Render Verification Cards ──
+function renderVerifyCards() {
+    var filtered = getVerifyFiltered();
+    var container = document.getElementById('verifyCardsList');
+    var emptyEl = document.getElementById('verifyEmptyState');
+    var countEl = document.getElementById('verifyResultCount');
+
+    if (countEl) countEl.textContent = filtered.length + ' посилок';
+
+    if (filtered.length === 0) {
+        container.innerHTML = '';
+        emptyEl.style.display = 'block';
+        return;
+    }
+    emptyEl.style.display = 'none';
+
+    container.innerHTML = filtered.map(p => renderSingleVerifyCard(p)).join('');
+}
+
+function renderSingleVerifyCard(p) {
+    var pkgId = p['PKG_ID'] || '';
+    var ttn = p['Номер ТТН'] || '';
+    var recipient = p['Піб отримувача'] || '';
+    var phone = p['Телефон отримувача'] || '';
+    var ctrl = String(p['Контроль перевірки'] || '').trim();
+    var photo = p['Фото посилки'] || '';
+    var weight = p['Кг'] || '';
+    var price = p['Оціночна вартість'] || '';
+    var intNum = p['Внутрішній №'] || '';
+    var date = p['Дата перевірки'] || p['Дата створення'] || '';
+    var desc = p['Опис'] || '';
+    var isOpen = openVerifyCardId === pkgId;
+
+    var statusClass = '';
+    var dotClass = 'dot-checking';
+    if (ctrl === 'Готова до маршруту') { statusClass = 'vcard-ready'; dotClass = 'dot-ready'; }
+    else if (ctrl === 'Відмова') { statusClass = 'vcard-rejected'; dotClass = 'dot-checking'; }
+    else if (!recipient && !phone) { statusClass = 'vcard-unknown'; dotClass = 'dot-unknown'; }
+    else if (ctrl === 'В перевірці' && !photo) { dotClass = 'dot-waiting'; }
+
+    var hasData = !!(weight && price);
+    var hasPhoto = !!photo;
+
+    // Check for cached duplicates
+    var dups = verifyDuplicatesCache[pkgId] || [];
+    var hasDups = dups.length > 0;
+
+    var html = '<div class="vcard ' + statusClass + '" id="vcard-' + pkgId + '">';
+
+    // Header
+    html += '<div class="vcard-header" onclick="toggleVerifyCard(\'' + escAttr(pkgId) + '\')">';
+    html += '<div class="vcard-status-dot ' + dotClass + '"></div>';
+    html += '<div class="vcard-info">';
+    html += '<div class="vcard-ttn">TTH: ' + escHtml(ttn || '—') + '</div>';
+    html += '<div class="vcard-recipient">' + (recipient ? escHtml(recipient) + (phone ? ' (' + escHtml(phone) + ')' : '') : '<span style="color:var(--danger);">Невідомий отримувач</span>') + '</div>';
+    html += '<div class="vcard-meta">';
+    html += '<span class="vcard-tag ' + (hasPhoto ? 'tag-photo-yes' : 'tag-photo-no') + '">Фото: ' + (hasPhoto ? '&#9989;' : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + (hasData ? 'tag-data-yes' : 'tag-data-no') + '">Дані: ' + (hasData ? '&#9989;' : '&#10060;') + '</span>';
+    if (hasDups) html += '<span class="vcard-tag tag-dup">&#9888; Дублі: ' + dups.length + '</span>';
+    if (!recipient) html += '<span class="vcard-tag tag-unknown">&#10067; НЕВІДОМИЙ</span>';
+    if (intNum) html += '<span class="vcard-tag tag-route">&#128666; ' + escHtml(intNum) + '</span>';
+    html += '</div></div>';
+    html += '<div class="vcard-right">';
+    if (intNum) html += '<div class="vcard-intnum">' + escHtml(intNum) + '</div>';
+    html += '<div class="vcard-time">' + escHtml(date) + '</div>';
+    html += '</div></div>';
+
+    // Expandable form
+    html += '<div class="vcard-form ' + (isOpen ? 'show' : '') + '" id="vform-' + pkgId + '">';
+    if (isOpen) html += renderVerifyForm(p);
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+}
+
+function toggleVerifyCard(pkgId) {
+    var wasOpen = openVerifyCardId === pkgId;
+    openVerifyCardId = wasOpen ? null : pkgId;
+
+    if (!wasOpen) {
+        // Load duplicates for this package
+        loadDuplicatesForPackage(pkgId);
+    }
+
+    renderVerifyCards();
+
+    if (!wasOpen) {
+        var el = document.getElementById('vcard-' + pkgId);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// ── Render Verification Form ──
+function renderVerifyForm(p) {
+    var pkgId = p['PKG_ID'] || '';
+    var ctrl = String(p['Контроль перевірки'] || '').trim();
+    var isReady = ctrl === 'Готова до маршруту';
+    var photo = p['Фото посилки'] || '';
+    var dups = verifyDuplicatesCache[pkgId] || [];
+
+    var html = '';
+
+    // Duplicates alert
+    if (dups.length > 0) {
+        html += '<div class="vform-dup-alert">';
+        html += '<div class="vform-dup-title">&#9888; ДУБЛІ ЗНАЙДЕНО (' + dups.length + ')</div>';
+        dups.forEach(function(d) {
+            html += '<div class="vform-dup-item">&#8226; TTH: ' + escHtml(d.ttn) + ' — ' + escHtml(d.recipient_name) + ' (' + escHtml(d.package_id) + ')</div>';
+        });
+        html += '</div>';
+    }
+
+    // Recipient section
+    html += '<div class="vform-section">';
+    html += '<div class="vform-section-title">&#128100; Отримувач</div>';
+    html += '<div class="vform-grid">';
+    html += vformField(pkgId, 'Піб отримувача', p['Піб отримувача'], 'text', 'ПІБ отримувача');
+    html += vformField(pkgId, 'Телефон отримувача', p['Телефон отримувача'], 'text', '+41...');
+    html += vformField(pkgId, 'Адреса в Європі', p['Адреса в Європі'], 'text', 'Адреса в Європі', true);
+    html += '</div></div>';
+
+    // Package section
+    html += '<div class="vform-section">';
+    html += '<div class="vform-section-title">&#128230; Посилка</div>';
+    html += '<div class="vform-grid">';
+    html += vformField(pkgId, 'Кг', p['Кг'], 'number', 'Вага (кг)');
+    html += vformField(pkgId, 'Оціночна вартість', p['Оціночна вартість'], 'number', 'Ціна');
+    html += vformField(pkgId, 'Кількість позицій', p['Кількість позицій'], 'number', 'Кількість');
+    html += vformField(pkgId, 'Номер ТТН', p['Номер ТТН'], 'text', 'ТТН');
+    html += vformField(pkgId, 'Опис', p['Опис'], 'text', 'Опис вмісту', true);
+    html += '</div></div>';
+
+    // Route section
+    html += '<div class="vform-section">';
+    html += '<div class="vform-section-title">&#128666; Маршрут</div>';
+    html += '<div class="vform-grid">';
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Номерація маршруту</label>';
+    html += '<select class="vform-select" id="vRouteSelect-' + pkgId + '" onchange="onRouteSelect(\'' + escAttr(pkgId) + '\')">';
+    html += '<option value="">-- Оберіть --</option>';
+    html += '<option value="200"' + (getRouteFromIntNum(p['Внутрішній №']) === '200' ? ' selected' : '') + '>200</option>';
+    html += '<option value="500"' + (getRouteFromIntNum(p['Внутрішній №']) === '500' ? ' selected' : '') + '>500</option>';
+    html += '<option value="custom">Інше...</option>';
+    html += '</select></div>';
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Внутрішній № (авто)</label>';
+    html += '<input class="vform-input" id="vIntNum-' + pkgId + '" value="' + escAttr(p['Внутрішній №'] || '') + '" readonly style="background:#f1f5f9;font-weight:700;">';
+    html += '</div></div></div>';
+
+    // Photo section
+    html += '<div class="vform-section">';
+    html += '<div class="vform-section-title">&#128247; Фото</div>';
+    html += '<div class="vform-photo-section">';
+    if (photo) {
+        html += '<img class="vform-photo-thumb" src="' + escAttr(photo) + '" onclick="viewPhoto(\'' + escAttr(photo) + '\')">';
+        html += '<div class="vform-photo-status"><strong style="color:var(--success);">&#9989; Фото завантажено</strong><br><span style="font-size:10px;color:var(--text-secondary);">Натисніть щоб переглянути</span></div>';
+    } else {
+        html += '<div class="vform-photo-placeholder">&#128247;</div>';
+        html += '<div class="vform-photo-status"><strong style="color:var(--warning);">&#9203; Очікується фото</strong><br><span style="font-size:10px;color:var(--text-secondary);">Від перевіряючого або завантажте самі</span></div>';
+    }
+    html += '<button class="scan-btn" style="padding:8px 12px;font-size:11px;" onclick="startVerifyPhotoUpload(\'' + escAttr(pkgId) + '\')">&#128247; Завантажити</button>';
+    html += '</div></div>';
+
+    // Verification control
+    html += '<div class="vform-section">';
+    html += '<div class="vform-section-title">&#128203; Контроль</div>';
+    html += '<div class="vform-grid">';
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Контроль перевірки</label>';
+    html += '<input class="vform-input" value="' + escAttr(ctrl || 'Нова') + '" readonly style="background:#f1f5f9;">';
+    html += '</div>';
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Дата перевірки</label>';
+    html += '<input class="vform-input" value="' + escAttr(p['Дата перевірки'] || '—') + '" readonly style="background:#f1f5f9;">';
+    html += '</div>';
+    html += '</div></div>';
+
+    // Action buttons
+    var canComplete = !!(p['Кг'] && p['Оціночна вартість'] && p['Внутрішній №'] && photo);
+    html += '<div class="vform-buttons">';
+    if (!isReady) {
+        html += '<button class="vform-btn btn-ready" onclick="completeVerification(\'' + escAttr(pkgId) + '\')" ' + (canComplete ? '' : 'disabled title="Заповніть всі поля, призначте маршрут та завантажте фото"') + '>&#9989; ГОТОВА</button>';
+        html += '<button class="vform-btn btn-reject" onclick="rejectVerification(\'' + escAttr(pkgId) + '\')">&#10060; Відмова</button>';
+    } else {
+        html += '<button class="vform-btn btn-edit" onclick="reopenVerification(\'' + escAttr(pkgId) + '\')">&#9998; Повернути в перевірку</button>';
+    }
+    html += '</div>';
+
+    return html;
+}
+
+function vformField(pkgId, col, value, type, placeholder, fullWidth) {
+    var val = value !== undefined && value !== null ? String(value) : '';
+    var cls = fullWidth ? 'vform-field vform-full' : 'vform-field';
+    return '<div class="' + cls + '">' +
+        '<label class="vform-label">' + escHtml(col) + '</label>' +
+        '<input class="vform-input" type="' + type + '" value="' + escAttr(val) + '" placeholder="' + escAttr(placeholder || '') + '" ' +
+        'onblur="saveVerifyField(\'' + escAttr(pkgId) + '\', \'' + escAttr(col) + '\', this.value)">' +
+        '</div>';
+}
+
+function getRouteFromIntNum(intNum) {
+    if (!intNum) return '';
+    var num = parseInt(String(intNum));
+    if (isNaN(num)) return '';
+    // 200-299 або 900-999 → маршрут 200
+    if ((num >= 200 && num <= 299) || (num >= 900 && num <= 999)) return '200';
+    // 500-599 або 800-899 → маршрут 500
+    if ((num >= 500 && num <= 599) || (num >= 800 && num <= 899)) return '500';
+    return '';
+}
+
+// ── Scan TTN ──
+async function doScanTTN() {
+    var input = document.getElementById('scanTTNInput');
+    var ttn = (input.value || '').trim();
+    if (!ttn) { showToast('Введіть номер ТТН'); return; }
+
+    var btn = document.getElementById('scanBtn');
+    btn.disabled = true;
+    btn.textContent = '&#9203; Сканування...';
+
+    try {
+        var res = await apiPost('scanTTN', { ttn: ttn, verifier: getManagerName() });
+
+        if (res.ok) {
+            // Update local data
+            if (res.found && res.data) {
+                // Update existing record in allData
+                var idx = allData.findIndex(x => x['PKG_ID'] === res.package_id);
+                if (idx !== -1) {
+                    allData[idx]['Контроль перевірки'] = 'В перевірці';
+                    allData[idx]['Дата перевірки'] = res.data['Дата перевірки'] || '';
+                }
+            } else if (!res.found && res.data) {
+                // New unknown package — add to allData
+                var newPkg = res.data;
+                newPkg._sheet = 'Реєстрація ТТН УК-єв';
+                newPkg._rowNum = 0;
+                newPkg['Борг'] = 0;
+                allData.push(newPkg);
+            }
+
+            // Cache duplicates
+            if (res.duplicates && res.duplicates.length > 0) {
+                verifyDuplicatesCache[res.package_id] = res.duplicates;
+            }
+
+            // Switch to checking tab and open the card
+            currentVerifyTab = 'checking';
+            openVerifyCardId = res.package_id;
+            loadVerificationData();
+
+            if (res.found) {
+                showToast('&#9989; Посилка знайдена: ' + (res.recipient_name || ttn) + (res.duplicates && res.duplicates.length > 0 ? ' (&#9888; ' + res.duplicates.length + ' дублів)' : ''));
+            } else {
+                showToast('&#10067; ТТН не знайдено в базі. Створено нову посилку. Заповніть дані.');
+            }
+
+            input.value = '';
+        } else {
+            showToast('Помилка: ' + (res.error || 'невідома'));
+        }
+    } catch (e) {
+        showToast('Помилка: ' + e.message);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '&#128269; Сканувати';
+}
+
+// ── Save Verify Field ──
+async function saveVerifyField(pkgId, col, newValue) {
+    var p = allData.find(x => x['PKG_ID'] === pkgId);
+    if (!p) return;
+    var oldValue = p[col] !== undefined ? String(p[col]) : '';
+    if (newValue === oldValue) return;
+
+    var res = await apiPost('updateField', { pkg_id: pkgId, col: col, value: newValue, manager: getManagerName() });
+    if (res.ok) {
+        p[col] = newValue;
+        // Recalc debt if needed
+        if (col === 'Сума' || col === 'Завдаток') {
+            p['Борг'] = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
+        }
+        showToast('Збережено: ' + col);
+        // Re-render to update status tags
+        loadVerificationData();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Route Assignment ──
+async function onRouteSelect(pkgId) {
+    var select = document.getElementById('vRouteSelect-' + pkgId);
+    var routeNum = select.value;
+
+    if (routeNum === 'custom') {
+        routeNum = prompt('Введіть номер маршруту:');
+        if (!routeNum) { select.value = ''; return; }
+    }
+    if (!routeNum) return;
+
+    showLoader('Призначення маршруту...');
+    var res = await apiPost('assignRouteNumber', { pkg_id: pkgId, route_number: routeNum });
+    hideLoader();
+
+    if (res.ok) {
+        var p = allData.find(x => x['PKG_ID'] === pkgId);
+        if (p) p['Внутрішній №'] = res.internal_number;
+
+        var intNumInput = document.getElementById('vIntNum-' + pkgId);
+        if (intNumInput) intNumInput.value = res.internal_number;
+
+        showToast('Маршрут ' + routeNum + ', Внутрішній №: ' + res.internal_number);
+        loadVerificationData();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Complete Verification ──
+async function completeVerification(pkgId) {
+    var p = allData.find(x => x['PKG_ID'] === pkgId);
+    if (!p) return;
+
+    // Client-side validation
+    var errors = [];
+    if (!p['Кг']) errors.push('Вага');
+    if (!p['Оціночна вартість']) errors.push('Ціна');
+    if (!p['Фото посилки']) errors.push('Фото');
+    if (!p['Внутрішній №']) errors.push('Маршрут');
+
+    if (errors.length > 0) {
+        showToast('Не заповнено: ' + errors.join(', '));
+        return;
+    }
+
+    showLoader('Завершення перевірки...');
+    var res = await apiPost('completeVerification', { pkg_id: pkgId });
+    hideLoader();
+
+    if (res.ok) {
+        p['Контроль перевірки'] = 'Готова до маршруту';
+        openVerifyCardId = null;
+        showToast('&#9989; Посилка готова до маршруту!');
+        loadVerificationData();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Reject Verification ──
+async function rejectVerification(pkgId) {
+    var reason = prompt('Причина відмови:');
+    if (reason === null) return;
+
+    showLoader('Обробка відмови...');
+    var res = await apiPost('rejectVerification', { pkg_id: pkgId, reason: reason });
+    hideLoader();
+
+    if (res.ok) {
+        var p = allData.find(x => x['PKG_ID'] === pkgId);
+        if (p) p['Контроль перевірки'] = 'Відмова';
+        openVerifyCardId = null;
+        showToast('Посилку відхилено');
+        loadVerificationData();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Reopen Verification ──
+async function reopenVerification(pkgId) {
+    showLoader('Повертаємо в перевірку...');
+    var res = await apiPost('updateField', { pkg_id: pkgId, col: 'Контроль перевірки', value: 'В перевірці' });
+    hideLoader();
+
+    if (res.ok) {
+        var p = allData.find(x => x['PKG_ID'] === pkgId);
+        if (p) p['Контроль перевірки'] = 'В перевірці';
+        currentVerifyTab = 'checking';
+        showToast('Посилку повернено в перевірку');
+        loadVerificationData();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Photo Upload for Verification ──
+function startVerifyPhotoUpload(pkgId) {
+    photoTargetPkgId = pkgId;
+    document.getElementById('photoFileInput').click();
+}
+
+// ── Load Duplicates ──
+async function loadDuplicatesForPackage(pkgId) {
+    if (verifyDuplicatesCache[pkgId]) return;
+    var res = await apiPost('findDuplicatesByRecipient', { pkg_id: pkgId });
+    if (res.ok && res.duplicates) {
+        verifyDuplicatesCache[pkgId] = res.duplicates;
+        // Re-render if this card is still open
+        if (openVerifyCardId === pkgId) {
+            var formEl = document.getElementById('vform-' + pkgId);
+            var p = allData.find(x => x['PKG_ID'] === pkgId);
+            if (formEl && p) formEl.innerHTML = renderVerifyForm(p);
+        }
+    }
+}
+
+// ── Polling for Real-time Updates ──
+function startPolling() {
+    stopPolling();
+    pollingTimer = setInterval(async function() {
+        if (currentView !== 'verification') { stopPolling(); return; }
+        try {
+            var res = await apiPost('getAll', { sheet: 'ue', filter: {} });
+            if (res.ok && res.data) {
+                // Merge updated data
+                res.data.forEach(function(serverPkg) {
+                    var idx = allData.findIndex(x => x['PKG_ID'] === serverPkg['PKG_ID']);
+                    if (idx !== -1) {
+                        // Update fields that may have changed
+                        allData[idx]['Контроль перевірки'] = serverPkg['Контроль перевірки'];
+                        allData[idx]['Дата перевірки'] = serverPkg['Дата перевірки'];
+                        allData[idx]['Фото посилки'] = serverPkg['Фото посилки'];
+                        allData[idx]['Внутрішній №'] = serverPkg['Внутрішній №'];
+                        allData[idx]['Кг'] = serverPkg['Кг'];
+                        allData[idx]['Оціночна вартість'] = serverPkg['Оціночна вартість'];
+                    } else {
+                        serverPkg['Борг'] = Math.max(0, (parseFloat(serverPkg['Сума']) || 0) - (parseFloat(serverPkg['Завдаток']) || 0));
+                        allData.push(serverPkg);
+                    }
+                });
+                loadVerificationData();
+            }
+        } catch(e) {
+            // Silent fail on polling
+        }
+    }, POLLING_INTERVAL);
+}
+
+function stopPolling() {
+    if (pollingTimer) {
+        clearInterval(pollingTimer);
+        pollingTimer = null;
+    }
+}
+
+// Patch: after photo upload, also refresh verification view
+const _origPhotoUploadHandler = handlePhotoUpload;
+document.getElementById('photoFileInput').onchange = async function(event) {
+    await _origPhotoUploadHandler(event);
+    if (currentView === 'verification') {
+        loadVerificationData();
+    }
+};
+</script>
+</body>
+</html>
