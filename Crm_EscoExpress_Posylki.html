@@ -1044,7 +1044,7 @@
                 <input class="bs-input" id="fEstValueUE" placeholder="0" type="number">
             </div>
         </div>
-        <div class="bs-row">
+        <div class="bs-row" id="fSumRow">
             <div class="bs-field">
                 <label class="bs-label">Сума</label>
                 <input class="bs-input" id="fSum" placeholder="0" type="number">
@@ -1061,7 +1061,7 @@
                 </select>
             </div>
         </div>
-        <div class="bs-field">
+        <div class="bs-field" id="fNoteWrap">
             <label class="bs-label">Примітка</label>
             <input class="bs-input" id="fNote" placeholder="Примітка">
         </div>
@@ -1746,7 +1746,8 @@ function toggleReceiverSection() {
     var btn = document.getElementById('fReceiverToggle');
     var section = document.getElementById('fReceiverSection');
     btn.classList.toggle('expanded');
-    section.classList.toggle('show');
+    var isExpanded = btn.classList.contains('expanded');
+    section.style.display = isExpanded ? 'block' : 'none';
 }
 
 function setDeliveryType(type) {
@@ -1932,12 +1933,17 @@ function updateFormForDirection() {
     document.getElementById('fSenderSection').style.display = isUE ? 'none' : 'block';
     document.getElementById('fReceiverToggleWrap').style.display = isUE ? 'none' : 'block';
     document.getElementById('fReceiverSection').style.display = 'none';
-    document.getElementById('fReceiverSection').classList.remove('show');
     var recToggle = document.getElementById('fReceiverToggle');
     if (recToggle) recToggle.classList.remove('expanded');
     // UE direction: show UE-specific fields
     document.getElementById('fUESection').style.display = isUE ? 'block' : 'none';
     document.getElementById('fUEWeightRow').style.display = isUE ? 'grid' : 'none';
+    // Hide Опис, Кількість, Сума, Валюта, Примітка for EU direction
+    document.getElementById('fCommonDescRow').style.display = isUE ? 'grid' : 'none';
+    document.getElementById('fSumRow').style.display = isUE ? 'grid' : 'none';
+    document.getElementById('fNoteWrap').style.display = isUE ? 'block' : 'none';
+    // SMS parser only for UE
+    document.getElementById('smsParserWrap').style.display = isUE ? 'block' : 'none';
     // Title
     if (isUE) {
         document.getElementById('addFormTitle').innerHTML = '&#128230; Нова посилка <b style="color:#1d4ed8">УК</b> &#8594; <b style="color:#1d4ed8">Європа</b>';
