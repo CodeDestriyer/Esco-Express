@@ -2268,11 +2268,15 @@ function renderVerifyForm(p) {
     var hasRoute = !!p['Внутрішній №'];
     var hasDups = dups.length > 0;
 
+    // Finance status
+    var hasFinance = !!(p['Сума']);
+
     // Tabs definition
     var tabs = [
         { id: 'info', label: '&#128230; Посилка', status: hasRecipient },
         { id: 'verify', label: '&#128270; Перевірка', status: hasPhoto },
         { id: 'data', label: '&#128203; Дані', status: hasData },
+        { id: 'finance', label: '&#128176; Фінанси', status: hasFinance },
         { id: 'route', label: '&#128666; Маршрут', status: hasRoute }
     ];
     if (hasDups) tabs.push({ id: 'dups', label: '&#9888; Дублі (' + dups.length + ')', status: false });
@@ -2382,6 +2386,60 @@ function renderVerifyForm(p) {
     html += '<label class="vform-label">Внутрішній № (авто)</label>';
     html += '<input class="vform-input readonly" id="vIntNum-' + pkgId + '" value="' + escAttr(p['Внутрішній №'] || 'Генерується автоматично') + '" readonly>';
     html += '</div>';
+    html += '</div></div>';
+
+    // === TAB: Фінанси (finance) ===
+    html += '<div class="vform-tab-panel ' + (activeTab === 'finance' ? 'active' : '') + '">';
+    html += '<div class="vform-grid">';
+    html += vformField(pkgId, 'Сума', p['Сума'], 'number', '0', false, false);
+    // Валюта оплати (dropdown)
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Валюта оплати</label>';
+    var curCurrency = p['Валюта оплати'] || '';
+    html += '<select class="vform-select" onchange="saveVerifyField(\'' + escAttr(pkgId) + '\', \'Валюта оплати\', this.value)">';
+    html += '<option value="">-- Оберіть --</option>';
+    ['UAH','EUR','CHF','USD','PLN','CZK'].forEach(function(c) {
+        html += '<option value="' + c + '"' + (curCurrency === c ? ' selected' : '') + '>' + c + '</option>';
+    });
+    html += '</select></div>';
+    html += vformField(pkgId, 'Завдаток', p['Завдаток'], 'number', '0', false, false);
+    // Валюта завдатку (dropdown)
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Валюта завдатку</label>';
+    var curDepCurrency = p['Валюта завдатку'] || '';
+    html += '<select class="vform-select" onchange="saveVerifyField(\'' + escAttr(pkgId) + '\', \'Валюта завдатку\', this.value)">';
+    html += '<option value="">-- Оберіть --</option>';
+    ['UAH','EUR','CHF','USD','PLN','CZK'].forEach(function(c) {
+        html += '<option value="' + c + '"' + (curDepCurrency === c ? ' selected' : '') + '>' + c + '</option>';
+    });
+    html += '</select></div>';
+    // Форма оплати (dropdown)
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Форма оплати</label>';
+    var curPayForm = p['Форма оплати'] || '';
+    html += '<select class="vform-select" onchange="saveVerifyField(\'' + escAttr(pkgId) + '\', \'Форма оплати\', this.value)">';
+    html += '<option value="">-- Оберіть --</option>';
+    ['Готівка','Безготівкова','Картка'].forEach(function(f) {
+        html += '<option value="' + f + '"' + (curPayForm === f ? ' selected' : '') + '>' + f + '</option>';
+    });
+    html += '</select></div>';
+    // Статус оплати (dropdown)
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Статус оплати</label>';
+    var curPayStatus = p['Статус оплати'] || '';
+    html += '<select class="vform-select" onchange="saveVerifyField(\'' + escAttr(pkgId) + '\', \'Статус оплати\', this.value)">';
+    html += '<option value="">-- Оберіть --</option>';
+    ['Не оплачено','Частково','Оплачено'].forEach(function(s) {
+        html += '<option value="' + s + '"' + (curPayStatus === s ? ' selected' : '') + '>' + s + '</option>';
+    });
+    html += '</select></div>';
+    // Борг (readonly, auto-calculated)
+    var debt = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Борг</label>';
+    html += '<div class="vform-readonly-field" style="color:' + (debt > 0 ? 'var(--danger)' : 'var(--success)') + ';font-weight:800;">' + debt + '</div>';
+    html += '</div>';
+    html += vformField(pkgId, 'Примітка оплати', p['Примітка оплати'], 'text', 'Примітка...', true, false);
     html += '</div></div>';
 
     // === TAB: Дублі (dups) — conditional ===
