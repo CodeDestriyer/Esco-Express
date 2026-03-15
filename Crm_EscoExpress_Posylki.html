@@ -438,6 +438,42 @@
         .polling-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); }
         .polling-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
 
+        /* ROUTES VIEW */
+        .route-loading-spinner { display:inline-block; width:12px; height:12px; border:2px solid #e2e8f0; border-top-color:#7c3aed; border-radius:50%; animation:spin .6s linear infinite; vertical-align:middle; margin-right:4px; }
+        .route-delete-btn { background:none; border:none; color:#dc2626; font-size:14px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:0; transition:opacity .2s; line-height:1; }
+        .route-sidebar-item:hover .route-delete-btn { opacity:0.7; }
+        .route-delete-btn:hover { opacity:1!important; background:rgba(220,38,38,0.1); }
+        .route-card { background:white; border-radius:8px; box-shadow:var(--shadow); border-left:4px solid var(--primary); margin-bottom:10px; overflow:hidden; }
+        .route-card.selected { background:#f0f7ff; border-left-color:var(--primary); }
+        .route-card-header { padding:10px 14px; cursor:pointer; }
+        .route-card-header:hover { background:#f8fafc; }
+        .route-card-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .route-card-top .card-direction { font-size:10px; padding:2px 8px; border-radius:4px; font-weight:700; }
+        .route-card-phone { font-weight:700; font-size:14px; color:var(--text-primary); }
+        .route-card-date { font-size:12px; color:var(--text-secondary); }
+        .route-card-price { margin-left:auto; font-size:16px; font-weight:800; color:var(--success); }
+        .route-card-info { display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap; font-size:11px; color:var(--text-secondary); }
+        .route-card-name { font-weight:600; color:var(--text-primary); }
+        .route-card-route { display:flex; align-items:center; gap:4px; margin-top:4px; font-size:11px; color:var(--text-secondary); }
+        .route-card-meta { display:flex; align-items:center; gap:8px; margin-top:4px; font-size:10px; color:var(--text-secondary); flex-wrap:wrap; }
+        .route-card-meta span { background:#f1f5f9; padding:2px 6px; border-radius:4px; }
+        .route-card-details { display:none; padding:0 14px 14px; }
+        .route-card-details.show { display:block; }
+        .route-card-details .details-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:8px; }
+        .route-card-details .detail-block { border:1px solid var(--border); border-radius:6px; padding:8px 10px; }
+        .route-card-details .detail-block-label { font-size:9px; text-transform:uppercase; color:var(--text-secondary); font-weight:700; margin-bottom:2px; }
+        .route-card-details .detail-block-value { font-size:12px; font-weight:600; color:var(--text-primary); }
+        .route-header-bar { background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%); color:white; border-radius:12px; padding:16px 20px; margin-bottom:16px; }
+        .route-header-bar h2 { margin:0; font-size:20px; font-weight:800; }
+        .route-header-bar .route-subtitle { font-size:12px; opacity:0.85; margin-top:4px; }
+        .route-card .card-checkbox-wrap { flex-shrink:0; }
+        .route-card .detail-block-actions { margin-top:4px; }
+        .route-card .detail-block-actions .detail-micro-btn { background:none; border:1px solid var(--border); border-radius:4px; padding:2px 6px; cursor:pointer; font-size:11px; }
+        .route-card .detail-block-actions .detail-micro-btn:hover { background:var(--bg-main); }
+        .route-filter-btn { padding:6px 14px; border:1px solid var(--border); border-radius:20px; background:white; font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; transition:all 0.2s; }
+        .route-filter-btn:hover { border-color:var(--primary); }
+        .route-filter-btn.active { background:var(--primary); color:white; border-color:var(--primary); }
+
         /* RESPONSIVE */
         @media (min-width: 901px) {
             .pc-sidebar-collapse-btn { display: flex; }
@@ -531,6 +567,9 @@
             <span class="side-menu-item-count" id="mobCountVerReady">0</span>
         </div>
         <div class="side-menu-divider"></div>
+        <div class="side-menu-section-title" onclick="toggleMobileRoutesList()" style="cursor:pointer;">&#128506; Маршрути <span id="mobileCountRoutes" style="float:right;font-size:11px;opacity:0.7;">0</span></div>
+        <div id="mobileRoutesList" style="display:none;padding-left:12px;"></div>
+        <div class="side-menu-divider"></div>
         <div class="side-menu-item" onclick="openAddForm(); closeSideMenu();">
             <span class="side-menu-item-left">&#10133; Нова посилка</span>
         </div>
@@ -604,6 +643,22 @@
                 <div class="pc-sidebar-item" id="sideVerReady" onclick="switchToVerification('ready')">
                     <span><span class="item-icon">&#9989;</span><span class="item-text">Готові</span></span>
                     <span class="item-count" id="pcCountVerReady">0</span>
+                </div>
+            </div>
+        </div>
+        <!-- ROUTES SECTION -->
+        <div class="pc-sidebar-section">
+            <div class="pc-sidebar-header collapsed" onclick="togglePcSection('routes')">
+                <span class="pc-sidebar-title">&#128506; МАРШРУТИ</span>
+                <span class="pc-sidebar-toggle" id="pcToggleRoutes">&#9660;</span>
+            </div>
+            <div class="pc-sidebar-content collapsed" id="pcSectionRoutes">
+                <div id="pcRoutesLoading" style="padding:12px 14px;font-size:11px;color:var(--text-secondary);text-align:center;">
+                    <span class="route-loading-spinner"></span> Завантаження...
+                </div>
+                <div id="pcRoutesList"></div>
+                <div style="margin-top:8px;display:flex;align-items:center;justify-content:center;padding:11px;border:2px dashed var(--border);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;color:#7c3aed;background:white;" onclick="promptCreateRoute()">
+                    &#10133; Новий маршрут
                 </div>
             </div>
         </div>
@@ -694,6 +749,45 @@
                 <div class="empty-state-text">Скануйте ТТН щоб почати перевірку</div>
             </div>
         </div>
+
+        <!-- ROUTES VIEW -->
+        <div class="routes-view" id="routesView" style="display:none;">
+            <div id="routeHeaderBar" class="route-header-bar" style="display:none;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                    <div>
+                        <h2 id="routeViewTitle" style="margin:0;font-size:20px;font-weight:800;">&#128666; Маршрут</h2>
+                        <div class="route-subtitle" id="routeSubtitle"></div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button style="background:rgba(255,255,255,0.2);color:white;font-size:11px;padding:8px 14px;border:1px solid rgba(255,255,255,0.3);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;" onclick="loadRoutes()">&#128260; Оновити</button>
+                    </div>
+                </div>
+            </div>
+            <div id="routeHeaderEmpty" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+                <h2 style="margin:0;font-size:18px;color:var(--text-primary);">&#128506; Маршрути</h2>
+                <button style="background:var(--primary);color:white;font-size:11px;padding:8px 14px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;" onclick="loadRoutes()">&#128260; Оновити</button>
+            </div>
+            <!-- Route filters -->
+            <div id="routeFiltersBar" style="display:none;margin-bottom:12px;">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+                    <button class="route-filter-btn active" id="rteStatusAll" onclick="setRouteStatusFilter('all',this)">Всі</button>
+                    <button class="route-filter-btn" id="rteStatusNew" onclick="setRouteStatusFilter('Новий',this)" style="border-color:#f59e0b;color:#92400e;">Новий</button>
+                    <button class="route-filter-btn" id="rteStatusWork" onclick="setRouteStatusFilter('В роботі',this)" style="border-color:#3b82f6;color:#1d4ed8;">В роботі</button>
+                    <button class="route-filter-btn" id="rteStatusConfirmed" onclick="setRouteStatusFilter('Підтверджено',this)" style="border-color:#10b981;color:#059669;">Підтверджено</button>
+                    <button class="route-filter-btn" id="rteStatusRefused" onclick="setRouteStatusFilter('Відмова',this)" style="border-color:#ef4444;color:#dc2626;">Відмова</button>
+                </div>
+            </div>
+            <!-- Route bulk toolbar -->
+            <div class="bulk-toolbar" id="routeBulkToolbar">
+                <span class="bulk-toolbar-count" id="routeBulkCount">0 обрано</span>
+                <button class="bulk-toolbar-btn select-all" onclick="toggleRouteSelectAll()">&#9745; Вибрати всі</button>
+                <button class="bulk-toolbar-btn" style="background:#fee2e2;color:#dc2626;" onclick="routeBulkDeleteFromRoute()">&#128465; З маршруту</button>
+                <button class="bulk-toolbar-btn cancel" onclick="clearRouteSelection()">&#10005; Скасувати</button>
+            </div>
+            <div id="routesLoading" style="display:none;text-align:center;padding:40px;color:var(--text-secondary);font-size:13px;">&#9203; Завантаження маршрутів...</div>
+            <div id="routesError" style="display:none;text-align:center;padding:40px;color:#dc2626;font-size:13px;"></div>
+            <div id="routesList"></div>
+        </div>
     </div>
 </div>
 
@@ -722,9 +816,9 @@
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
     <button class="nav-item active" id="navParcels" onclick="showAllParcels()"><span>📦</span>Посилки</button>
+    <button class="nav-item" id="navRoutes" onclick="showRoutesView()"><span>🗺️</span>Маршрути</button>
     <button class="nav-item" id="navPax" onclick="window.open('https://script.google.com/macros/s/AKfycbwQBMlsTUhUpoKGCiVXqVPNF9_KZ4N-DFHh7RVGmWMF2UEALNFuJ5Cj04xyFMBuEr6e/exec','_blank')"><span>👥</span>Пасажири</button>
     <button class="nav-item" onclick="silentSync()"><span>🔄</span>Синхр.</button>
-    <button class="nav-item" onclick="openColumnConfigurator()"><span>⚙️</span>Колонки</button>
     <button class="nav-item" onclick="openAddForm()"><span>➕</span>Додати</button>
 </nav>
 
@@ -1889,13 +1983,13 @@ document.addEventListener('change', function(e) {
 
 // ── SHOW ALL PARCELS (reset filters) ──
 function showAllParcels() {
-    // Switch to parcels view if in verification mode
-    if (typeof currentView !== 'undefined' && currentView === 'verification') {
-        currentView = 'parcels';
-        document.getElementById('defaultView').style.display = 'block';
-        document.getElementById('verificationView').style.display = 'none';
-        if (typeof stopPolling === 'function') stopPolling();
-    }
+    currentView = 'parcels';
+    document.getElementById('defaultView').style.display = 'block';
+    document.getElementById('verificationView').style.display = 'none';
+    var rv = document.getElementById('routesView');
+    if (rv) rv.style.display = 'none';
+    if (typeof stopPolling === 'function') stopPolling();
+
     // Update bottom nav
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     var navP = document.getElementById('navParcels');
@@ -2595,6 +2689,456 @@ document.getElementById('photoFileInput').onchange = async function(event) {
         loadVerificationData();
     }
 };
+
+// ================================================================
+// ROUTES SYSTEM — Маршрути посилок
+// ================================================================
+
+let routes = [];
+let allRouteSheets = [];
+let activeRouteIdx = null;
+let routeStatusFilter = 'all';
+let routeSelectedIds = new Set();
+let routeOpenDetailsId = null;
+
+// ── View switching ──
+function showRoutesView() {
+    currentView = 'routes';
+    document.getElementById('defaultView').style.display = 'none';
+    document.getElementById('verificationView').style.display = 'none';
+    document.getElementById('routesView').style.display = 'block';
+    if (typeof stopPolling === 'function') stopPolling();
+
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    var navR = document.getElementById('navRoutes');
+    if (navR) navR.classList.add('active');
+
+    if (routes.length === 0 && allRouteSheets.length === 0) loadRoutes();
+    else renderRoutes();
+}
+
+// ── Load routes list ──
+async function loadRoutes() {
+    const loading = document.getElementById('routesLoading');
+    const errEl = document.getElementById('routesError');
+    const list = document.getElementById('routesList');
+    if (loading) { loading.style.display = 'block'; loading.textContent = '⏳ Завантаження списку маршрутів...'; }
+    if (errEl) errEl.style.display = 'none';
+    if (list) list.innerHTML = '';
+
+    try {
+        const res = await apiPost('getRoutesList', {});
+        if (loading) loading.style.display = 'none';
+        if (res.ok && res.data) {
+            allRouteSheets = res.data.map(s => ({
+                sheetName: s.sheetName,
+                rowCount: s.rowCount,
+                headers: [],
+                rows: null
+            }));
+            routes = allRouteSheets.filter(s => {
+                const n = (s.sheetName || '');
+                return n.startsWith('Маршрут_') && n !== 'Маршрут_Шаблон';
+            });
+            setElText('pcCountRoutes', routes.length);
+            setElText('mobileCountRoutes', routes.length);
+            renderRouteSidebar();
+            renderRoutes();
+        } else {
+            if (errEl) { errEl.style.display = 'block'; errEl.textContent = '❌ ' + (res.error || 'Помилка завантаження'); }
+        }
+    } catch (e) {
+        if (loading) loading.style.display = 'none';
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = '❌ Помилка: ' + e.message; }
+    }
+}
+
+function setElText(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = val;
+}
+
+// ── Load single route sheet data (lazy) ──
+async function loadRouteSheetData(idx) {
+    const sheet = routes[idx];
+    if (!sheet || sheet.rows !== null) return;
+
+    const loading = document.getElementById('routesLoading');
+    if (loading) { loading.style.display = 'block'; loading.textContent = '⏳ Завантаження ' + (sheet.sheetName || '').replace('Маршрут_', '') + '...'; }
+
+    try {
+        const res = await apiPost('getRouteSheet', { sheetName: sheet.sheetName });
+        if (loading) loading.style.display = 'none';
+        if (res.ok && res.data) {
+            sheet.headers = res.data.headers || [];
+            sheet.rows = res.data.rows || [];
+            sheet.rowCount = res.data.rowCount || 0;
+            const allIdx = allRouteSheets.findIndex(s => s.sheetName === sheet.sheetName);
+            if (allIdx !== -1) allRouteSheets[allIdx] = sheet;
+        }
+    } catch (e) {
+        if (loading) loading.style.display = 'none';
+        console.error('loadRouteSheetData error:', e);
+    }
+}
+
+// ── Render sidebar routes ──
+function renderRouteSidebar() {
+    const pcLoading = document.getElementById('pcRoutesLoading');
+    if (pcLoading) pcLoading.style.display = 'none';
+
+    const pcList = document.getElementById('pcRoutesList');
+    if (pcList) {
+        if (routes.length === 0) {
+            pcList.innerHTML = '<div style="padding:10px 14px;font-size:11px;color:var(--text-secondary);">Немає маршрутів</div>';
+        } else {
+            pcList.innerHTML = routes.map((sheet, idx) => {
+                const name = (sheet.sheetName || '').replace('Маршрут_', '');
+                const rows = sheet.rows;
+                const isLoaded = rows !== null;
+                const isActive = activeRouteIdx === idx && currentView === 'routes';
+                let countLabel = isLoaded ? '📦' + rows.length : '📋' + (sheet.rowCount || 0);
+                return '<div class="pc-sidebar-item route-sidebar-item' + (isActive ? ' active' : '') + '" onclick="openRoute(' + idx + ')" style="position:relative;">' +
+                    '<span><span class="item-icon">🗺️</span><span class="item-text">' + escHtml(name) + '</span></span>' +
+                    '<span style="display:flex;align-items:center;gap:4px;">' +
+                    '<span class="item-count" style="font-size:9px;">' + countLabel + '</span>' +
+                    '<button class="route-delete-btn" onclick="event.stopPropagation(); confirmDeleteRoute(' + idx + ')" title="Видалити маршрут">✕</button>' +
+                    '</span></div>';
+            }).join('');
+        }
+    }
+
+    const mobList = document.getElementById('mobileRoutesList');
+    if (mobList) {
+        if (routes.length === 0) {
+            mobList.innerHTML = '<div style="padding:8px 14px;font-size:11px;color:rgba(255,255,255,0.5);">Немає маршрутів</div>';
+        } else {
+            mobList.innerHTML = routes.map((sheet, idx) => {
+                const name = (sheet.sheetName || '').replace('Маршрут_', '');
+                const countLabel = sheet.rows !== null ? '📦' + sheet.rows.length : '📋' + (sheet.rowCount || 0);
+                return '<div class="side-menu-item" onclick="openRoute(' + idx + '); closeSideMenu();" style="padding:8px 14px;font-size:12px;">' +
+                    '<span class="side-menu-item-left">🗺️ ' + escHtml(name) + '</span>' +
+                    '<span style="font-size:10px;opacity:0.8;">' + countLabel + '</span></div>';
+            }).join('') + '<div class="side-menu-item" onclick="promptCreateRoute(); closeSideMenu();" style="color:#7c3aed;padding:8px 14px;font-size:12px;">' +
+                '<span class="side-menu-item-left">➕ Новий маршрут</span></div>';
+        }
+    }
+}
+
+function toggleMobileRoutesList() {
+    const el = document.getElementById('mobileRoutesList');
+    if (!el) return;
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+        if (routes.length === 0) loadRoutes();
+    } else {
+        el.style.display = 'none';
+    }
+}
+
+// ── Open route ──
+async function openRoute(idx) {
+    activeRouteIdx = idx;
+    if (routes[idx] && routes[idx].rows === null) {
+        await loadRouteSheetData(idx);
+    }
+    showRoutesView();
+}
+
+// ── Filters ──
+function setRouteStatusFilter(val, btn) {
+    routeStatusFilter = val;
+    document.querySelectorAll('#rteStatusAll,#rteStatusNew,#rteStatusWork,#rteStatusConfirmed,#rteStatusRefused').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderRoutes();
+}
+
+function getFilteredRouteRows(rows) {
+    let filtered = rows;
+    if (routeStatusFilter !== 'all') filtered = filtered.filter(r => (r['Статус'] || r['Статус ліда'] || '') === routeStatusFilter);
+    return filtered;
+}
+
+// ── Render route content ──
+function renderRoutes() {
+    const list = document.getElementById('routesList');
+    const headerBar = document.getElementById('routeHeaderBar');
+    const headerEmpty = document.getElementById('routeHeaderEmpty');
+    const filtersBar = document.getElementById('routeFiltersBar');
+    const title = document.getElementById('routeViewTitle');
+    const subtitle = document.getElementById('routeSubtitle');
+    if (!list) return;
+
+    if (routes.length === 0) {
+        if (headerBar) headerBar.style.display = 'none';
+        if (headerEmpty) headerEmpty.style.display = 'flex';
+        if (filtersBar) filtersBar.style.display = 'none';
+        list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:8px;">🗺️</div><div style="font-size:13px;font-weight:600;">Активних маршрутів не знайдено</div><div style="font-size:11px;margin-top:4px;">Створіть новий маршрут через меню зліва</div></div>';
+        return;
+    }
+
+    if (activeRouteIdx === null || activeRouteIdx >= routes.length) {
+        if (headerBar) headerBar.style.display = 'none';
+        if (headerEmpty) headerEmpty.style.display = 'flex';
+        if (filtersBar) filtersBar.style.display = 'none';
+        list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);"><div style="font-size:40px;margin-bottom:8px;">👈</div><div style="font-size:13px;font-weight:600;">Оберіть маршрут у меню зліва</div></div>';
+        return;
+    }
+
+    const sheet = routes[activeRouteIdx];
+    const rows = sheet.rows || [];
+    const name = (sheet.sheetName || 'Маршрут').replace('Маршрут_', '');
+
+    if (headerBar) headerBar.style.display = 'block';
+    if (headerEmpty) headerEmpty.style.display = 'none';
+    if (filtersBar) filtersBar.style.display = 'block';
+    if (title) title.textContent = '🚐 ' + name;
+    if (subtitle) subtitle.textContent = '📦 ' + rows.length + ' посилок';
+
+    const filtered = getFilteredRouteRows(rows);
+    let html = '';
+
+    if (filtered.length === 0) {
+        html += '<div style="padding:40px;text-align:center;color:var(--text-secondary);font-size:13px;">' +
+            (rows.length === 0 ? 'Маршрут порожній — перенесіть посилки з головного списку' : 'Немає записів за обраним фільтром') + '</div>';
+    } else {
+        html += filtered.map((r, idx) => renderRouteCard(r, idx, sheet.sheetName)).join('');
+    }
+
+    list.innerHTML = html;
+    renderRouteSidebar();
+    updateRouteBulkToolbar();
+}
+
+// ── Render route card ──
+function renderRouteCard(r, idx, sheetName) {
+    const pkgId = r['PAX_ID/PKG_ID'] || r['PKG_ID'] || '';
+    const type = r['Тип запису'] || 'Посилка';
+    const sender = r['Піб відправника'] || r['Піб пасажира'] || '—';
+    const phone = r['Телефон'] || r['Телефон пасажира'] || '—';
+    const receiver = r['Піб отримувача'] || '';
+    const phoneRecv = r['Телефон отримувача'] || '';
+    const direction = r['Напрям'] || '';
+    const address = r['Адреса'] || r['Адреса відправки'] || '';
+    const kg = r['Кг'] || '';
+    const price = r['Сума'] || '';
+    const deposit = r['Завдаток'] || '';
+    const debt = r['Борг'] || '';
+    const payStatus = r['Статус оплати'] || '';
+    const status = r['Статус'] || r['Статус ліда'] || '';
+    const rteId = r['RTE_ID'] || pkgId || ('rte-' + idx);
+    const isSelected = routeSelectedIds.has(rteId);
+    const isDetailsOpen = routeOpenDetailsId === rteId;
+
+    const payBadge = payStatus === 'Оплачено' ? '<span class="badge badge-paid">Оплачено</span>' :
+        payStatus === 'Частково' ? '<span class="badge badge-partial">Частково</span>' :
+        payStatus === 'Не оплачено' ? '<span class="badge badge-unpaid">Не оплачено</span>' : '';
+
+    const lsBadge = status === 'Підтверджено' ? '<span class="badge badge-confirmed">Підтверджено</span>' :
+        status === 'В роботі' ? '<span class="badge badge-work">В роботі</span>' :
+        status === 'Новий' ? '<span class="badge badge-new">Новий</span>' :
+        status === 'Відмова' ? '<span class="badge badge-refused">Відмова</span>' : '';
+
+    const statusClass = status === 'Підтверджено' ? 'status-confirmed' :
+        status === 'Відмова' ? 'status-refused' :
+        status === 'Новий' ? 'status-new' : '';
+
+    const allFields = [
+        {label: 'Відправник', value: sender},
+        {label: 'Телефон', value: phone},
+        {label: 'Отримувач', value: receiver},
+        {label: 'Тел. отримувача', value: phoneRecv},
+        {label: 'Напрям', value: direction},
+        {label: 'Адреса', value: address},
+        {label: 'Кг', value: kg},
+        {label: 'Сума', value: price},
+        {label: 'Завдаток', value: deposit},
+        {label: 'Борг', value: debt},
+        {label: 'Статус оплати', value: payStatus},
+        {label: 'Статус', value: status}
+    ];
+
+    const cleanPhone = (phone || '').replace(/[^+\d]/g, '');
+
+    return '<div class="route-card ' + statusClass + (isSelected ? ' selected' : '') + '" id="rte-card-' + rteId + '">' +
+        '<div class="route-card-header" onclick="toggleRouteDetails(\'' + rteId + '\')">' +
+            '<div class="route-card-top">' +
+                '<div class="card-checkbox-wrap" onclick="event.stopPropagation()">' +
+                    '<input class="card-checkbox" type="checkbox" ' + (isSelected ? 'checked' : '') + ' onchange="toggleRouteSelect(\'' + rteId + '\',this.checked)">' +
+                '</div>' +
+                '<span class="route-card-phone">' + escHtml(phone) + '</span>' +
+                (kg ? '<span style="background:#e0e7ff;color:#3730a3;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;">⚖️ ' + escHtml(kg) + ' кг</span>' : '') +
+                '<span class="route-card-price">' + (price ? escHtml(price) : '') + '</span>' +
+            '</div>' +
+            '<div class="route-card-info">' +
+                '<span style="font-size:12px;">📦</span>' +
+                '<span class="route-card-name">' + escHtml(sender) + '</span>' +
+                (pkgId ? '<span style="color:var(--text-secondary);font-size:10px;">' + escHtml(pkgId) + '</span>' : '') +
+                lsBadge + ' ' + payBadge +
+            '</div>' +
+            (receiver ? '<div class="route-card-route">📍 ' + escHtml(sender) + ' → ' + escHtml(receiver) + '</div>' : '') +
+            '<div class="route-card-meta">' +
+                (address ? '<span>📍 ' + escHtml(address.substring(0,40)) + '</span>' : '') +
+                (debt ? '<span style="color:#dc2626;">💰 Борг: ' + escHtml(debt) + '</span>' : '') +
+            '</div>' +
+        '</div>' +
+        '<div class="route-card-details ' + (isDetailsOpen ? 'show' : '') + '" id="rte-details-' + rteId + '">' +
+            '<div class="details-grid">' +
+                allFields.map(f => '<div class="detail-block"><div class="detail-block-label">' + f.label + '</div><div class="detail-block-value">' + escHtml(f.value || '—') + '</div></div>').join('') +
+            '</div>' +
+            '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">' +
+                (cleanPhone ? '<button class="btn-card-action btn-call" onclick="event.stopPropagation(); window.open(\'tel:' + cleanPhone + '\')">📞 Дзвінок</button>' : '') +
+                '<button class="btn-card-action" style="background:#fee2e2;color:#dc2626;" onclick="event.stopPropagation(); deleteFromRouteByRteId(\'' + escAttr(rteId) + '\',\'' + escAttr(pkgId) + '\')">🗑️ З маршруту</button>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+}
+
+// ── Route details ──
+function toggleRouteDetails(rteId) {
+    routeOpenDetailsId = routeOpenDetailsId === rteId ? null : rteId;
+    renderRoutes();
+}
+
+// ── Route selection ──
+function toggleRouteSelect(rteId, checked) {
+    if (checked) routeSelectedIds.add(rteId); else routeSelectedIds.delete(rteId);
+    updateRouteBulkToolbar();
+    const card = document.getElementById('rte-card-' + rteId);
+    if (card) card.classList.toggle('selected', checked);
+}
+
+function toggleRouteSelectAll() {
+    const sheet = routes[activeRouteIdx];
+    if (!sheet) return;
+    const filtered = getFilteredRouteRows(sheet.rows || []);
+    if (routeSelectedIds.size >= filtered.length) {
+        routeSelectedIds.clear();
+    } else {
+        filtered.forEach(r => {
+            const id = r['RTE_ID'] || r['PAX_ID/PKG_ID'] || r['PKG_ID'] || '';
+            if (id) routeSelectedIds.add(id);
+        });
+    }
+    renderRoutes();
+}
+
+function clearRouteSelection() {
+    routeSelectedIds.clear();
+    updateRouteBulkToolbar();
+    renderRoutes();
+}
+
+function updateRouteBulkToolbar() {
+    const tb = document.getElementById('routeBulkToolbar');
+    const ct = document.getElementById('routeBulkCount');
+    if (!tb) return;
+    if (routeSelectedIds.size > 0) {
+        tb.classList.add('show');
+        if (ct) ct.textContent = routeSelectedIds.size + ' обрано';
+    } else {
+        tb.classList.remove('show');
+    }
+}
+
+// ── Delete from route ──
+async function deleteFromRouteByRteId(rteId, pkgId) {
+    if (!confirm('Відв\'язати посилку від маршруту?')) return;
+    if (pkgId) {
+        showLoader('Відв\'язуємо...');
+        const res = await apiPost('removeFromRoute', { pkg_id: pkgId });
+        hideLoader();
+        if (res.ok) {
+            showToast('Посилку відв\'язано від маршруту');
+            // Remove from route data locally
+            const sheet = routes[activeRouteIdx];
+            if (sheet && sheet.rows) {
+                sheet.rows = sheet.rows.filter(r => (r['PAX_ID/PKG_ID'] || r['PKG_ID'] || '') !== pkgId);
+                sheet.rowCount = sheet.rows.length;
+            }
+            // Also update allData
+            const p = allData.find(x => x['PKG_ID'] === pkgId);
+            if (p) { p['RTE_ID'] = ''; p['Номер авто'] = ''; p['Дата відправки'] = ''; }
+            renderRoutes();
+        } else {
+            showToast('Помилка: ' + (res.error || ''));
+        }
+    }
+}
+
+async function routeBulkDeleteFromRoute() {
+    if (!confirm('Відв\'язати ' + routeSelectedIds.size + ' записів від маршруту?')) return;
+    showLoader('Відв\'язуємо...');
+    const sheet = routes[activeRouteIdx];
+    const rows = sheet ? (sheet.rows || []) : [];
+    let ok = 0;
+    for (const rteId of routeSelectedIds) {
+        const row = rows.find(r => (r['RTE_ID'] || r['PAX_ID/PKG_ID'] || r['PKG_ID'] || '') === rteId);
+        const pkgId = row ? (row['PAX_ID/PKG_ID'] || row['PKG_ID'] || '') : '';
+        if (pkgId) {
+            const res = await apiPost('removeFromRoute', { pkg_id: pkgId });
+            if (res.ok) ok++;
+        }
+    }
+    hideLoader();
+    showToast(ok + ' посилок відв\'язано');
+    routeSelectedIds.clear();
+    // Reload route data
+    if (sheet) { sheet.rows = null; }
+    await loadRouteSheetData(activeRouteIdx);
+    renderRoutes();
+}
+
+// ── Create / Delete route ──
+async function promptCreateRoute() {
+    const name = prompt('Назва нового маршруту:');
+    if (!name || !name.trim()) return;
+    showLoader('Створюємо маршрут...');
+    const res = await apiPost('createRoute', { name: name.trim() });
+    hideLoader();
+    if (res.ok) {
+        showToast('Маршрут "' + name.trim() + '" створено');
+        await loadRoutes();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+async function confirmDeleteRoute(idx) {
+    const sheet = routes[idx];
+    if (!sheet) return;
+    const name = (sheet.sheetName || '').replace('Маршрут_', '');
+    if (!confirm('Видалити маршрут "' + name + '"? Цю дію не можна відмінити.')) return;
+    showLoader('Видаляємо маршрут...');
+    const res = await apiPost('deleteRoute', { name: name });
+    hideLoader();
+    if (res.ok) {
+        showToast('Маршрут "' + name + '" видалено');
+        if (activeRouteIdx === idx) activeRouteIdx = null;
+        await loadRoutes();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Patch switchToVerification and switchToParcels to hide routesView ──
+(function() {
+    const _origSwitchToVerification = switchToVerification;
+    switchToVerification = function(tab) {
+        var rv = document.getElementById('routesView');
+        if (rv) rv.style.display = 'none';
+        _origSwitchToVerification(tab);
+    };
+})();
+
+(function() {
+    const _origSwitchToParcels = switchToParcels;
+    switchToParcels = function() {
+        var rv = document.getElementById('routesView');
+        if (rv) rv.style.display = 'none';
+        _origSwitchToParcels();
+    };
+})();
 </script>
 </body>
 </html>

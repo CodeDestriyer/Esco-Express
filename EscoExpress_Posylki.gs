@@ -711,6 +711,106 @@ function apiGetRoutesList(params) {
   return { ok: true, data: result };
 }
 
+// Завантажити дані одного аркуша маршруту
+function apiGetRouteSheet(params) {
+  var sheetName = params.sheetName;
+  if (!sheetName) return { ok: false, error: 'sheetName is required' };
+
+  var ss = SpreadsheetApp.openById(DB.MARHRUT);
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return { ok: false, error: 'Sheet not found: ' + sheetName };
+
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastRow < 2 || lastCol < 1) {
+    return { ok: true, data: { sheetName: sheetName, headers: [], rows: [], rowCount: 0 } };
+  }
+
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { return String(h).trim(); });
+  var dataRows = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+
+  var rows = [];
+  for (var i = 0; i < dataRows.length; i++) {
+    var row = dataRows[i];
+    var isEmpty = row.every(function(cell) { return String(cell).trim() === ''; });
+    if (isEmpty) continue;
+
+    var obj = {};
+    for (var j = 0; j < headers.length; j++) {
+      if (headers[j]) {
+        var val = row[j];
+        if (val instanceof Date) {
+          obj[headers[j]] = Utilities.formatDate(val, 'Europe/Kiev', 'dd.MM.yyyy');
+        } else {
+          obj[headers[j]] = String(val !== null && val !== undefined ? val : '');
+        }
+      }
+    }
+    rows.push(obj);
+  }
+
+  return { ok: true, data: { sheetName: sheetName, headers: headers.filter(function(h) { return h !== ''; }), rows: rows, rowCount: rows.length } };
+}
+
+// Створити новий маршрут (копіює шаблони: Маршрут_, Відправка_, Витрати_)
+function apiCreateRoute(params) {
+  var name = params.name;
+  if (!name || !name.trim()) return { ok: false, error: 'Назва маршруту обов\'язкова' };
+  name = name.trim();
+
+  var ss = SpreadsheetApp.openById(DB.MARHRUT);
+
+  if (ss.getSheetByName('Маршрут_' + name)) {
+    return { ok: false, error: 'Маршрут "' + name + '" вже існує' };
+  }
+
+  var tplRoute = ss.getSheetByName('Маршрут_Шаблон');
+  var tplDispatch = ss.getSheetByName('Відправка_Шаблон');
+  var tplExpenses = ss.getSheetByName('Витрати_Шаблон');
+
+  if (tplRoute) {
+    var newRoute = tplRoute.copyTo(ss);
+    newRoute.setName('Маршрут_' + name);
+    newRoute.showSheet();
+  } else {
+    return { ok: false, error: 'Шаблон "Маршрут_Шаблон" не знайдено' };
+  }
+
+  if (tplDispatch) {
+    var newDisp = tplDispatch.copyTo(ss);
+    newDisp.setName('Відправка_' + name);
+    newDisp.showSheet();
+  }
+
+  if (tplExpenses) {
+    var newExp = tplExpenses.copyTo(ss);
+    newExp.setName('Витрати_' + name);
+    newExp.showSheet();
+  }
+
+  return { ok: true, created: ['Маршрут_' + name, 'Відправка_' + name, 'Витрати_' + name] };
+}
+
+// Видалити маршрут
+function apiDeleteRoute(params) {
+  var name = params.name;
+  if (!name) return { ok: false, error: 'Назва маршруту обов\'язкова' };
+
+  var ss = SpreadsheetApp.openById(DB.MARHRUT);
+  var sheet = ss.getSheetByName('Маршрут_' + name);
+  if (!sheet) return { ok: false, error: 'Маршрут "' + name + '" не знайдено' };
+
+  ss.deleteSheet(sheet);
+
+  // Видалити пов'язані аркуші
+  var dispSheet = ss.getSheetByName('Відправка_' + name);
+  if (dispSheet) ss.deleteSheet(dispSheet);
+  var expSheet = ss.getSheetByName('Витрати_' + name);
+  if (expSheet) ss.deleteSheet(expSheet);
+
+  return { ok: true };
+}
+
 
 // ══════════════════════════════════════════════════════════════
 // 8. KLIYENTU — Синхронізація статусу
@@ -1269,6 +1369,9 @@ function doPost(e) {
       case 'addToRoute':         result = apiAddToRoute(body); break;
       case 'removeFromRoute':    result = apiRemoveFromRoute(body); break;
       case 'getRoutesList':      result = apiGetRoutesList(body); break;
+      case 'getRouteSheet':      result = apiGetRouteSheet(body); break;
+      case 'createRoute':        result = apiCreateRoute(body); break;
+      case 'deleteRoute':        result = apiDeleteRoute(body); break;
 
       // ── KLIYENTU ──
       case 'getOrderInfo':       result = apiGetOrderInfo(body); break;
