@@ -1759,6 +1759,13 @@ function apiAddToRoute(params) {
     sheet.appendRow(row);
   }
 
+  // Інвалідуємо кеш маршруту щоб обидва CRM бачили актуальні дані
+  try {
+    var cache = CacheService.getScriptCache();
+    cache.remove('routeSheet_' + sheetName);
+    cache.remove('routesList_v1');
+  } catch(e) { /* ignore */ }
+
   return { ok: true, added: leads.length };
 }
 

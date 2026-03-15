@@ -1788,10 +1788,18 @@ async function loadRouteSheetData(idx) {
             // Оновити також в allRouteSheets
             const allIdx = allRouteSheets.findIndex(s => s.sheetName === sheet.sheetName);
             if (allIdx !== -1) allRouteSheets[allIdx] = sheet;
+        } else {
+            console.error('loadRouteSheetData API error:', res.error || 'Unknown error');
+            showToast('❌ Помилка завантаження маршруту: ' + (res.error || 'Невідома помилка'));
+            sheet.rows = [];
+            sheet.rowCount = 0;
         }
     } catch (e) {
         if (loading) loading.style.display = 'none';
         console.error('loadRouteSheetData error:', e);
+        showToast('❌ Помилка мережі: ' + e.message);
+        sheet.rows = [];
+        sheet.rowCount = 0;
     }
 }
 
