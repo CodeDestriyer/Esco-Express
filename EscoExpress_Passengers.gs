@@ -1737,6 +1737,54 @@ function apiGetRoutes(params) {
  * Додати ліди в аркуш маршруту
  * data: { sheetName: 'Маршрут_Цюріх', leads: [{ 'Піб пасажира':'...', ... }] }
  */
+
+// Оновити поле в аркуші маршруту (DB.MARHRUT)
+function apiUpdateRouteField(params) {
+  var sheetName = params.sheet;
+  var rteId = params.rte_id || params.pax_id;
+  var col = params.col;
+  var value = params.value;
+  if (!sheetName || !rteId || !col) return { ok: false, error: 'sheet, rte_id/pax_id, col обов\'язкові' };
+
+  var ss = SpreadsheetApp.openById(DB.MARHRUT);
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return { ok: false, error: 'Аркуш не знайдено: ' + sheetName };
+
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastRow < 2 || lastCol < 1) return { ok: false, error: 'Аркуш порожній' };
+
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { return String(h).trim(); });
+  var colIdx = headers.indexOf(col);
+  if (colIdx === -1) return { ok: false, error: 'Колонка не знайдена: ' + col };
+
+  var rteIdCol = headers.indexOf('RTE_ID');
+  var paxPkgCol = headers.indexOf('PAX_ID/PKG_ID');
+  var data = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  var rowNum = -1;
+
+  for (var i = 0; i < data.length; i++) {
+    var rId = rteIdCol !== -1 ? String(data[i][rteIdCol]).trim() : '';
+    var ppId = paxPkgCol !== -1 ? String(data[i][paxPkgCol]).trim() : '';
+    if (rId === rteId || ppId === rteId) {
+      rowNum = i + 2;
+      break;
+    }
+  }
+
+  if (rowNum === -1) return { ok: false, error: 'Запис не знайдено: ' + rteId };
+
+  sheet.getRange(rowNum, colIdx + 1).setValue(value);
+
+  // Інвалідуємо кеш маршруту
+  try {
+    var cache = CacheService.getScriptCache();
+    cache.remove('routeSheet_' + sheetName);
+  } catch(e) { /* ignore */ }
+
+  return { ok: true };
+}
+
 function apiAddToRoute(params) {
   var sheetName = params.sheetName;
   var leads = params.leads;
@@ -2065,6 +2113,7 @@ function doPost(e) {
       case 'createRoute':        result = apiCreateRoute(body); break;
       case 'deleteRoute':        result = apiDeleteRoute(body); break;
       case 'deleteLinkedSheets': result = apiDeleteLinkedSheets(body); break;
+      case 'updateRouteField':   result = apiUpdateRouteField(body); break;
 
       // ── AUTOPARK ──
       case 'getAutopark':        result = apiGetAutopark(body); break;

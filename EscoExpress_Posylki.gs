@@ -663,6 +663,8 @@ function apiAddToRoute(params) {
   lead['Завдаток'] = pkg['Завдаток'] || '';
   lead['Борг'] = pkg['Борг'] || '';
   lead['Статус оплати'] = pkg['Статус оплати'] || '';
+  lead['Статус'] = pkg['Статус ліда'] || pkg['Статус'] || 'Новий';
+  lead['RTE_ID'] = params.rte_id || sheetName;
 
   var row = headers.map(function(h) { return lead[h] || ''; });
   sheet.appendRow(row);
@@ -689,6 +691,47 @@ function apiRemoveFromRoute(params) {
   apiUpdateField({ pkg_id: pkgId, col: 'Номер авто', value: '' });
   apiUpdateField({ pkg_id: pkgId, col: 'Дата відправки', value: '' });
 
+  return { ok: true };
+}
+
+// Оновити поле в аркуші маршруту (DB.MARHRUT)
+function apiUpdateRouteField(params) {
+  var sheetName = params.sheet;
+  var rteId = params.rte_id;
+  var col = params.col;
+  var value = params.value;
+  if (!sheetName || !rteId || !col) return { ok: false, error: 'sheet, rte_id, col обов\'язкові' };
+
+  var ss = SpreadsheetApp.openById(DB.MARHRUT);
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return { ok: false, error: 'Аркуш не знайдено: ' + sheetName };
+
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastRow < 2 || lastCol < 1) return { ok: false, error: 'Аркуш порожній' };
+
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { return String(h).trim(); });
+  var colIdx = headers.indexOf(col);
+  if (colIdx === -1) return { ok: false, error: 'Колонка не знайдена: ' + col };
+
+  // Шукаємо рядок за RTE_ID або PAX_ID/PKG_ID
+  var rteIdCol = headers.indexOf('RTE_ID');
+  var paxPkgCol = headers.indexOf('PAX_ID/PKG_ID');
+  var data = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  var rowNum = -1;
+
+  for (var i = 0; i < data.length; i++) {
+    var rId = rteIdCol !== -1 ? String(data[i][rteIdCol]).trim() : '';
+    var ppId = paxPkgCol !== -1 ? String(data[i][paxPkgCol]).trim() : '';
+    if (rId === rteId || ppId === rteId) {
+      rowNum = i + 2;
+      break;
+    }
+  }
+
+  if (rowNum === -1) return { ok: false, error: 'Запис не знайдено: ' + rteId };
+
+  sheet.getRange(rowNum, colIdx + 1).setValue(value);
   return { ok: true };
 }
 
@@ -1372,6 +1415,7 @@ function doPost(e) {
       case 'getRouteSheet':      result = apiGetRouteSheet(body); break;
       case 'createRoute':        result = apiCreateRoute(body); break;
       case 'deleteRoute':        result = apiDeleteRoute(body); break;
+      case 'updateRouteField':   result = apiUpdateRouteField(body); break;
 
       // ── KLIYENTU ──
       case 'getOrderInfo':       result = apiGetOrderInfo(body); break;

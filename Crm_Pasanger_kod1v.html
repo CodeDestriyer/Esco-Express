@@ -2204,7 +2204,7 @@ async function saveRouteInlineEdit(rteId, colName, sheetName, newVal) {
     const el = document.getElementById('rdv-' + rteId + '-' + colName);
     if (el) el.textContent = newVal || '—';
 
-    const res = await apiPost('updateField', { sheet: sheetName, pax_id: rteId, col: colName, value: newVal });
+    const res = await apiPost('updateRouteField', { sheet: sheetName, rte_id: rteId, col: colName, value: newVal });
     if (res.ok) {
         showToast('✅ Збережено');
         renderRoutes();
