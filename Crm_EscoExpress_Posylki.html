@@ -280,6 +280,14 @@
         .bs-delivery-opt { flex: 1; padding: 8px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; font-size: 11px; font-weight: 700; background: white; transition: all 0.15s; }
         .bs-delivery-opt.active { border-color: var(--primary); background: var(--primary); color: white; }
 
+        /* SWISS POINTS SELECTOR */
+        .swiss-points-wrap { margin-bottom: 8px; }
+        .swiss-points-label { font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+        .swiss-points-grid { display: flex; flex-wrap: wrap; gap: 4px; }
+        .swiss-point-btn { padding: 5px 10px; border: 1.5px solid #e2e8f0; border-radius: 6px; background: #f8fafc; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; color: #334155; white-space: nowrap; }
+        .swiss-point-btn:hover { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
+        .swiss-point-btn.selected { border-color: var(--primary); background: var(--primary); color: white; }
+
         /* DUPLICATE WARNING */
         .duplicate-warning { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 12px; margin-bottom: 12px; display: none; }
         .duplicate-warning.show { display: block; }
@@ -934,6 +942,10 @@
             </div>
             <div class="bs-field" id="fAddressFromWrap">
                 <label class="bs-label">Адреса відправника <span class="required">*</span></label>
+                <div class="swiss-points-wrap">
+                    <div class="swiss-points-label">&#127464;&#127469; Наші точки (натисніть щоб вставити):</div>
+                    <div class="swiss-points-grid" id="swissPointsSender"></div>
+                </div>
                 <input class="bs-input" id="fAddressFrom" placeholder="Адреса в Європі">
             </div>
             <div class="bs-row">
@@ -1014,6 +1026,10 @@
             </div>
             <div class="bs-field" id="fAddressToWrap">
                 <label class="bs-label">Адреса в Європі <span class="required">*</span></label>
+                <div class="swiss-points-wrap">
+                    <div class="swiss-points-label">&#127464;&#127469; Наші точки (натисніть щоб вставити):</div>
+                    <div class="swiss-points-grid" id="swissPointsReceiver"></div>
+                </div>
                 <input class="bs-input" id="fAddressTo" placeholder="Адреса в Європі">
             </div>
             <div class="bs-field" id="fTTNWrap">
@@ -1603,10 +1619,16 @@ function startInlineEdit(pkgId, col, btn) {
     // Check if there are predefined options for selects
     const selectOptions = getFieldOptions(col);
 
+    var isAddressField = (col === 'Адреса відправки' || col === 'Адреса в Європі');
+
     if (selectOptions) {
+        var optionsHtml = '';
+        if (isAddressField && currentVal && selectOptions.indexOf(currentVal) === -1) {
+            optionsHtml += '<option value="' + escAttr(currentVal) + '" selected>' + escHtml(currentVal) + '</option>';
+        }
+        optionsHtml += selectOptions.map(o => '<option value="' + escAttr(o) + '" ' + (o === currentVal ? 'selected' : '') + '>' + escHtml(o) + '</option>').join('');
         valueEl.innerHTML = '<select class="detail-inline-edit" onchange="saveInlineEdit(\'' + escAttr(pkgId) + '\', \'' + escAttr(col) + '\', this.value)" onblur="cancelInlineEdit(\'' + escAttr(pkgId) + '\')">' +
-            selectOptions.map(o => '<option value="' + escAttr(o) + '" ' + (o === currentVal ? 'selected' : '') + '>' + escHtml(o) + '</option>').join('') +
-            '</select>';
+            optionsHtml + '</select>';
         block.querySelector('select')?.focus();
     } else {
         valueEl.innerHTML = '<input class="detail-inline-edit" value="' + escAttr(currentVal) + '" onkeydown="if(event.key===\'Enter\')saveInlineEdit(\'' + escAttr(pkgId) + '\', \'' + escAttr(col) + '\', this.value);if(event.key===\'Escape\')cancelInlineEdit(\'' + escAttr(pkgId) + '\');" onblur="saveInlineEdit(\'' + escAttr(pkgId) + '\', \'' + escAttr(col) + '\', this.value)">';
@@ -1614,7 +1636,12 @@ function startInlineEdit(pkgId, col, btn) {
     }
 }
 
+function getSwissPointAddresses() {
+    return SWISS_POINTS.map(function(p) { return p.city + ' — ' + p.address; });
+}
+
 function getFieldOptions(col) {
+    var swissAddrs = getSwissPointAddresses();
     const opts = {
         'Статус ліда': ['Новий', 'В роботі', 'Підтверджено', 'Відмова'],
         'Статус оплати': ['Не оплачено', 'Частково', 'Оплачено'],
@@ -1625,7 +1652,9 @@ function getFieldOptions(col) {
         'Валюта НП': ['UAH', 'EUR', 'CHF', 'USD'],
         'Форма НП': ['Готівка', 'Картка', 'Частково'],
         'Статус НП': ['Ми оплатили', 'Відправник оплатив', 'Наложний платіж'],
-        'Форма оплати': ['Готівка', 'Картка', 'Частково']
+        'Форма оплати': ['Готівка', 'Картка', 'Частково'],
+        'Адреса відправки': swissAddrs,
+        'Адреса в Європі': swissAddrs
     };
     return opts[col] || null;
 }
@@ -1728,6 +1757,7 @@ function openAddForm() {
     document.getElementById('dirOptEU').classList.toggle('active', currentDirection === 'eu');
     updateFormForDirection();
     clearForm();
+    initSwissPoints();
 }
 
 function onFormDirectionChange() {
@@ -1766,6 +1796,62 @@ function setDeliveryType(type) {
         npFields.style.display = 'none';
         addrFields.style.display = 'block';
     }
+}
+
+// ── SWISS PICKUP/DELIVERY POINTS ──
+var SWISS_POINTS = [
+    { city: 'Цюрих', address: 'Parking Theater 11, Dorflistrasse 90, 8050 Zürich' },
+    { city: 'Цуг', address: 'Bahnhofplatz, 6300 Zug' },
+    { city: 'Люцерн', address: 'Tourist Bus Parking Landenberg, Alpenquai, 6005 Luzern' },
+    { city: 'Берн', address: 'Parkplatz 7c, Beundenfeld, 3014 Bern' },
+    { city: 'Базель', address: 'Basel Meret Oppenheim Strasse SBB Station, 4053 Basel' },
+    { city: 'Сен-Гален', address: 'Bahnhofpl. 8b, 9000 St. Gallen' },
+    { city: 'Лозана', address: 'Avenue du Grey 43, Lausanne' },
+    { city: 'Монтре', address: 'Rte des Châtaigniers 7, 1816 Montreux' },
+    { city: 'Женева', address: 'P+R Bout-du-Monde, Rte de Vessy 12, 1206 Genève' }
+];
+
+function renderSwissPoints(containerId, targetInputId) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    SWISS_POINTS.forEach(function(point, idx) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'swiss-point-btn';
+        btn.textContent = point.city;
+        btn.title = point.address;
+        btn.setAttribute('data-idx', idx);
+        btn.onclick = function() {
+            selectSwissPoint(containerId, targetInputId, idx);
+        };
+        container.appendChild(btn);
+    });
+}
+
+function selectSwissPoint(containerId, targetInputId, idx) {
+    var container = document.getElementById(containerId);
+    var input = document.getElementById(targetInputId);
+    if (!container || !input) return;
+    var point = SWISS_POINTS[idx];
+    var fullAddress = point.city + ' — ' + point.address;
+    // Toggle: if same point clicked again, deselect
+    if (input.value === fullAddress) {
+        input.value = '';
+        var btns = container.querySelectorAll('.swiss-point-btn');
+        btns.forEach(function(b) { b.classList.remove('selected'); });
+        return;
+    }
+    input.value = fullAddress;
+    var btns = container.querySelectorAll('.swiss-point-btn');
+    btns.forEach(function(b) { b.classList.remove('selected'); });
+    btns[idx].classList.add('selected');
+}
+
+// Initialize Swiss points buttons when form opens
+function initSwissPoints() {
+    renderSwissPoints('swissPointsSender', 'fAddressFrom');
+    renderSwissPoints('swissPointsReceiver', 'fAddressTo');
 }
 
 function closeAddForm() {
