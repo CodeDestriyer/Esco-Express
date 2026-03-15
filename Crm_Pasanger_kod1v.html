@@ -2712,6 +2712,7 @@ function renderCard(p) {
                     <div class="card-row2-wrap">
                         <div class="card-info-row">
                             <span class="card-id">${id}</span>
+                            <span class="card-smart-id">SS: ${smartId || '—'}</span>
                             <span class="card-name">${name}</span>
                             ${lsBadge} ${payBadge}
                             ${debt > 0 ? '<span class="badge badge-debt">Борг: '+debt+'</span>' : ''}
@@ -2721,7 +2722,6 @@ function renderCard(p) {
                         <div class="card-meta-row">
                             ${tripDateStr ? '<span class="card-meta-tag">🗓 Рейс: '+tripDateStr+'</span>' : ''}
                             ${dateCreated && dateCreated !== '—' ? '<span class="card-meta-tag">📅 Реєстр: '+dateCreated+'</span>' : ''}
-                            ${smartId ? '<span class="card-smart-id">SS: '+smartId+'</span>' : ''}
                         </div>
                     </div>
                 </div>
