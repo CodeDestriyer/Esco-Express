@@ -253,6 +253,33 @@
         .bs-btn.cancel:hover { background: var(--border); }
         .bs-footer { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
 
+        /* DIRECTION STYLED SELECTOR */
+        .bs-dir-selector { display: flex; gap: 8px; margin-bottom: 4px; }
+        .bs-dir-option { flex: 1; padding: 12px 10px; border-radius: 10px; border: 2px solid var(--border); text-align: center; cursor: pointer; font-size: 13px; font-weight: 700; transition: all 0.2s; user-select: none; }
+        .bs-dir-option .dir-label-flag { font-size: 16px; display: block; margin-bottom: 4px; }
+        .bs-dir-option .dir-label-text { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; }
+        .bs-dir-option .dir-label-bold { font-weight: 900; font-size: 13px; }
+        .bs-dir-option.dir-opt-ue { color: #64748b; }
+        .bs-dir-option.dir-opt-ue.active { background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-color: #2563eb; color: #1d4ed8; }
+        .bs-dir-option.dir-opt-ue .dir-label-bold { color: #1d4ed8; }
+        .bs-dir-option.dir-opt-eu { color: #64748b; }
+        .bs-dir-option.dir-opt-eu.active { background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-color: #059669; color: #047857; }
+        .bs-dir-option.dir-opt-eu .dir-label-bold { color: #059669; }
+
+        /* COLLAPSIBLE RECEIVER SECTION */
+        .bs-section-toggle { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; background: white; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--primary); display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; margin-bottom: 12px; }
+        .bs-section-toggle:hover { border-color: var(--primary); background: #f8fafc; }
+        .bs-section-toggle.expanded { border-color: var(--primary); background: linear-gradient(135deg, #dbeafe, #f0f9ff); }
+        .bs-section-toggle .toggle-arrow { font-size: 12px; transition: transform 0.2s; }
+        .bs-section-toggle.expanded .toggle-arrow { transform: rotate(180deg); }
+        .bs-section-content { display: none; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: #fafbfd; margin-bottom: 12px; margin-top: -4px; }
+        .bs-section-content.show { display: block; }
+
+        /* DELIVERY TYPE TOGGLE */
+        .bs-delivery-toggle { display: flex; gap: 6px; margin-bottom: 12px; }
+        .bs-delivery-opt { flex: 1; padding: 8px; border: 2px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; font-size: 11px; font-weight: 700; background: white; transition: all 0.15s; }
+        .bs-delivery-opt.active { border-color: var(--primary); background: var(--primary); color: white; }
+
         /* DUPLICATE WARNING */
         .duplicate-warning { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 12px; margin-bottom: 12px; display: none; }
         .duplicate-warning.show { display: block; }
@@ -532,11 +559,11 @@
     <div class="side-menu-content">
         <div class="side-menu-section-title">Напрямок</div>
         <div class="side-menu-item active" id="mobDirUE" onclick="setDirection('ue'); closeSideMenu();">
-            <span class="side-menu-item-left">&#127482;&#127462;&#8594;&#127466;&#127482; Україна-Європа</span>
+            <span class="side-menu-item-left">&#127482;&#127462;&#8594;&#127466;&#127482; <b>УК</b> &#8594; <b>Європа</b></span>
             <span class="side-menu-item-count" id="mobCountUE">0</span>
         </div>
         <div class="side-menu-item" id="mobDirEU" onclick="setDirection('eu'); closeSideMenu();">
-            <span class="side-menu-item-left">&#127466;&#127482;&#8594;&#127482;&#127462; Європа-Україна</span>
+            <span class="side-menu-item-left">&#127466;&#127482;&#8594;&#127482;&#127462; <b>Європа</b> &#8594; <b>УК</b></span>
             <span class="side-menu-item-count" id="mobCountEU">0</span>
         </div>
         <div class="side-menu-divider"></div>
@@ -589,11 +616,11 @@
             </div>
             <div class="pc-sidebar-content" id="pcSectionDirection">
                 <div class="pc-sidebar-item pc-dir-ue active" id="sideDirUE" onclick="setDirection('ue')">
-                    <span><span class="item-icon">&#127482;&#127462;&#8594;&#127466;&#127482;</span><span class="item-text">Україна-Європа</span></span>
+                    <span><span class="item-icon">&#127482;&#127462;&#8594;&#127466;&#127482;</span><span class="item-text"><b>УК</b> &#8594; <b>Європа</b></span></span>
                     <span class="item-count" id="pcCountUE">0</span>
                 </div>
                 <div class="pc-sidebar-item pc-dir-eu" id="sideDirEU" onclick="setDirection('eu')">
-                    <span><span class="item-icon">&#127466;&#127482;&#8594;&#127482;&#127462;</span><span class="item-text">Європа-Україна</span></span>
+                    <span><span class="item-icon">&#127466;&#127482;&#8594;&#127482;&#127462;</span><span class="item-text"><b>Європа</b> &#8594; <b>УК</b></span></span>
                     <span class="item-count" id="pcCountEU">0</span>
                 </div>
             </div>
@@ -815,10 +842,10 @@
 <!-- DIRECTION POPUP -->
 <div class="direction-popup" id="directionPopup">
     <div class="direction-option active-ue" data-dir="ue" onclick="setDirectionFromPopup('ue')">
-        <span>&#127482;&#127462;&#8594;&#127466;&#127482;</span> Україна-Європа <span class="dir-count-popup" id="countDirUE">0</span>
+        <span>&#127482;&#127462;&#8594;&#127466;&#127482;</span> <b>УК</b> &#8594; <b>Європа</b> <span class="dir-count-popup" id="countDirUE">0</span>
     </div>
     <div class="direction-option" data-dir="eu" onclick="setDirectionFromPopup('eu')">
-        <span>&#127466;&#127482;&#8594;&#127482;&#127462;</span> Європа-Україна <span class="dir-count-popup" id="countDirEU">0</span>
+        <span>&#127466;&#127482;&#8594;&#127482;&#127462;</span> <b>Європа</b> &#8594; <b>УК</b> <span class="dir-count-popup" id="countDirEU">0</span>
     </div>
 </div>
 
@@ -863,23 +890,30 @@
     <div class="bottom-sheet">
         <div class="bottom-sheet-handle"></div>
         <div class="bs-title" id="addFormTitle">&#128230; Нова посилка</div>
-        <!-- DIRECTION SELECTOR -->
+        <!-- DIRECTION SELECTOR (styled) -->
         <div class="bs-field">
             <label class="bs-label">Напрямок <span class="required" style="color:var(--danger)">*</span></label>
-            <select class="bs-select" id="fDirection" onchange="onFormDirectionChange()">
-                <option value="ue">🇺🇦→🇪🇺 Україна-Європа</option>
-                <option value="eu">🇪🇺→🇺🇦 Європа-Україна</option>
-            </select>
+            <input type="hidden" id="fDirection" value="ue">
+            <div class="bs-dir-selector">
+                <div class="bs-dir-option dir-opt-ue active" id="dirOptUE" onclick="selectFormDirection('ue')">
+                    <span class="dir-label-flag">&#127482;&#127462; &#8594; &#127466;&#127482;</span>
+                    <span class="dir-label-text"><span class="dir-label-bold" style="color:#1d4ed8;">УК</span> <span style="font-size:11px;">&#8594;</span> <span class="dir-label-bold" style="color:#1d4ed8;">Європа</span></span>
+                </div>
+                <div class="bs-dir-option dir-opt-eu" id="dirOptEU" onclick="selectFormDirection('eu')">
+                    <span class="dir-label-flag">&#127466;&#127482; &#8594; &#127482;&#127462;</span>
+                    <span class="dir-label-text"><span class="dir-label-bold" style="color:#059669;">Європа</span> <span style="font-size:11px;">&#8594;</span> <span class="dir-label-bold" style="color:#059669;">УК</span></span>
+                </div>
+            </div>
         </div>
         <!-- SMS PARSER -->
         <div class="sms-parser-wrap" id="smsParserWrap">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">📋 Вставте текст повідомлення</span>
-                <button id="smsParserToggle" onclick="toggleSmsParser()" style="background:none;border:none;font-size:10px;color:var(--info);cursor:pointer;font-weight:600;">Згорнути ▲</button>
+                <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">&#128203; Вставте текст повідомлення</span>
+                <button id="smsParserToggle" onclick="toggleSmsParser()" style="background:none;border:none;font-size:10px;color:var(--info);cursor:pointer;font-weight:600;">Згорнути &#9650;</button>
             </div>
             <div id="smsParserBody">
                 <textarea id="smsInput" rows="3" placeholder="Наприклад: Турко Сергій +41797856664 Цюріх, документи 2кг" style="width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;"></textarea>
-                <button onclick="parseSmsText()" style="width:100%;margin-top:6px;padding:8px;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">🔍 Розпізнати та заповнити</button>
+                <button onclick="parseSmsText()" style="width:100%;margin-top:6px;padding:8px;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">&#128269; Розпізнати та заповнити</button>
                 <div id="smsParseResult" style="display:none;margin-top:6px;padding:8px 10px;border-radius:8px;font-size:11px;font-weight:600;"></div>
             </div>
         </div>
@@ -887,56 +921,127 @@
             <div class="duplicate-warning-title">&#9888; Можливий дублікат</div>
             <div class="duplicate-warning-text" id="duplicateText"></div>
         </div>
-        <div class="bs-field" id="fSenderWrap">
-            <label class="bs-label">Піб відправника <span class="required">*</span></label>
-            <input class="bs-input" id="fSender" placeholder="Прізвище Ім'я">
+
+        <!-- ===== SENDER SECTION (always visible for EU direction, hidden for UE) ===== -->
+        <div id="fSenderSection">
+            <div class="bs-field" id="fSenderWrap">
+                <label class="bs-label">Піб відправника <span class="required">*</span></label>
+                <input class="bs-input" id="fSender" placeholder="Прізвище Ім'я">
+            </div>
+            <div class="bs-field" id="fPhoneWrap">
+                <label class="bs-label">Телефон відправника <span class="required">*</span></label>
+                <input class="bs-input" id="fPhone" placeholder="+41... / +49... / +48..." oninput="checkDuplicatesDebounced()">
+            </div>
+            <div class="bs-field" id="fAddressFromWrap">
+                <label class="bs-label">Адреса відправника <span class="required">*</span></label>
+                <input class="bs-input" id="fAddressFrom" placeholder="Адреса в Європі">
+            </div>
+            <div class="bs-row">
+                <div class="bs-field">
+                    <label class="bs-label">Оціночна вартість (&#8364;) &#177;</label>
+                    <input class="bs-input" id="fEstValue" placeholder="0" type="number">
+                </div>
+                <div class="bs-field">
+                    <label class="bs-label">Приблизна вага (кг)</label>
+                    <input class="bs-input" id="fWeight" placeholder="0" type="number">
+                </div>
+            </div>
         </div>
-        <div class="bs-field" id="fPhoneWrap">
-            <label class="bs-label">Телефон реєстратора <span class="required">*</span></label>
-            <input class="bs-input" id="fPhone" placeholder="+380..." oninput="checkDuplicatesDebounced()">
+
+        <!-- ===== RECEIVER SECTION (collapsible for EU direction) ===== -->
+        <div id="fReceiverToggleWrap">
+            <button class="bs-section-toggle" id="fReceiverToggle" onclick="toggleReceiverSection()">
+                <span>&#128205; Дані отримувача в Україні</span>
+                <span class="toggle-arrow">&#9660;</span>
+            </button>
         </div>
-        <div class="bs-field" id="fAddressFromWrap">
-            <label class="bs-label">Адреса відправки <span class="required">*</span></label>
-            <input class="bs-input" id="fAddressFrom" placeholder="Адреса">
+        <div class="bs-section-content" id="fReceiverSection">
+            <div class="bs-field">
+                <label class="bs-label">ПІБ отримувача <span class="required">*</span></label>
+                <input class="bs-input" id="fReceiver" placeholder="Прізвище Ім'я По-батькові">
+            </div>
+            <div class="bs-field">
+                <label class="bs-label">Телефон отримувача <span class="required">*</span></label>
+                <input class="bs-input" id="fPhoneReceiver" placeholder="+380...">
+            </div>
+            <!-- Delivery type toggle -->
+            <div class="bs-field">
+                <label class="bs-label">Тип доставки</label>
+                <div class="bs-delivery-toggle">
+                    <div class="bs-delivery-opt active" id="deliveryNP" onclick="setDeliveryType('np')">&#128230; Нова Пошта</div>
+                    <div class="bs-delivery-opt" id="deliveryAddr" onclick="setDeliveryType('address')">&#127968; Адресна</div>
+                </div>
+            </div>
+            <!-- Nova Poshta fields -->
+            <div id="fNPFieldsWrap">
+                <div class="bs-field" id="fCityNPWrap">
+                    <label class="bs-label">Нова Пошта (місто + відділення) <span class="required">*</span></label>
+                    <input class="bs-input" id="fCityNP" placeholder="Київ 174">
+                </div>
+            </div>
+            <!-- Address delivery fields -->
+            <div id="fAddrFieldsWrap" style="display:none;">
+                <div class="bs-field">
+                    <label class="bs-label">Місто / Село <span class="required">*</span></label>
+                    <input class="bs-input" id="fAddrCity" placeholder="Київ">
+                </div>
+                <div class="bs-field">
+                    <label class="bs-label">Вулиця <span class="required">*</span></label>
+                    <input class="bs-input" id="fAddrStreet" placeholder="вул. Хрещатик">
+                </div>
+                <div class="bs-row">
+                    <div class="bs-field">
+                        <label class="bs-label">Будинок <span class="required">*</span></label>
+                        <input class="bs-input" id="fAddrHouse" placeholder="12">
+                    </div>
+                    <div class="bs-field">
+                        <label class="bs-label">Квартира</label>
+                        <input class="bs-input" id="fAddrApt" placeholder="34">
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="bs-field">
-            <label class="bs-label">Піб отримувача <span class="required">*</span></label>
-            <input class="bs-input" id="fReceiver" placeholder="Прізвище Ім'я">
+
+        <!-- ===== UE DIRECTION FIELDS (shown only for UE) ===== -->
+        <div id="fUESection" style="display:none;">
+            <div class="bs-field">
+                <label class="bs-label">Піб отримувача <span class="required">*</span></label>
+                <input class="bs-input" id="fReceiverUE" placeholder="Прізвище Ім'я">
+            </div>
+            <div class="bs-field">
+                <label class="bs-label">Телефон отримувача <span class="required">*</span></label>
+                <input class="bs-input" id="fPhoneReceiverUE" placeholder="+41... / +49...">
+            </div>
+            <div class="bs-field" id="fAddressToWrap">
+                <label class="bs-label">Адреса в Європі <span class="required">*</span></label>
+                <input class="bs-input" id="fAddressTo" placeholder="Адреса в Європі">
+            </div>
+            <div class="bs-field" id="fTTNWrap">
+                <label class="bs-label">Номер ТТН</label>
+                <input class="bs-input" id="fTTN" placeholder="Номер ТТН">
+            </div>
         </div>
-        <div class="bs-field">
-            <label class="bs-label">Телефон отримувача <span class="required">*</span></label>
-            <input class="bs-input" id="fPhoneReceiver" placeholder="+380...">
-        </div>
-        <div class="bs-field" id="fAddressToWrap">
-            <label class="bs-label">Адреса в Європі <span class="required">*</span></label>
-            <input class="bs-input" id="fAddressTo" placeholder="Адреса в Європі">
-        </div>
-        <div class="bs-field" id="fCityNPWrap" style="display:none;">
-            <label class="bs-label">Місто Нова Пошта <span class="required">*</span></label>
-            <input class="bs-input" id="fCityNP" placeholder="Місто">
-        </div>
-        <div class="bs-field" id="fTTNWrap">
-            <label class="bs-label">Номер ТТН</label>
-            <input class="bs-input" id="fTTN" placeholder="Номер ТТН">
-        </div>
-        <div class="bs-row">
+
+        <!-- ===== COMMON FIELDS ===== -->
+        <div class="bs-row" id="fCommonDescRow">
             <div class="bs-field">
                 <label class="bs-label">Опис</label>
                 <input class="bs-input" id="fDescription" placeholder="Опис вмісту">
             </div>
-            <div class="bs-field">
-                <label class="bs-label">Кг</label>
-                <input class="bs-input" id="fWeight" placeholder="0" type="number">
-            </div>
-        </div>
-        <div class="bs-row">
-            <div class="bs-field">
+            <div class="bs-field" id="fQtyWrap">
                 <label class="bs-label">Кількість позицій</label>
                 <input class="bs-input" id="fQty" placeholder="1" type="number">
             </div>
+        </div>
+        <!-- Weight & EstValue for UE direction (shown inline for UE) -->
+        <div class="bs-row" id="fUEWeightRow" style="display:none;">
             <div class="bs-field">
-                <label class="bs-label">Оціночна вартість</label>
-                <input class="bs-input" id="fEstValue" placeholder="0" type="number">
+                <label class="bs-label">Приблизна вага (кг)</label>
+                <input class="bs-input" id="fWeightUE" placeholder="0" type="number">
+            </div>
+            <div class="bs-field">
+                <label class="bs-label">Оціночна вартість (&#8364;) &#177;</label>
+                <input class="bs-input" id="fEstValueUE" placeholder="0" type="number">
             </div>
         </div>
         <div class="bs-row">
@@ -1619,6 +1724,8 @@ async function saveRatingComment(pkgId, value) {
 function openAddForm() {
     document.getElementById('addFormOverlay').classList.add('show');
     document.getElementById('fDirection').value = currentDirection;
+    document.getElementById('dirOptUE').classList.toggle('active', currentDirection === 'ue');
+    document.getElementById('dirOptEU').classList.toggle('active', currentDirection === 'eu');
     updateFormForDirection();
     clearForm();
 }
@@ -1626,6 +1733,38 @@ function openAddForm() {
 function onFormDirectionChange() {
     currentDirection = document.getElementById('fDirection').value;
     updateFormForDirection();
+}
+
+function selectFormDirection(dir) {
+    document.getElementById('fDirection').value = dir;
+    document.getElementById('dirOptUE').classList.toggle('active', dir === 'ue');
+    document.getElementById('dirOptEU').classList.toggle('active', dir === 'eu');
+    onFormDirectionChange();
+}
+
+function toggleReceiverSection() {
+    var btn = document.getElementById('fReceiverToggle');
+    var section = document.getElementById('fReceiverSection');
+    btn.classList.toggle('expanded');
+    section.classList.toggle('show');
+}
+
+function setDeliveryType(type) {
+    var npOpt = document.getElementById('deliveryNP');
+    var addrOpt = document.getElementById('deliveryAddr');
+    var npFields = document.getElementById('fNPFieldsWrap');
+    var addrFields = document.getElementById('fAddrFieldsWrap');
+    if (type === 'np') {
+        npOpt.classList.add('active');
+        addrOpt.classList.remove('active');
+        npFields.style.display = 'block';
+        addrFields.style.display = 'none';
+    } else {
+        npOpt.classList.remove('active');
+        addrOpt.classList.add('active');
+        npFields.style.display = 'none';
+        addrFields.style.display = 'block';
+    }
 }
 
 function closeAddForm() {
@@ -1672,7 +1811,7 @@ function parseSmsText() {
     if (isUE) {
         // For UE: first phone → receiver
         if (phones.length > 0) {
-            document.getElementById('fPhoneReceiver').value = phones[0];
+            document.getElementById('fPhoneReceiverUE').value = phones[0];
             found.push('тел: ' + phones[0]);
         }
     } else {
@@ -1698,7 +1837,8 @@ function parseSmsText() {
     // 3. Weight
     const weightMatch = remaining.match(/(\d+(?:[.,]\d+)?)\s*(?:кг|kg)/i);
     if (weightMatch) {
-        document.getElementById('fWeight').value = weightMatch[1].replace(',', '.');
+        var wEl = isUE ? document.getElementById('fWeightUE') : document.getElementById('fWeight');
+        if (wEl) wEl.value = weightMatch[1].replace(',', '.');
         found.push('вага: ' + weightMatch[1] + 'кг');
         remaining = remaining.replace(weightMatch[0], ' ');
     }
@@ -1758,7 +1898,7 @@ function parseSmsText() {
     if (nameMatch) {
         const fullName = nameMatch[1] + ' ' + nameMatch[2];
         if (isUE) {
-            document.getElementById('fReceiver').value = fullName;
+            document.getElementById('fReceiverUE').value = fullName;
             found.push('отримувач: ' + fullName);
         } else {
             // If receiver is empty, put there; otherwise sender
@@ -1788,23 +1928,41 @@ function parseSmsText() {
 
 function updateFormForDirection() {
     const isUE = currentDirection === 'ue';
-    // Hide sender fields for UE direction
-    document.getElementById('fSenderWrap').style.display = isUE ? 'none' : 'block';
-    document.getElementById('fPhoneWrap').style.display = isUE ? 'none' : 'block';
-    document.getElementById('fAddressFromWrap').style.display = isUE ? 'none' : 'block';
-    document.getElementById('fAddressToWrap').style.display = isUE ? 'block' : 'none';
-    document.getElementById('fCityNPWrap').style.display = isUE ? 'none' : 'block';
-    document.getElementById('fTTNWrap').style.display = isUE ? 'block' : 'none';
-    document.getElementById('addFormTitle').innerHTML = isUE ? '&#128230; Нова посилка УК&#8594;ЄВ' : '&#128230; Нова посилка ЄВ&#8594;УК';
+    // EU direction: show sender section + collapsible receiver
+    document.getElementById('fSenderSection').style.display = isUE ? 'none' : 'block';
+    document.getElementById('fReceiverToggleWrap').style.display = isUE ? 'none' : 'block';
+    document.getElementById('fReceiverSection').style.display = 'none';
+    document.getElementById('fReceiverSection').classList.remove('show');
+    var recToggle = document.getElementById('fReceiverToggle');
+    if (recToggle) recToggle.classList.remove('expanded');
+    // UE direction: show UE-specific fields
+    document.getElementById('fUESection').style.display = isUE ? 'block' : 'none';
+    document.getElementById('fUEWeightRow').style.display = isUE ? 'grid' : 'none';
+    // Title
+    if (isUE) {
+        document.getElementById('addFormTitle').innerHTML = '&#128230; Нова посилка <b style="color:#1d4ed8">УК</b> &#8594; <b style="color:#1d4ed8">Європа</b>';
+    } else {
+        document.getElementById('addFormTitle').innerHTML = '&#128230; Нова посилка <b style="color:#059669">Європа</b> &#8594; <b style="color:#059669">УК</b>';
+    }
+    // Update direction selector visuals
+    document.getElementById('dirOptUE').classList.toggle('active', isUE);
+    document.getElementById('dirOptEU').classList.toggle('active', !isUE);
 }
 
 function clearForm() {
-    ['fSender', 'fPhone', 'fAddressFrom', 'fReceiver', 'fPhoneReceiver', 'fAddressTo', 'fCityNP', 'fTTN', 'fDescription', 'fWeight', 'fQty', 'fEstValue', 'fSum', 'fNote'].forEach(id => {
+    ['fSender', 'fPhone', 'fAddressFrom', 'fReceiver', 'fPhoneReceiver', 'fAddressTo', 'fCityNP', 'fTTN', 'fDescription', 'fWeight', 'fQty', 'fEstValue', 'fSum', 'fNote', 'fReceiverUE', 'fPhoneReceiverUE', 'fWeightUE', 'fEstValueUE', 'fAddrCity', 'fAddrStreet', 'fAddrHouse', 'fAddrApt'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
     document.getElementById('fCurrency').value = 'UAH';
     document.getElementById('duplicateWarning').classList.remove('show');
+    // Reset receiver section
+    var recSection = document.getElementById('fReceiverSection');
+    if (recSection) { recSection.classList.remove('show'); }
+    var recToggle = document.getElementById('fReceiverToggle');
+    if (recToggle) { recToggle.classList.remove('expanded'); }
+    // Reset delivery type to NP
+    setDeliveryType('np');
     // Reset SMS parser
     var smsIn = document.getElementById('smsInput'); if (smsIn) smsIn.value = '';
     var smsRes = document.getElementById('smsParseResult'); if (smsRes) smsRes.style.display = 'none';
@@ -1812,21 +1970,37 @@ function clearForm() {
 
 async function saveParcel() {
     const isUE = currentDirection === 'ue';
-    const sender = document.getElementById('fSender').value.trim();
-    const phone = document.getElementById('fPhone').value.trim();
-    const addressFrom = document.getElementById('fAddressFrom').value.trim();
-    const receiver = document.getElementById('fReceiver').value.trim();
-    const phoneReceiver = document.getElementById('fPhoneReceiver').value.trim();
+    var sender, phone, addressFrom, receiver, phoneReceiver;
+
+    if (isUE) {
+        // UE: sender info from logged-in user context (or empty), receiver from UE section
+        sender = '';
+        phone = '';
+        addressFrom = '';
+        receiver = document.getElementById('fReceiverUE').value.trim();
+        phoneReceiver = document.getElementById('fPhoneReceiverUE').value.trim();
+    } else {
+        // EU: sender from sender section, receiver from collapsible section
+        sender = document.getElementById('fSender').value.trim();
+        phone = document.getElementById('fPhone').value.trim();
+        addressFrom = document.getElementById('fAddressFrom').value.trim();
+        receiver = document.getElementById('fReceiver').value.trim();
+        phoneReceiver = document.getElementById('fPhoneReceiver').value.trim();
+    }
 
     // Validate required
     if (isUE) {
         if (!receiver || !phoneReceiver) {
-            showToast('Заповніть всі обов\'язкові поля');
+            showToast('Заповніть ПІБ та телефон отримувача');
             return;
         }
     } else {
-        if (!sender || !phone || !addressFrom || !receiver || !phoneReceiver) {
-            showToast('Заповніть всі обов\'язкові поля');
+        if (!sender || !phone || !addressFrom) {
+            showToast('Заповніть дані відправника');
+            return;
+        }
+        if (!receiver || !phoneReceiver) {
+            showToast('Заповніть дані отримувача в Україні');
             return;
         }
     }
@@ -1834,9 +2008,37 @@ async function saveParcel() {
         showToast('Вкажіть адресу в Європі');
         return;
     }
-    if (!isUE && !document.getElementById('fCityNP').value.trim()) {
-        showToast('Вкажіть місто Нова Пошта');
-        return;
+    // EU: validate NP or address
+    if (!isUE) {
+        var isNP = document.getElementById('deliveryNP').classList.contains('active');
+        if (isNP && !document.getElementById('fCityNP').value.trim()) {
+            showToast('Вкажіть Нова Пошта (місто + відділення)');
+            return;
+        }
+        if (!isNP) {
+            var city = document.getElementById('fAddrCity').value.trim();
+            var street = document.getElementById('fAddrStreet').value.trim();
+            var house = document.getElementById('fAddrHouse').value.trim();
+            if (!city || !street || !house) {
+                showToast('Заповніть адресу доставки (місто, вулиця, будинок)');
+                return;
+            }
+        }
+    }
+
+    // Build cityNP value for EU direction
+    var cityNPVal = '';
+    if (!isUE) {
+        var isNPDelivery = document.getElementById('deliveryNP').classList.contains('active');
+        if (isNPDelivery) {
+            cityNPVal = document.getElementById('fCityNP').value.trim();
+        } else {
+            // Combine address fields into cityNP
+            var parts = [document.getElementById('fAddrCity').value.trim(), document.getElementById('fAddrStreet').value.trim(), 'буд. ' + document.getElementById('fAddrHouse').value.trim()];
+            var apt = document.getElementById('fAddrApt').value.trim();
+            if (apt) parts.push('кв. ' + apt);
+            cityNPVal = 'Адресна: ' + parts.join(', ');
+        }
     }
 
     const data = {
@@ -1846,12 +2048,12 @@ async function saveParcel() {
         receiver: receiver,
         phoneReceiver: phoneReceiver,
         addressTo: isUE ? document.getElementById('fAddressTo').value.trim() : '',
-        cityNP: !isUE ? document.getElementById('fCityNP').value.trim() : '',
+        cityNP: cityNPVal,
         ttn: isUE ? document.getElementById('fTTN').value.trim() : '',
         description: document.getElementById('fDescription').value.trim(),
-        weight: document.getElementById('fWeight').value.trim(),
+        weight: isUE ? (document.getElementById('fWeightUE').value.trim() || '') : (document.getElementById('fWeight').value.trim() || ''),
         qty: document.getElementById('fQty').value.trim(),
-        estimatedValue: document.getElementById('fEstValue').value.trim(),
+        estimatedValue: isUE ? (document.getElementById('fEstValueUE').value.trim() || '') : (document.getElementById('fEstValue').value.trim() || ''),
         sum: document.getElementById('fSum').value.trim(),
         currency: document.getElementById('fCurrency').value,
         note: document.getElementById('fNote').value.trim()
