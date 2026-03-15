@@ -503,28 +503,6 @@
             <span class="side-menu-item-count" id="mobCountEU">0</span>
         </div>
         <div class="side-menu-divider"></div>
-        <div class="side-menu-section-title">Посилки</div>
-        <div class="side-menu-item active" id="mobAll" onclick="setFilter('all'); closeSideMenu();">
-            <span class="side-menu-item-left">&#128230; Всі посилки</span>
-            <span class="side-menu-item-count" id="mobCountAll">0</span>
-        </div>
-        <div class="side-menu-item" id="mobNew" onclick="setFilter('Новий'); closeSideMenu();">
-            <span class="side-menu-item-left">&#128313; Нові</span>
-            <span class="side-menu-item-count" id="mobCountNew">0</span>
-        </div>
-        <div class="side-menu-item" id="mobWork" onclick="setFilter('В роботі'); closeSideMenu();">
-            <span class="side-menu-item-left">&#128736; В роботі</span>
-            <span class="side-menu-item-count" id="mobCountWork">0</span>
-        </div>
-        <div class="side-menu-item" id="mobConfirmed" onclick="setFilter('Підтверджено'); closeSideMenu();">
-            <span class="side-menu-item-left">&#9989; Підтверджено</span>
-            <span class="side-menu-item-count" id="mobCountConfirmed">0</span>
-        </div>
-        <div class="side-menu-item" id="mobRefused" onclick="setFilter('Відмова'); closeSideMenu();">
-            <span class="side-menu-item-left">&#10060; Відмова</span>
-            <span class="side-menu-item-count" id="mobCountRefused">0</span>
-        </div>
-        <div class="side-menu-divider"></div>
         <div class="side-menu-section-title">Фінанси</div>
         <div class="side-menu-item" id="mobUnpaid" onclick="setPayFilter('Не оплачено'); closeSideMenu();">
             <span class="side-menu-item-left">&#128308; Не оплачено</span>
@@ -540,6 +518,10 @@
         </div>
         <div class="side-menu-divider"></div>
         <div class="side-menu-section-title">Перевірка</div>
+        <div class="side-menu-item" id="mobWork" onclick="setFilter('В роботі'); closeSideMenu();">
+            <span class="side-menu-item-left">&#128736; В роботі</span>
+            <span class="side-menu-item-count" id="mobCountWork">0</span>
+        </div>
         <div class="side-menu-item" id="mobVerCheck" onclick="switchToVerification('checking'); closeSideMenu();">
             <span class="side-menu-item-left">&#128269; Перевірка</span>
             <span class="side-menu-item-count" id="mobCountVerCheck">0</span>
@@ -577,35 +559,6 @@
             </div>
         </div>
         <div class="pc-sidebar-section">
-            <div class="pc-sidebar-header collapsed" onclick="togglePcSection('leads')">
-                <span class="pc-sidebar-title">&#128230; ПОСИЛКИ</span>
-                <span class="pc-sidebar-toggle" id="pcToggleLeads">&#9660;</span>
-            </div>
-            <div class="pc-sidebar-content collapsed" id="pcSectionLeads">
-                <div class="pc-sidebar-item active" id="sideAll" onclick="setFilter('all')">
-                    <span><span class="item-icon">&#128230;</span><span class="item-text">Всі посилки</span></span>
-                    <span class="item-count" id="pcCountAll">0</span>
-                </div>
-                <div class="pc-sidebar-item" id="sideNew" onclick="setFilter('Новий')">
-                    <span><span class="item-icon">&#128313;</span><span class="item-text">Нові</span></span>
-                    <span class="item-count" id="pcCountNew">0</span>
-                </div>
-                <div class="pc-sidebar-item" id="sideWork" onclick="setFilter('В роботі')">
-                    <span><span class="item-icon">&#128736;</span><span class="item-text">В роботі</span></span>
-                    <span class="item-count" id="pcCountWork">0</span>
-                </div>
-                <div class="pc-sidebar-item" id="sideConfirmed" onclick="setFilter('Підтверджено')">
-                    <span><span class="item-icon">&#9989;</span><span class="item-text">Підтверджено</span></span>
-                    <span class="item-count" id="pcCountConfirmed">0</span>
-                </div>
-                <div class="pc-sidebar-item" id="sideRefused" onclick="setFilter('Відмова')">
-                    <span><span class="item-icon">&#10060;</span><span class="item-text">Відмова</span></span>
-                    <span class="item-count" id="pcCountRefused">0</span>
-                </div>
-                <div class="pc-sidebar-add" onclick="openAddForm()">+ Нова посилка</div>
-            </div>
-        </div>
-        <div class="pc-sidebar-section">
             <div class="pc-sidebar-header collapsed" onclick="togglePcSection('finance')">
                 <span class="pc-sidebar-title">&#128176; ФІНАНСИ</span>
                 <span class="pc-sidebar-toggle" id="pcToggleFinance">&#9660;</span>
@@ -639,6 +592,10 @@
                 <div class="pc-sidebar-item" id="sideVerNew" onclick="switchToVerification('new')">
                     <span><span class="item-icon">&#128313;</span><span class="item-text">Нові</span></span>
                     <span class="item-count" id="pcCountVerNew">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sideWork" onclick="setFilter('В роботі')">
+                    <span><span class="item-icon">&#128736;</span><span class="item-text">В роботі</span></span>
+                    <span class="item-count" id="pcCountWork">0</span>
                 </div>
                 <div class="pc-sidebar-item" id="sideVerCheck" onclick="switchToVerification('checking')">
                     <span><span class="item-icon">&#128269;</span><span class="item-text">Перевірка</span></span>
@@ -1028,6 +985,9 @@ function setFilter(status) {
     currentFilter = status;
     currentPayFilter = 'all';
     document.getElementById('filterPayStatus').value = 'all';
+    if (currentView === 'verification') {
+        switchToParcels();
+    }
     updateSidebarActive();
     applyFilters();
 }
@@ -1042,11 +1002,7 @@ function setPayFilter(status) {
 function updateSidebarActive() {
     document.querySelectorAll('.pc-sidebar-item').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.side-menu-item').forEach(el => el.classList.remove('active'));
-    if (currentFilter === 'all' && currentPayFilter === 'all') { document.getElementById('sideAll')?.classList.add('active'); document.getElementById('mobAll')?.classList.add('active'); }
-    else if (currentFilter === 'Новий') { document.getElementById('sideNew')?.classList.add('active'); document.getElementById('mobNew')?.classList.add('active'); }
-    else if (currentFilter === 'В роботі') { document.getElementById('sideWork')?.classList.add('active'); document.getElementById('mobWork')?.classList.add('active'); }
-    else if (currentFilter === 'Підтверджено') { document.getElementById('sideConfirmed')?.classList.add('active'); document.getElementById('mobConfirmed')?.classList.add('active'); }
-    else if (currentFilter === 'Відмова') { document.getElementById('sideRefused')?.classList.add('active'); document.getElementById('mobRefused')?.classList.add('active'); }
+    if (currentFilter === 'В роботі') { document.getElementById('sideWork')?.classList.add('active'); document.getElementById('mobWork')?.classList.add('active'); }
     else if (currentPayFilter === 'Не оплачено') { document.getElementById('sideUnpaid')?.classList.add('active'); document.getElementById('mobUnpaid')?.classList.add('active'); }
     else if (currentPayFilter === 'Частково') { document.getElementById('sidePartial')?.classList.add('active'); document.getElementById('mobPartial')?.classList.add('active'); }
     else if (currentPayFilter === 'Оплачено') { document.getElementById('sidePaid')?.classList.add('active'); document.getElementById('mobPaid')?.classList.add('active'); }
@@ -1101,21 +1057,13 @@ function updateSidebar() {
         if (payCounts[pay] !== undefined) payCounts[pay]++;
     });
 
-    document.getElementById('pcCountAll').textContent = counts.all;
-    document.getElementById('pcCountNew').textContent = counts['Новий'];
     document.getElementById('pcCountWork').textContent = counts['В роботі'];
-    document.getElementById('pcCountConfirmed').textContent = counts['Підтверджено'];
-    document.getElementById('pcCountRefused').textContent = counts['Відмова'];
     document.getElementById('pcCountUnpaid').textContent = payCounts['Не оплачено'];
     document.getElementById('pcCountPartial').textContent = payCounts['Частково'];
     document.getElementById('pcCountPaid').textContent = payCounts['Оплачено'];
 
     // Mobile counts
-    document.getElementById('mobCountAll').textContent = counts.all;
-    document.getElementById('mobCountNew').textContent = counts['Новий'];
     document.getElementById('mobCountWork').textContent = counts['В роботі'];
-    document.getElementById('mobCountConfirmed').textContent = counts['Підтверджено'];
-    document.getElementById('mobCountRefused').textContent = counts['Відмова'];
     document.getElementById('mobCountUnpaid').textContent = payCounts['Не оплачено'];
     document.getElementById('mobCountPartial').textContent = payCounts['Частково'];
     document.getElementById('mobCountPaid').textContent = payCounts['Оплачено'];
