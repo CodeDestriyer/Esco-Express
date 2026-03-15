@@ -2036,8 +2036,12 @@ function updateFormForDirection() {
     document.getElementById('fCommonDescRow').style.display = isUE ? 'grid' : 'none';
     document.getElementById('fSumRow').style.display = isUE ? 'grid' : 'none';
     document.getElementById('fNoteWrap').style.display = isUE ? 'block' : 'none';
-    // SMS parser only for UE
-    document.getElementById('smsParserWrap').style.display = isUE ? 'block' : 'none';
+    // SMS parser for both directions
+    document.getElementById('smsParserWrap').style.display = 'block';
+    var smsIn = document.getElementById('smsInput');
+    if (smsIn) smsIn.placeholder = isUE
+        ? 'Наприклад: Турко Сергій +41797856664 Цюріх, документи 2кг'
+        : 'Наприклад: Іванов Петро +380631234567 Київ, вул. Хрещатик 10, 3кг';
     // Title
     if (isUE) {
         document.getElementById('addFormTitle').innerHTML = '&#128230; Нова посилка <b style="color:#1d4ed8">УК</b> &#8594; <b style="color:#1d4ed8">Європа</b>';
