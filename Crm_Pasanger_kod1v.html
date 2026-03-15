@@ -311,6 +311,7 @@
         .route-card { background:white; border-radius:8px; box-shadow:var(--shadow); border-left:4px solid var(--primary); margin-bottom:10px; overflow:hidden; }
         .route-card.status-confirmed { border-left-color:var(--success); }
         .route-card.status-new { border-left-color:var(--warning); }
+        .route-card.status-work { border-left-color:var(--info); }
         .route-card.status-refused { border-left-color:var(--danger); background:#fef2f2; }
         .route-card-header { padding:10px 14px; cursor:pointer; }
         .route-card-header:hover { background:#f8fafc; }
@@ -1048,6 +1049,11 @@
                     <button class="trip-filter-btn" id="rteStatusWork" onclick="setRouteStatusFilter('В роботі',this)" style="border-color:#3b82f6;color:#1d4ed8;">В роботі</button>
                     <button class="trip-filter-btn" id="rteStatusConfirmed" onclick="setRouteStatusFilter('Підтверджено',this)" style="border-color:#10b981;color:#059669;">Підтверджено</button>
                     <button class="trip-filter-btn" id="rteStatusRefused" onclick="setRouteStatusFilter('Відмова',this)" style="border-color:#ef4444;color:#dc2626;">Відмова</button>
+                    <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+                    <button class="trip-filter-btn active" id="rtePayAll" onclick="setRoutePayFilter('all',this)">Всі</button>
+                    <button class="trip-filter-btn" id="rtePayUnpaid" onclick="setRoutePayFilter('Не оплачено',this)" style="border-color:#ef4444;color:#dc2626;">Не оплачено</button>
+                    <button class="trip-filter-btn" id="rtePayPartial" onclick="setRoutePayFilter('Частково',this)" style="border-color:#f59e0b;color:#92400e;">Частково</button>
+                    <button class="trip-filter-btn" id="rtePayPaid" onclick="setRoutePayFilter('Оплачено',this)" style="border-color:#10b981;color:#059669;">Оплачено</button>
                 </div>
             </div>
             <!-- Route bulk toolbar -->
@@ -1527,6 +1533,7 @@ let allRouteSheets = []; // Всі аркуші (включно з Відпра�
 let activeRouteIdx = null; // Індекс обраного маршруту для перегляду
 let routeTypeFilter = 'all'; // all | pax | parcel
 let routeStatusFilter = 'all'; // all | Новий | Підтверджено | В роботі | Відмова
+let routePayFilter = 'all'; // all | Не оплачено | Частково | Оплачено
 let routeSelectedIds = new Set();
 let routeOpenDetailsId = null;
 let routeOpenActionsId = null;
@@ -1896,11 +1903,18 @@ function setRouteStatusFilter(val, btn) {
     if (btn) btn.classList.add('active');
     renderRoutes();
 }
+function setRoutePayFilter(val, btn) {
+    routePayFilter = val;
+    document.querySelectorAll('#rtePayAll,#rtePayUnpaid,#rtePayPartial,#rtePayPaid').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderRoutes();
+}
 function getFilteredRouteRows(rows) {
     let filtered = rows;
     if (routeTypeFilter === 'pax') filtered = filtered.filter(r => (r['Тип запису'] || '').includes('Пасажир'));
     if (routeTypeFilter === 'parcel') filtered = filtered.filter(r => (r['Тип запису'] || '').includes('Посилк'));
     if (routeStatusFilter !== 'all') filtered = filtered.filter(r => (r['Статус'] || '') === routeStatusFilter);
+    if (routePayFilter !== 'all') filtered = filtered.filter(r => (r['Статус оплати'] || '') === routePayFilter);
     return filtered;
 }
 
@@ -1949,7 +1963,7 @@ function renderRoutes() {
 
     if (filtered.length === 0) {
         html += '<div style="padding:40px;text-align:center;color:var(--text-secondary);font-size:13px;">' +
-            (rows.length === 0 ? 'Маршрут порожній — перенесіть ліди з пасажирів' : 'Немає записів за обраним фільтром') + '</div>';
+            (rows.length === 0 ? 'Маршрут порожній — перенесіть посилки з головного списку' : 'Немає записів за обраним фільтром') + '</div>';
     } else {
         html += filtered.map((r, idx) => renderRouteCard(r, idx, sheet.sheetName)).join('');
     }
@@ -1988,7 +2002,8 @@ function renderRouteCard(r, idx, sheetName) {
 
     const statusClass = status === 'Підтверджено' ? 'status-confirmed' :
         status === 'Відмова' ? 'status-refused' :
-        status === 'Новий' ? 'status-new' : '';
+        status === 'Новий' ? 'status-new' :
+        status === 'В роботі' ? 'status-work' : '';
 
     const isUE = direction.includes('Україна') || direction.includes('UA');
     const dirLabel = direction ? (isUE ? 'UA → EU' : 'EU → UA') : '';
