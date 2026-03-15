@@ -774,6 +774,10 @@
             <!-- Route filters -->
             <div id="routeFiltersBar" style="display:none;margin-bottom:12px;">
                 <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+                    <button class="route-filter-btn active" id="rteFilterAll" onclick="setRouteTypeFilter('all',this)">Всі</button>
+                    <button class="route-filter-btn" id="rteFilterPax" onclick="setRouteTypeFilter('pax',this)">👤 Пасажири</button>
+                    <button class="route-filter-btn" id="rteFilterParcel" onclick="setRouteTypeFilter('parcel',this)">📦 Посилки</button>
+                    <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
                     <button class="route-filter-btn active" id="rteStatusAll" onclick="setRouteStatusFilter('all',this)">Всі</button>
                     <button class="route-filter-btn" id="rteStatusNew" onclick="setRouteStatusFilter('Новий',this)" style="border-color:#f59e0b;color:#92400e;">Новий</button>
                     <button class="route-filter-btn" id="rteStatusWork" onclick="setRouteStatusFilter('В роботі',this)" style="border-color:#3b82f6;color:#1d4ed8;">В роботі</button>
@@ -2712,6 +2716,7 @@ document.getElementById('photoFileInput').onchange = async function(event) {
 let routes = [];
 let allRouteSheets = [];
 let activeRouteIdx = null;
+let routeTypeFilter = 'all'; // all | pax | parcel
 let routeStatusFilter = 'all';
 let routePayFilter = 'all';
 let routeSelectedIds = new Set();
@@ -2816,7 +2821,14 @@ function renderRouteSidebar() {
                 const rows = sheet.rows;
                 const isLoaded = rows !== null;
                 const isActive = activeRouteIdx === idx && currentView === 'routes';
-                let countLabel = isLoaded ? '📦' + rows.length : '📋' + (sheet.rowCount || 0);
+                let countLabel = '';
+                if (isLoaded) {
+                    const pax = rows.filter(r => (r['Тип запису'] || '').includes('Пасажир')).length;
+                    const parcels = rows.filter(r => (r['Тип запису'] || '').includes('Посилк')).length;
+                    countLabel = '👤' + pax + ' 📦' + parcels;
+                } else {
+                    countLabel = '📋' + (sheet.rowCount || 0);
+                }
                 return '<div class="pc-sidebar-item route-sidebar-item' + (isActive ? ' active' : '') + '" onclick="openRoute(' + idx + ')" style="position:relative;">' +
                     '<span><span class="item-icon">🗺️</span><span class="item-text">' + escHtml(name) + '</span></span>' +
                     '<span style="display:flex;align-items:center;gap:4px;">' +
@@ -2834,7 +2846,14 @@ function renderRouteSidebar() {
         } else {
             mobList.innerHTML = routes.map((sheet, idx) => {
                 const name = (sheet.sheetName || '').replace('Маршрут_', '');
-                const countLabel = sheet.rows !== null ? '📦' + sheet.rows.length : '📋' + (sheet.rowCount || 0);
+                let countLabel = '';
+                if (sheet.rows !== null) {
+                    const pax = sheet.rows.filter(r => (r['Тип запису'] || '').includes('Пасажир')).length;
+                    const parcels = sheet.rows.filter(r => (r['Тип запису'] || '').includes('Посилк')).length;
+                    countLabel = '👤' + pax + ' 📦' + parcels;
+                } else {
+                    countLabel = '📋' + (sheet.rowCount || 0);
+                }
                 return '<div class="side-menu-item" onclick="openRoute(' + idx + '); closeSideMenu();" style="padding:8px 14px;font-size:12px;">' +
                     '<span class="side-menu-item-left">🗺️ ' + escHtml(name) + '</span>' +
                     '<span style="font-size:10px;opacity:0.8;">' + countLabel + '</span></div>';
@@ -2865,6 +2884,12 @@ async function openRoute(idx) {
 }
 
 // ── Filters ──
+function setRouteTypeFilter(val, btn) {
+    routeTypeFilter = val;
+    document.querySelectorAll('#rteFilterAll,#rteFilterPax,#rteFilterParcel').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderRoutes();
+}
 function setRouteStatusFilter(val, btn) {
     routeStatusFilter = val;
     document.querySelectorAll('#rteStatusAll,#rteStatusNew,#rteStatusWork,#rteStatusConfirmed,#rteStatusRefused').forEach(b => b.classList.remove('active'));
@@ -2880,6 +2905,8 @@ function setRoutePayFilter(val, btn) {
 
 function getFilteredRouteRows(rows) {
     let filtered = rows;
+    if (routeTypeFilter === 'pax') filtered = filtered.filter(r => (r['Тип запису'] || '').includes('Пасажир'));
+    if (routeTypeFilter === 'parcel') filtered = filtered.filter(r => (r['Тип запису'] || '').includes('Посилк'));
     if (routeStatusFilter !== 'all') filtered = filtered.filter(r => (r['Статус'] || r['Статус ліда'] || '') === routeStatusFilter);
     if (routePayFilter !== 'all') filtered = filtered.filter(r => (r['Статус оплати'] || '') === routePayFilter);
     return filtered;
@@ -2918,8 +2945,11 @@ function renderRoutes() {
     if (headerBar) headerBar.style.display = 'block';
     if (headerEmpty) headerEmpty.style.display = 'none';
     if (filtersBar) filtersBar.style.display = 'block';
+    const paxCount = rows.filter(r => (r['Тип запису'] || '').includes('Пасажир')).length;
+    const parcelCount = rows.filter(r => (r['Тип запису'] || '').includes('Посилк')).length;
+
     if (title) title.textContent = '🚐 ' + name;
-    if (subtitle) subtitle.textContent = '📦 ' + rows.length + ' посилок';
+    if (subtitle) subtitle.textContent = '👤 ' + paxCount + ' пасажирів · 📦 ' + parcelCount + ' посилок · ' + rows.length + ' записів';
 
     const filtered = getFilteredRouteRows(rows);
     let html = '';
