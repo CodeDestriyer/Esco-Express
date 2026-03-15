@@ -281,12 +281,17 @@
         .bs-delivery-opt.active { border-color: var(--primary); background: var(--primary); color: white; }
 
         /* SWISS POINTS SELECTOR */
-        .swiss-points-wrap { margin-bottom: 8px; }
-        .swiss-points-label { font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
-        .swiss-points-grid { display: flex; flex-wrap: wrap; gap: 4px; }
-        .swiss-point-btn { padding: 5px 10px; border: 1.5px solid #e2e8f0; border-radius: 6px; background: #f8fafc; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; color: #334155; white-space: nowrap; }
-        .swiss-point-btn:hover { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
-        .swiss-point-btn.selected { border-color: var(--primary); background: var(--primary); color: white; }
+        .swiss-points-wrap { position: relative; display: inline-block; margin-bottom: 6px; }
+        .swiss-points-trigger { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border: 1.5px solid var(--primary); border-radius: 8px; background: #eff6ff; font-size: 11px; font-weight: 700; cursor: pointer; color: var(--primary); transition: all 0.15s; }
+        .swiss-points-trigger:hover { background: var(--primary); color: white; }
+        .swiss-points-dropdown { display: none; position: absolute; top: 100%; left: 0; z-index: 1000; margin-top: 4px; min-width: 280px; background: white; border: 1.5px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); overflow: hidden; }
+        .swiss-points-dropdown.show { display: block; }
+        .swiss-points-dropdown-header { padding: 8px 12px; font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; background: #f8fafc; border-bottom: 1px solid var(--border); }
+        .swiss-point-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: background 0.1s; }
+        .swiss-point-item:last-child { border-bottom: none; }
+        .swiss-point-item:hover { background: #eff6ff; }
+        .swiss-point-item-city { font-size: 12px; font-weight: 700; color: #1e293b; }
+        .swiss-point-item-addr { font-size: 10px; color: #64748b; margin-top: 2px; }
 
         /* DUPLICATE WARNING */
         .duplicate-warning { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 12px; margin-bottom: 12px; display: none; }
@@ -942,9 +947,9 @@
             </div>
             <div class="bs-field" id="fAddressFromWrap">
                 <label class="bs-label">Адреса відправника <span class="required">*</span></label>
-                <div class="swiss-points-wrap">
-                    <div class="swiss-points-label">&#127464;&#127469; Наші точки (натисніть щоб вставити):</div>
-                    <div class="swiss-points-grid" id="swissPointsSender"></div>
+                <div class="swiss-points-wrap" id="swissPointsSenderWrap">
+                    <button type="button" class="swiss-points-trigger" onclick="toggleSwissDropdown('swissDropdownSender')">&#127464;&#127469; Наші точки &#9660;</button>
+                    <div class="swiss-points-dropdown" id="swissDropdownSender"></div>
                 </div>
                 <input class="bs-input" id="fAddressFrom" placeholder="Адреса в Європі">
             </div>
@@ -1026,9 +1031,9 @@
             </div>
             <div class="bs-field" id="fAddressToWrap">
                 <label class="bs-label">Адреса в Європі <span class="required">*</span></label>
-                <div class="swiss-points-wrap">
-                    <div class="swiss-points-label">&#127464;&#127469; Наші точки (натисніть щоб вставити):</div>
-                    <div class="swiss-points-grid" id="swissPointsReceiver"></div>
+                <div class="swiss-points-wrap" id="swissPointsReceiverWrap">
+                    <button type="button" class="swiss-points-trigger" onclick="toggleSwissDropdown('swissDropdownReceiver')">&#127464;&#127469; Наші точки &#9660;</button>
+                    <div class="swiss-points-dropdown" id="swissDropdownReceiver"></div>
                 </div>
                 <input class="bs-input" id="fAddressTo" placeholder="Адреса в Європі">
             </div>
@@ -1811,47 +1816,50 @@ var SWISS_POINTS = [
     { city: 'Женева', address: 'P+R Bout-du-Monde, Rte de Vessy 12, 1206 Genève' }
 ];
 
-function renderSwissPoints(containerId, targetInputId) {
-    var container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = '';
+function renderSwissDropdown(dropdownId, targetInputId) {
+    var dd = document.getElementById(dropdownId);
+    if (!dd) return;
+    var html = '<div class="swiss-points-dropdown-header">&#127464;&#127469; Оберіть точку</div>';
     SWISS_POINTS.forEach(function(point, idx) {
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'swiss-point-btn';
-        btn.textContent = point.city;
-        btn.title = point.address;
-        btn.setAttribute('data-idx', idx);
-        btn.onclick = function() {
-            selectSwissPoint(containerId, targetInputId, idx);
-        };
-        container.appendChild(btn);
+        html += '<div class="swiss-point-item" onclick="selectSwissPoint(\'' + dropdownId + '\', \'' + targetInputId + '\', ' + idx + ')">' +
+            '<div class="swiss-point-item-city">' + point.city + '</div>' +
+            '<div class="swiss-point-item-addr">' + point.address + '</div>' +
+            '</div>';
     });
+    dd.innerHTML = html;
 }
 
-function selectSwissPoint(containerId, targetInputId, idx) {
-    var container = document.getElementById(containerId);
+function toggleSwissDropdown(dropdownId) {
+    var dd = document.getElementById(dropdownId);
+    if (!dd) return;
+    // Close all other dropdowns first
+    document.querySelectorAll('.swiss-points-dropdown.show').forEach(function(el) {
+        if (el.id !== dropdownId) el.classList.remove('show');
+    });
+    dd.classList.toggle('show');
+}
+
+function selectSwissPoint(dropdownId, targetInputId, idx) {
     var input = document.getElementById(targetInputId);
-    if (!container || !input) return;
+    if (!input) return;
     var point = SWISS_POINTS[idx];
-    var fullAddress = point.city + ' — ' + point.address;
-    // Toggle: if same point clicked again, deselect
-    if (input.value === fullAddress) {
-        input.value = '';
-        var btns = container.querySelectorAll('.swiss-point-btn');
-        btns.forEach(function(b) { b.classList.remove('selected'); });
-        return;
-    }
-    input.value = fullAddress;
-    var btns = container.querySelectorAll('.swiss-point-btn');
-    btns.forEach(function(b) { b.classList.remove('selected'); });
-    btns[idx].classList.add('selected');
+    input.value = point.city + ' — ' + point.address;
+    // Close dropdown
+    document.getElementById(dropdownId).classList.remove('show');
 }
 
-// Initialize Swiss points buttons when form opens
+// Close dropdowns on outside click
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.swiss-points-wrap')) {
+        document.querySelectorAll('.swiss-points-dropdown.show').forEach(function(el) {
+            el.classList.remove('show');
+        });
+    }
+});
+
 function initSwissPoints() {
-    renderSwissPoints('swissPointsSender', 'fAddressFrom');
-    renderSwissPoints('swissPointsReceiver', 'fAddressTo');
+    renderSwissDropdown('swissDropdownSender', 'fAddressFrom');
+    renderSwissDropdown('swissDropdownReceiver', 'fAddressTo');
 }
 
 function closeAddForm() {
