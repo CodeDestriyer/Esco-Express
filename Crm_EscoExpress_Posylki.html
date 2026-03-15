@@ -306,9 +306,6 @@
         .empty-state-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
         .empty-state-text { font-size: 12px; }
 
-        /* FAB */
-        .fab { position: fixed; bottom: 70px; right: 20px; width: 56px; height: 56px; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 4px 20px rgba(26,58,94,0.4); z-index: 50; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .fab:hover { transform: scale(1.1); background: var(--primary-dark); }
 
         /* SIDEBAR COLLAPSE BUTTON */
         .pc-sidebar-collapse-btn { display: none; position: fixed; top: 60px; left: 300px; z-index: 150; width: 24px; height: 48px; background: white; border: 1px solid var(--border); border-left: none; border-radius: 0 8px 8px 0; cursor: pointer; align-items: center; justify-content: center; font-size: 12px; color: var(--text-secondary); box-shadow: 2px 0 8px rgba(0,0,0,0.08); transition: left 0.3s ease, background 0.2s; }
@@ -491,7 +488,6 @@
             .pc-sidebar { display: block !important; }
             .bottom-nav { display: flex; }
             .filter-bar { display: none !important; }
-            .fab { bottom: 70px; }
             .main-content-area { padding-bottom: 60px; }
         }
         @media (max-width: 768px) {
@@ -806,7 +802,6 @@
 </div>
 
 <!-- FAB -->
-<button class="fab" id="fabBtn" onclick="openAddForm()">+</button>
 
 <!-- BULK TOOLBAR -->
 <div class="bulk-toolbar" id="bulkToolbar">
@@ -868,6 +863,14 @@
     <div class="bottom-sheet">
         <div class="bottom-sheet-handle"></div>
         <div class="bs-title" id="addFormTitle">&#128230; Нова посилка</div>
+        <!-- DIRECTION SELECTOR -->
+        <div class="bs-field">
+            <label class="bs-label">Напрямок <span class="required" style="color:var(--danger)">*</span></label>
+            <select class="bs-select" id="fDirection" onchange="onFormDirectionChange()">
+                <option value="ue">🇺🇦→🇪🇺 Україна-Європа</option>
+                <option value="eu">🇪🇺→🇺🇦 Європа-Україна</option>
+            </select>
+        </div>
         <!-- SMS PARSER -->
         <div class="sms-parser-wrap" id="smsParserWrap">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
@@ -1615,8 +1618,14 @@ async function saveRatingComment(pkgId, value) {
 // ── ADD PARCEL FORM ──
 function openAddForm() {
     document.getElementById('addFormOverlay').classList.add('show');
+    document.getElementById('fDirection').value = currentDirection;
     updateFormForDirection();
     clearForm();
+}
+
+function onFormDirectionChange() {
+    currentDirection = document.getElementById('fDirection').value;
+    updateFormForDirection();
 }
 
 function closeAddForm() {
@@ -1971,11 +1980,16 @@ async function openRouteModal(pkgId) {
 
     const res = await apiPost('getRoutesList', {});
     if (res.ok && res.data) {
-        if (res.data.length === 0) {
+        // Фільтруємо тільки аркуші маршрутів (як в пасажирах)
+        var routeSheets = res.data.filter(function(r) {
+            var n = r.sheetName || '';
+            return n.startsWith('Маршрут_') && n !== 'Маршрут_Шаблон';
+        });
+        if (routeSheets.length === 0) {
             document.getElementById('routeModalContent').innerHTML = '<div class="payments-empty">Немає доступних маршрутів</div>';
             return;
         }
-        document.getElementById('routeModalContent').innerHTML = res.data.map(r =>
+        document.getElementById('routeModalContent').innerHTML = routeSheets.map(r =>
             '<div class="route-item" onclick="selectRoute(\'' + escAttr(r.sheetName) + '\')">' +
             '<div class="route-item-name">' + escHtml(r.sheetName) + '</div>' +
             '<div class="route-item-count">' + r.rowCount + ' записів</div>' +
