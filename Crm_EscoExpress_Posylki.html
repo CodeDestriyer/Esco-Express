@@ -1029,6 +1029,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         showToast('Помилка завантаження: ' + e.message);
     }
     hideLoader();
+    // Load routes list in background
+    if (typeof loadRoutes === 'function') loadRoutes();
 });
 
 // ── DIRECTION POPUP ──
@@ -1847,6 +1849,10 @@ function togglePcSection(section) {
     const header = content?.previousElementSibling;
     if (content) content.classList.toggle('collapsed');
     if (header) header.classList.toggle('collapsed');
+    // Auto-load routes when expanding routes section
+    if (section === 'routes' && content && !content.classList.contains('collapsed')) {
+        if (typeof routes !== 'undefined' && routes.length === 0) loadRoutes();
+    }
 }
 
 function showToast(msg) {
@@ -2722,6 +2728,7 @@ async function loadRoutes() {
     const loading = document.getElementById('routesLoading');
     const errEl = document.getElementById('routesError');
     const list = document.getElementById('routesList');
+    const pcLoading = document.getElementById('pcRoutesLoading');
     if (loading) { loading.style.display = 'block'; loading.textContent = '⏳ Завантаження списку маршрутів...'; }
     if (errEl) errEl.style.display = 'none';
     if (list) list.innerHTML = '';
@@ -2729,6 +2736,7 @@ async function loadRoutes() {
     try {
         const res = await apiPost('getRoutesList', {});
         if (loading) loading.style.display = 'none';
+        if (pcLoading) pcLoading.style.display = 'none';
         if (res.ok && res.data) {
             allRouteSheets = res.data.map(s => ({
                 sheetName: s.sheetName,
@@ -2749,6 +2757,7 @@ async function loadRoutes() {
         }
     } catch (e) {
         if (loading) loading.style.display = 'none';
+        if (pcLoading) pcLoading.style.display = 'none';
         if (errEl) { errEl.style.display = 'block'; errEl.textContent = '❌ Помилка: ' + e.message; }
     }
 }
