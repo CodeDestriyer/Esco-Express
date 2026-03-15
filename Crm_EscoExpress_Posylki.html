@@ -1175,7 +1175,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             apiPost('getStats', {}),
             apiPost('checkNpApiKey', {})
         ]);
+        console.log('[DEBUG] allRes:', allRes);
+        console.log('[DEBUG] allRes.ok:', allRes.ok, '| data length:', allRes.data ? allRes.data.length : 'no data');
         if (allRes.ok) allData = allRes.data || [];
+        if (allRes.ok && allData.length > 0) {
+            console.log('[DEBUG] Sample parcel _sheet values:', allData.slice(0, 3).map(p => p._sheet));
+            console.log('[DEBUG] Sample parcel Статус CRM:', allData.slice(0, 3).map(p => p['Статус CRM']));
+        }
         if (statsRes.ok) stats = statsRes;
         if (npRes.ok) hasNpApiKey = npRes.hasKey || false;
         updateSidebar();
@@ -1290,8 +1296,27 @@ function onSearchInput() {
 
 function applyFilters() {
     const sheetName = currentDirection === 'ue' ? 'Реєстрація ТТН УК-єв' : 'Виклик Курєра ЄВ-ук';
-    const statusFilter = document.getElementById('filterStatus').value;
-    const payFilter = document.getElementById('filterPayStatus').value;
+    const statusFilter = document.getElementById('filterStatus')?.value || 'all';
+    const payFilter = document.getElementById('filterPayStatus')?.value || 'all';
+
+    console.log('[DEBUG applyFilters] direction:', currentDirection, '| sheetName:', sheetName,
+        '| allData.length:', allData.length, '| currentFilter:', currentFilter,
+        '| currentPayFilter:', currentPayFilter, '| statusFilter:', statusFilter, '| payFilter:', payFilter);
+
+    // Debug: show why each parcel is filtered out
+    if (allData.length > 0 && allData.length < 20) {
+        allData.forEach((p, i) => {
+            const reasons = [];
+            if (p._sheet !== sheetName) reasons.push('_sheet mismatch: "' + p._sheet + '" !== "' + sheetName + '"');
+            if (String(p['Статус CRM']) === 'Архів') reasons.push('archived');
+            if (currentFilter !== 'all' && p['Статус ліда'] !== currentFilter) reasons.push('lead status');
+            if (currentPayFilter !== 'all' && p['Статус оплати'] !== currentPayFilter) reasons.push('pay filter');
+            if (statusFilter !== 'all' && p['Статус посилки'] !== statusFilter) reasons.push('pkg status');
+            if (payFilter !== 'all' && p['Статус оплати'] !== payFilter) reasons.push('pay status');
+            if (reasons.length > 0) console.log('[DEBUG] Parcel', i, p['PKG_ID'], 'filtered out:', reasons.join(', '));
+            else console.log('[DEBUG] Parcel', i, p['PKG_ID'], 'PASSES all filters');
+        });
+    }
 
     filteredData = allData.filter(p => {
         if (p._sheet !== sheetName) return false;
@@ -1310,6 +1335,7 @@ function applyFilters() {
         return true;
     });
 
+    console.log('[DEBUG applyFilters] filteredData.length:', filteredData.length);
     renderCards();
 }
 
