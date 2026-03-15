@@ -1678,7 +1678,7 @@ function parseSmsText() {
     }
 
     // 2. TTN number
-    const ttnMatch = remaining.match(/(?:ттн|ttn|тн)[:\s]*(\d{10,14})/i) || remaining.match(/\b(59\d{11,13})\b/) || remaining.match(/\b(20\d{11,13})\b/);
+    const ttnMatch = remaining.match(/(?:ттн|ttn|тн)[:\s]*(\d{10,14})/i) || remaining.match(/\b(59\d{11,13})\b/) || remaining.match(/\b(56\d{11,13})\b/) || remaining.match(/\b(20\d{11,13})\b/);
     if (ttnMatch) {
         document.getElementById('fTTN').value = ttnMatch[1];
         found.push('ТТН: ' + ttnMatch[1]);
