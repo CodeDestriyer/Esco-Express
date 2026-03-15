@@ -572,7 +572,7 @@
             <span class="side-menu-item-count" id="mobCountVerReady">0</span>
         </div>
         <div class="side-menu-divider"></div>
-        <div class="side-menu-section-title" onclick="toggleMobileRoutesList()" style="cursor:pointer;">&#128506; Маршрути <span id="mobileCountRoutes" style="float:right;font-size:11px;opacity:0.7;">0</span></div>
+        <div class="side-menu-section-title" onclick="toggleMobileRoutesList()" style="cursor:pointer;">🗺️ Маршрути <span id="mobileCountRoutes" style="float:right;font-size:11px;opacity:0.7;">0</span></div>
         <div id="mobileRoutesList" style="display:none;padding-left:12px;"></div>
         <div class="side-menu-divider"></div>
         <div class="side-menu-item" onclick="openAddForm(); closeSideMenu();">
@@ -654,7 +654,7 @@
         <!-- ROUTES SECTION -->
         <div class="pc-sidebar-section">
             <div class="pc-sidebar-header collapsed" onclick="togglePcSection('routes')">
-                <span class="pc-sidebar-title">&#128506; МАРШРУТИ</span>
+                <span class="pc-sidebar-title">🗺️ МАРШРУТИ</span>
                 <span class="pc-sidebar-toggle" id="pcToggleRoutes">&#9660;</span>
             </div>
             <div class="pc-sidebar-content collapsed" id="pcSectionRoutes">
@@ -769,7 +769,7 @@
                 </div>
             </div>
             <div id="routeHeaderEmpty" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-                <h2 style="margin:0;font-size:18px;color:var(--text-primary);">&#128506; Маршрути</h2>
+                <h2 style="margin:0;font-size:18px;color:var(--text-primary);">🗺️ Маршрути</h2>
                 <button style="background:var(--primary);color:white;font-size:11px;padding:8px 14px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;" onclick="loadRoutes()">&#128260; Оновити</button>
             </div>
             <!-- Route filters -->
@@ -830,7 +830,6 @@
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
     <button class="nav-item active" id="navParcels" onclick="showAllParcels()"><span>📦</span>Посилки</button>
-    <button class="nav-item" id="navRoutes" onclick="showRoutesView()"><span>🗺️</span>Маршрути</button>
     <button class="nav-item" id="navPax" onclick="window.open('https://script.google.com/macros/s/AKfycbzDGNCMfx1YozEiWhQtVqImGzvyt-_dXivxjGeYCapThcCdZ6CCVEKaKvWWz7CcFwhuNw/exec','_blank')"><span>👥</span>Пасажири</button>
     <button class="nav-item" onclick="silentSync()"><span>🔄</span>Синхр.</button>
     <button class="nav-item" onclick="openAddForm()"><span>➕</span>Додати</button>
@@ -1068,6 +1067,18 @@ document.addEventListener('click', function(e) {
 
 // ── FILTERS ──
 function setDirection(dir) {
+    // Switch back to parcels view if on verification or routes
+    if (currentView !== 'parcels') {
+        currentView = 'parcels';
+        document.getElementById('defaultView').style.display = 'block';
+        document.getElementById('verificationView').style.display = 'none';
+        var rv = document.getElementById('routesView');
+        if (rv) rv.style.display = 'none';
+        if (typeof stopPolling === 'function') stopPolling();
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        var navP = document.getElementById('navParcels');
+        if (navP) navP.classList.add('active');
+    }
     currentDirection = dir;
     // Update bottom nav label
     var navLabel = document.getElementById('navDirectionLabel');
@@ -1103,6 +1114,18 @@ function setFilter(status) {
 }
 
 function setPayFilter(status) {
+    // Switch back to parcels view if on verification or routes
+    if (currentView !== 'parcels') {
+        currentView = 'parcels';
+        document.getElementById('defaultView').style.display = 'block';
+        document.getElementById('verificationView').style.display = 'none';
+        var rv = document.getElementById('routesView');
+        if (rv) rv.style.display = 'none';
+        if (typeof stopPolling === 'function') stopPolling();
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        var navP = document.getElementById('navParcels');
+        if (navP) navP.classList.add('active');
+    }
     currentPayFilter = status;
     currentFilter = 'all';
     updateSidebarActive();
