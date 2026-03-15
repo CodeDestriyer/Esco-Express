@@ -765,7 +765,6 @@
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
     <button class="nav-item active" id="navParcels" onclick="showAllParcels()"><span>📦</span>Посилки</button>
-    <button class="nav-item" id="navVerify" onclick="switchToVerification('checking')"><span>🔍</span>Перевірка</button>
     <button class="nav-item" id="navPax" onclick="window.open('https://script.google.com/macros/s/AKfycbwQBMlsTUhUpoKGCiVXqVPNF9_KZ4N-DFHh7RVGmWMF2UEALNFuJ5Cj04xyFMBuEr6e/exec','_blank')"><span>👥</span>Пасажири</button>
     <button class="nav-item" onclick="silentSync()"><span>🔄</span>Синхр.</button>
     <button class="nav-item" onclick="openColumnConfigurator()"><span>⚙️</span>Колонки</button>
@@ -936,6 +935,7 @@ let currentFilter = 'all';
 let currentPayFilter = 'all';
 let searchQuery = '';
 let openCardId = null;
+let openActionsId = null;
 let activeDetailTab = {};
 let messengerPhone = '';
 let routeTargetPkgId = '';
@@ -1176,6 +1176,7 @@ function renderCards() {
         const dirBadge = isUE ? 'dir-badge-ua-eu' : 'dir-badge-eu-ua';
         const dirText = isUE ? 'УК&#8594;ЄВ' : 'ЄВ&#8594;УК';
         const isOpen = openCardId === pkgId;
+        const isActionsOpen = openActionsId === pkgId;
 
         let routeStrip = '';
         if (rteId) {
@@ -1188,7 +1189,7 @@ function renderCards() {
             '<div class="card-body" onclick="toggleCard(\'' + pkgId + '\')">' +
             '<div class="card-top-row">' +
             '<span class="card-direction ' + dirBadge + '">' + dirText + '</span>' +
-            (v('phone') ? '<span class="card-phone">' + escHtml(phone) + '</span>' : '') +
+            (ttn ? '<span class="card-phone">TTH: ' + escHtml(ttn) + '</span>' : '') +
             (v('weight') && weight ? '<span class="card-weight">' + weight + ' кг</span>' : '') +
             '<div class="card-price-wrap">' +
             (v('sum') ? '<span class="card-price">' + sum + ' ' + currency + '</span>' : '') +
@@ -1201,16 +1202,16 @@ function renderCards() {
             '<div class="card-meta-row">' +
             (v('date') && date ? '<span class="card-meta-tag">&#128197; ' + date + '</span>' : '') +
             (v('pkgStatus') && pkgStatus ? '<span class="card-meta-tag">' + escHtml(pkgStatus) + '</span>' : '') +
-            (v('ttn') && ttn ? '<span class="card-meta-tag">TTH: ' + escHtml(ttn) + '</span>' : '') +
+            (v('phone') && phone ? '<span class="card-meta-tag">&#128222; ' + escHtml(phone) + '</span>' : '') +
             (v('tag') && tag ? '<span class="card-meta-tag" style="background:#f3e8ff;color:#7c3aed;">' + escHtml(tag) + '</span>' : '') +
             '</div></div></div>' +
-            '<div class="card-right-section"><button class="card-actions-toggle ' + (isOpen ? 'open' : '') + '" onclick="toggleCard(\'' + pkgId + '\')">&#9660;</button></div>' +
+            '<div class="card-right-section"><button class="card-actions-toggle ' + (isActionsOpen ? 'open' : '') + '" onclick="event.stopPropagation(); toggleCardActions(\'' + pkgId + '\')" title="Дії">&#9660;</button></div>' +
             '</div></div>' +
             routeStrip +
             '<div class="card-details ' + (isOpen ? 'show' : '') + '" id="details-' + pkgId + '">' +
             (isOpen ? renderDetailsContent(p) : '') +
             '</div>' +
-            '<div class="card-actions ' + (isOpen ? 'show' : '') + '" id="actions-' + pkgId + '">' +
+            '<div class="card-actions ' + (isActionsOpen ? 'show' : '') + '" id="actions-' + pkgId + '">' +
             '<button class="btn-card-action btn-call" onclick="callPhone(\'' + escAttr(phone) + '\')">&#128222; Дзвінок</button>' +
             '<button class="btn-card-action btn-write" onclick="openMessengerPopup(\'' + escAttr(phone) + '\')">&#128172; Писати</button>' +
             (isUE && ttn ? '<button class="btn-card-action btn-track" onclick="trackTTN(\'' + escAttr(pkgId) + '\', \'' + escAttr(ttn) + '\')">&#128230; Трекінг</button>' : '') +
@@ -1232,6 +1233,12 @@ function toggleCard(pkgId) {
         const el = document.getElementById('card-' + pkgId);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+}
+
+// ── TOGGLE CARD ACTIONS (separate from details, like passenger card) ──
+function toggleCardActions(pkgId) {
+    openActionsId = openActionsId === pkgId ? null : pkgId;
+    renderCards();
 }
 
 // ── SECTION DEFINITIONS (data-driven, configurable) ──
