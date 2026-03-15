@@ -871,15 +871,15 @@
             <div class="duplicate-warning-title">&#9888; Можливий дублікат</div>
             <div class="duplicate-warning-text" id="duplicateText"></div>
         </div>
-        <div class="bs-field">
+        <div class="bs-field" id="fSenderWrap">
             <label class="bs-label">Піб відправника <span class="required">*</span></label>
             <input class="bs-input" id="fSender" placeholder="Прізвище Ім'я">
         </div>
-        <div class="bs-field">
+        <div class="bs-field" id="fPhoneWrap">
             <label class="bs-label">Телефон реєстратора <span class="required">*</span></label>
             <input class="bs-input" id="fPhone" placeholder="+380..." oninput="checkDuplicatesDebounced()">
         </div>
-        <div class="bs-field">
+        <div class="bs-field" id="fAddressFromWrap">
             <label class="bs-label">Адреса відправки <span class="required">*</span></label>
             <input class="bs-input" id="fAddressFrom" placeholder="Адреса">
         </div>
@@ -1613,6 +1613,10 @@ function closeAddForm() {
 
 function updateFormForDirection() {
     const isUE = currentDirection === 'ue';
+    // Hide sender fields for UE direction
+    document.getElementById('fSenderWrap').style.display = isUE ? 'none' : 'block';
+    document.getElementById('fPhoneWrap').style.display = isUE ? 'none' : 'block';
+    document.getElementById('fAddressFromWrap').style.display = isUE ? 'none' : 'block';
     document.getElementById('fAddressToWrap').style.display = isUE ? 'block' : 'none';
     document.getElementById('fCityNPWrap').style.display = isUE ? 'none' : 'block';
     document.getElementById('fTTNWrap').style.display = isUE ? 'block' : 'none';
@@ -1637,9 +1641,16 @@ async function saveParcel() {
     const phoneReceiver = document.getElementById('fPhoneReceiver').value.trim();
 
     // Validate required
-    if (!sender || !phone || !addressFrom || !receiver || !phoneReceiver) {
-        showToast('Заповніть всі обов\'язкові поля');
-        return;
+    if (isUE) {
+        if (!receiver || !phoneReceiver) {
+            showToast('Заповніть всі обов\'язкові поля');
+            return;
+        }
+    } else {
+        if (!sender || !phone || !addressFrom || !receiver || !phoneReceiver) {
+            showToast('Заповніть всі обов\'язкові поля');
+            return;
+        }
     }
     if (isUE && !document.getElementById('fAddressTo').value.trim()) {
         showToast('Вкажіть адресу в Європі');
