@@ -867,6 +867,18 @@
     <div class="bottom-sheet">
         <div class="bottom-sheet-handle"></div>
         <div class="bs-title" id="addFormTitle">&#128230; Нова посилка</div>
+        <!-- SMS PARSER -->
+        <div class="sms-parser-wrap" id="smsParserWrap">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">📋 Вставте текст повідомлення</span>
+                <button id="smsParserToggle" onclick="toggleSmsParser()" style="background:none;border:none;font-size:10px;color:var(--info);cursor:pointer;font-weight:600;">Згорнути ▲</button>
+            </div>
+            <div id="smsParserBody">
+                <textarea id="smsInput" rows="3" placeholder="Наприклад: Турко Сергій +41797856664 Цюріх, документи 2кг" style="width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;"></textarea>
+                <button onclick="parseSmsText()" style="width:100%;margin-top:6px;padding:8px;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">🔍 Розпізнати та заповнити</button>
+                <div id="smsParseResult" style="display:none;margin-top:6px;padding:8px 10px;border-radius:8px;font-size:11px;font-weight:600;"></div>
+            </div>
+        </div>
         <div class="duplicate-warning" id="duplicateWarning">
             <div class="duplicate-warning-title">&#9888; Можливий дублікат</div>
             <div class="duplicate-warning-text" id="duplicateText"></div>
@@ -1611,6 +1623,159 @@ function closeAddForm() {
     clearForm();
 }
 
+// ── SMS PARSER (Розпізнати та заповнити) ──
+function toggleSmsParser() {
+    const body = document.getElementById('smsParserBody');
+    const btn = document.getElementById('smsParserToggle');
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        btn.textContent = 'Згорнути ▲';
+    } else {
+        body.style.display = 'none';
+        btn.textContent = 'Розгорнути ▼';
+    }
+}
+
+function parseSmsText() {
+    const text = document.getElementById('smsInput').value.trim();
+    if (!text) return;
+    const isUE = currentDirection === 'ue';
+    const found = [];
+    let remaining = text;
+
+    // 1. Phone numbers (international & Ukrainian)
+    const phones = [];
+    const phoneRegex = /(\+?\d[\d\s\-()]{8,}\d)/g;
+    let pm;
+    while ((pm = phoneRegex.exec(text)) !== null) {
+        let p = pm[1].replace(/[\s\-()]/g, '');
+        if (p.match(/^0\d{9}$/)) p = '+380' + p.slice(1);
+        else if (p.match(/^380\d{9}$/)) p = '+' + p;
+        else if (p.match(/^\+380\d{9}$/)) { /* ok */ }
+        else if (p.match(/^\+\d{10,15}$/)) { /* international */ }
+        else if (p.match(/^\d{10,15}$/)) p = '+' + p;
+        else continue;
+        phones.push(p);
+        remaining = remaining.replace(pm[0], ' ');
+    }
+
+    if (isUE) {
+        // For UE: first phone → receiver
+        if (phones.length > 0) {
+            document.getElementById('fPhoneReceiver').value = phones[0];
+            found.push('тел: ' + phones[0]);
+        }
+    } else {
+        // For EU-UA: first phone → sender, second → receiver
+        if (phones.length > 0) {
+            document.getElementById('fPhone').value = phones[0];
+            found.push('тел відпр: ' + phones[0]);
+        }
+        if (phones.length > 1) {
+            document.getElementById('fPhoneReceiver').value = phones[1];
+            found.push('тел отрим: ' + phones[1]);
+        }
+    }
+
+    // 2. TTN number
+    const ttnMatch = remaining.match(/(?:ттн|ttn|тн)[:\s]*(\d{10,14})/i) || remaining.match(/\b(59\d{11,13})\b/) || remaining.match(/\b(20\d{11,13})\b/);
+    if (ttnMatch) {
+        document.getElementById('fTTN').value = ttnMatch[1];
+        found.push('ТТН: ' + ttnMatch[1]);
+        remaining = remaining.replace(ttnMatch[0], ' ');
+    }
+
+    // 3. Weight
+    const weightMatch = remaining.match(/(\d+(?:[.,]\d+)?)\s*(?:кг|kg)/i);
+    if (weightMatch) {
+        document.getElementById('fWeight').value = weightMatch[1].replace(',', '.');
+        found.push('вага: ' + weightMatch[1] + 'кг');
+        remaining = remaining.replace(weightMatch[0], ' ');
+    }
+
+    // 4. Quantity
+    const qtyMatch = remaining.match(/(\d+)\s*(?:шт|позиці|місц|пакет|коробк|boxes|pcs)/i);
+    if (qtyMatch) {
+        document.getElementById('fQty').value = qtyMatch[1];
+        found.push('к-сть: ' + qtyMatch[1]);
+        remaining = remaining.replace(qtyMatch[0], ' ');
+    }
+
+    // 5. Sum / price
+    const sumMatch = remaining.match(/(\d+(?:[.,]\d+)?)\s*(?:грн|uah|eur|€|chf|usd|\$|pln|czk)/i);
+    if (sumMatch) {
+        document.getElementById('fSum').value = sumMatch[1].replace(',', '.');
+        // Detect currency
+        const cur = sumMatch[0].toLowerCase();
+        if (cur.includes('eur') || cur.includes('€')) document.getElementById('fCurrency').value = 'EUR';
+        else if (cur.includes('chf')) document.getElementById('fCurrency').value = 'CHF';
+        else if (cur.includes('usd') || cur.includes('$')) document.getElementById('fCurrency').value = 'USD';
+        else if (cur.includes('pln')) document.getElementById('fCurrency').value = 'PLN';
+        else if (cur.includes('czk')) document.getElementById('fCurrency').value = 'CZK';
+        else document.getElementById('fCurrency').value = 'UAH';
+        found.push('сума: ' + sumMatch[0].trim());
+        remaining = remaining.replace(sumMatch[0], ' ');
+    }
+
+    // 6. Address (after "адреса", "адр", "вул", "м.")
+    const addrMatch = remaining.match(/(?:адрес[аи]?|адр\.?|вул\.?|м\.)\s*[:\s]?\s*([^,\n]+)/i);
+    if (addrMatch) {
+        if (isUE) {
+            document.getElementById('fAddressTo').value = addrMatch[1].trim();
+            found.push('адреса: ' + addrMatch[1].trim());
+        } else {
+            document.getElementById('fAddressFrom').value = addrMatch[1].trim();
+            found.push('адреса: ' + addrMatch[1].trim());
+        }
+        remaining = remaining.replace(addrMatch[0], ' ');
+    }
+
+    // 7. City (known cities for Нова Пошта)
+    if (!isUE) {
+        const CITIES_UA = ['київ','львів','одеса','харків','дніпро','запоріжжя','вінниця','тернопіль','івано-франківськ','рівне','луцьк','чернівці','ужгород','мукачево','хмельницький','полтава','черкаси','житомир','суми','миколаїв','херсон','кропивницький','чернігів'];
+        const lowerRemaining = remaining.toLowerCase();
+        for (const city of CITIES_UA) {
+            if (lowerRemaining.includes(city)) {
+                document.getElementById('fCityNP').value = city.charAt(0).toUpperCase() + city.slice(1);
+                found.push('місто НП: ' + city.charAt(0).toUpperCase() + city.slice(1));
+                break;
+            }
+        }
+    }
+
+    // 8. Name detection - look for capitalized words (Name Surname pattern)
+    const nameMatch = remaining.match(/([А-ЯІЇЄҐA-Z][а-яіїєґa-z']+)\s+([А-ЯІЇЄҐA-Z][а-яіїєґa-z']+)/);
+    if (nameMatch) {
+        const fullName = nameMatch[1] + ' ' + nameMatch[2];
+        if (isUE) {
+            document.getElementById('fReceiver').value = fullName;
+            found.push('отримувач: ' + fullName);
+        } else {
+            // If receiver is empty, put there; otherwise sender
+            if (!document.getElementById('fReceiver').value) {
+                document.getElementById('fReceiver').value = fullName;
+                found.push('отримувач: ' + fullName);
+            } else {
+                document.getElementById('fSender').value = fullName;
+                found.push('відправник: ' + fullName);
+            }
+        }
+    }
+
+    // Show result
+    const resultEl = document.getElementById('smsParseResult');
+    resultEl.style.display = 'block';
+    if (found.length > 0) {
+        resultEl.style.background = '#f0fdf4';
+        resultEl.style.color = '#059669';
+        resultEl.innerHTML = '✅ Розпізнано: ' + found.join(', ');
+    } else {
+        resultEl.style.background = '#fef2f2';
+        resultEl.style.color = '#dc2626';
+        resultEl.innerHTML = '⚠️ Не вдалось розпізнати дані. Заповніть форму вручну.';
+    }
+}
+
 function updateFormForDirection() {
     const isUE = currentDirection === 'ue';
     // Hide sender fields for UE direction
@@ -1630,6 +1795,9 @@ function clearForm() {
     });
     document.getElementById('fCurrency').value = 'UAH';
     document.getElementById('duplicateWarning').classList.remove('show');
+    // Reset SMS parser
+    var smsIn = document.getElementById('smsInput'); if (smsIn) smsIn.value = '';
+    var smsRes = document.getElementById('smsParseResult'); if (smsRes) smsRes.style.display = 'none';
 }
 
 async function saveParcel() {
