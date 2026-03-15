@@ -411,26 +411,48 @@
         .vcard-time { font-size: 10px; color: var(--text-secondary); }
 
         /* VERIFICATION FORM (EXPANDED) */
-        .vcard-form { display: none; padding: 12px; border-top: 1px solid var(--border); background: #fafbfc; }
+        .vcard-form { display: none; padding: 0; border-top: 1px solid var(--border); background: #fafbfc; }
         .vcard-form.show { display: block; }
+
+        /* Collapsible blocks */
+        .vform-block { border-bottom: 1px solid var(--border); }
+        .vform-block:last-child { border-bottom: none; }
+        .vform-block-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; cursor: pointer; background: white; transition: background 0.2s; user-select: none; }
+        .vform-block-header:hover { background: #f0f4f8; }
+        .vform-block-header.active { background: #eef2ff; }
+        .vform-block-title { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+        .vform-block-title .block-num { background: var(--primary); color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; flex-shrink: 0; }
+        .vform-block-status { display: flex; align-items: center; gap: 6px; }
+        .vform-block-check { font-size: 14px; }
+        .vform-block-toggle { font-size: 11px; color: var(--text-secondary); transition: transform 0.3s; }
+        .vform-block-header.collapsed .vform-block-toggle { transform: rotate(-90deg); }
+        .vform-block-body { padding: 10px 12px 14px; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s ease, opacity 0.3s ease; opacity: 1; }
+        .vform-block-body.collapsed { max-height: 0 !important; padding-top: 0; padding-bottom: 0; opacity: 0; overflow: hidden; }
+
         .vform-section { margin-bottom: 12px; }
         .vform-section-title { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 4px; border-bottom: 2px solid var(--primary); margin-bottom: 8px; }
         .vform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .vform-field { }
+        .vform-field.required .vform-label::after { content: ' *'; color: var(--danger); font-weight: 800; }
         .vform-label { font-size: 9px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px; display: block; }
         .vform-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; }
         .vform-input:focus { border-color: var(--primary); }
+        .vform-input.readonly { background: #f1f5f9; color: var(--text-secondary); cursor: default; }
         .vform-select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; background: white; }
-        .vform-textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; resize: vertical; min-height: 50px; }
+        .vform-textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; outline: none; resize: vertical; min-height: 60px; }
         .vform-full { grid-column: 1 / -1; }
+        .vform-conditional { display: none; }
+        .vform-conditional.visible { display: block; }
         .vform-dup-alert { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
         .vform-dup-title { font-size: 11px; font-weight: 700; color: #92400e; margin-bottom: 4px; }
-        .vform-dup-item { font-size: 11px; color: #92400e; padding: 2px 0; }
+        .vform-dup-item { font-size: 11px; color: #92400e; padding: 2px 0; cursor: pointer; text-decoration: underline; }
+        .vform-dup-item:hover { color: #78350f; }
         .vform-photo-section { display: flex; align-items: center; gap: 10px; padding: 10px; background: white; border: 1px solid var(--border); border-radius: 8px; }
         .vform-photo-thumb { width: 60px; height: 60px; border-radius: 6px; object-fit: cover; border: 2px solid var(--border); cursor: pointer; }
         .vform-photo-placeholder { width: 60px; height: 60px; border: 2px dashed var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-secondary); }
         .vform-photo-status { flex: 1; font-size: 11px; }
-        .vform-buttons { display: flex; gap: 8px; margin-top: 12px; }
+        .vform-readonly-field { background: #f1f5f9; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 12px; font-weight: 600; color: var(--text-primary); }
+        .vform-buttons { display: flex; gap: 8px; padding: 12px; background: white; border-top: 1px solid var(--border); }
         .vform-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; }
         .vform-btn.btn-ready { background: var(--success); color: white; }
         .vform-btn.btn-ready:hover { background: #059669; }
@@ -438,6 +460,14 @@
         .vform-btn.btn-reject { background: #fee2e2; color: #dc2626; }
         .vform-btn.btn-reject:hover { background: #dc2626; color: white; }
         .vform-btn.btn-edit { background: var(--bg-main); color: var(--text-primary); }
+        .vform-btn.btn-refresh { background: #dbeafe; color: #1d4ed8; }
+        .vform-btn.btn-refresh:hover { background: #bfdbfe; }
+
+        @media (max-width: 600px) {
+            .vform-grid { grid-template-columns: 1fr; }
+            .vform-buttons { flex-wrap: wrap; }
+            .vform-btn { min-width: calc(50% - 4px); }
+        }
 
         /* POLLING INDICATOR */
         .polling-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); }
@@ -2015,6 +2045,7 @@ let currentVerifyTab = 'all'; // 'all' | 'new' | 'checking' | 'ready'
 let verifyData = [];
 let openVerifyCardId = null;
 let verifyDuplicatesCache = {};
+let verifyBlockState = {}; // { pkgId: { b1: true, b2: true, ... } }
 let pollingTimer = null;
 const POLLING_INTERVAL = 15000; // 15 секунд
 
@@ -2167,7 +2198,9 @@ function renderSingleVerifyCard(p) {
     else if (!recipient && !phone) { statusClass = 'vcard-unknown'; dotClass = 'dot-unknown'; }
     else if (ctrl === 'В перевірці' && !photo) { dotClass = 'dot-waiting'; }
 
-    var hasData = !!(weight && price);
+    var timing = p['Таймінг'] || '';
+    var shipDate = p['Дата відправки'] || '';
+    var hasData = !!(weight && price && desc && timing && shipDate);
     var hasPhoto = !!photo;
 
     // Check for cached duplicates
@@ -2220,108 +2253,202 @@ function toggleVerifyCard(pkgId) {
     }
 }
 
-// ── Render Verification Form ──
+// ── Render Verification Form (6 послідовних блоків згідно ТЗ) ──
 function renderVerifyForm(p) {
     var pkgId = p['PKG_ID'] || '';
     var ctrl = String(p['Контроль перевірки'] || '').trim();
     var isReady = ctrl === 'Готова до маршруту';
     var photo = p['Фото посилки'] || '';
     var dups = verifyDuplicatesCache[pkgId] || [];
+    var isUE = p._sheet === 'Реєстрація ТТН УК-єв';
+
+    // Track which blocks are open (default: all open)
+    if (!verifyBlockState[pkgId]) {
+        verifyBlockState[pkgId] = { b1: true, b2: true, b3: true, b4: true, b5: true };
+    }
+    var bs = verifyBlockState[pkgId];
+
+    // Block status indicators
+    var hasRecipient = !!(p['Піб отримувача'] && p['Телефон отримувача']);
+    var hasPhoto = !!photo;
+    var hasData = !!(p['Кг'] && p['Оціночна вартість'] && p['Опис']);
+    var hasRoute = !!p['Внутрішній №'];
+    var hasDups = dups.length > 0;
 
     var html = '';
 
-    // Duplicates alert
-    if (dups.length > 0) {
-        html += '<div class="vform-dup-alert">';
-        html += '<div class="vform-dup-title">&#9888; ДУБЛІ ЗНАЙДЕНО (' + dups.length + ')</div>';
-        dups.forEach(function(d) {
-            html += '<div class="vform-dup-item">&#8226; TTH: ' + escHtml(d.ttn) + ' — ' + escHtml(d.recipient_name) + ' (' + escHtml(d.package_id) + ')</div>';
-        });
-        html += '</div>';
+    // ═══ БЛОК 1 — ІНФОРМАЦІЯ ПРО ПОСИЛКУ ═══
+    html += '<div class="vform-block">';
+    html += '<div class="vform-block-header ' + (bs.b1 ? 'active' : 'collapsed') + '" onclick="toggleVerifyBlock(\'' + escAttr(pkgId) + '\', \'b1\')">';
+    html += '<span class="vform-block-title"><span class="block-num">1</span> Інформація про посилку</span>';
+    html += '<div class="vform-block-status">';
+    html += '<span class="vform-block-check">' + (hasRecipient ? '&#9989;' : '&#9888;&#65039;') + '</span>';
+    html += '<span class="vform-block-toggle">&#9660;</span>';
+    html += '</div></div>';
+    html += '<div class="vform-block-body ' + (bs.b1 ? '' : 'collapsed') + '" style="max-height:' + (bs.b1 ? '600px' : '0') + ';">';
+    html += '<div class="vform-grid">';
+    // ТТН основний
+    if (isUE) {
+        html += vformField(pkgId, 'Номер ТТН', p['Номер ТТН'], 'text', '59000001', false, false);
     }
-
-    // Recipient section
-    html += '<div class="vform-section">';
-    html += '<div class="vform-section-title">&#128100; Отримувач</div>';
-    html += '<div class="vform-grid">';
-    html += vformField(pkgId, 'Піб отримувача', p['Піб отримувача'], 'text', 'ПІБ отримувача');
-    html += vformField(pkgId, 'Телефон отримувача', p['Телефон отримувача'], 'text', '+41...');
-    html += vformField(pkgId, 'Адреса в Європі', p['Адреса в Європі'], 'text', 'Адреса в Європі', true);
-    html += '</div></div>';
-
-    // Package section
-    html += '<div class="vform-section">';
-    html += '<div class="vform-section-title">&#128230; Посилка</div>';
-    html += '<div class="vform-grid">';
-    html += vformField(pkgId, 'Кг', p['Кг'], 'number', 'Вага (кг)');
-    html += vformField(pkgId, 'Оціночна вартість', p['Оціночна вартість'], 'number', 'Ціна');
-    html += vformField(pkgId, 'Кількість позицій', p['Кількість позицій'], 'number', 'Кількість');
-    html += vformField(pkgId, 'Номер ТТН', p['Номер ТТН'], 'text', 'ТТН');
-    html += vformField(pkgId, 'Опис', p['Опис'], 'text', 'Опис вмісту', true);
-    html += '</div></div>';
-
-    // Route section
-    html += '<div class="vform-section">';
-    html += '<div class="vform-section-title">&#128666; Маршрут</div>';
-    html += '<div class="vform-grid">';
+    // ТТН додатково (comma-separated)
+    html += vformField(pkgId, 'Деталі', p['Деталі'] || '', 'text', 'Додаткові ТТН (через кому)', true, false);
+    // ПІБ отримувача
+    html += vformField(pkgId, 'Піб отримувача', p['Піб отримувача'], 'text', 'ПІБ отримувача', false, true);
+    // Телефон
+    html += vformField(pkgId, 'Телефон отримувача', p['Телефон отримувача'], 'text', '+41791234567', false, true);
+    // Адреса
+    html += vformField(pkgId, isUE ? 'Адреса в Європі' : 'Місто Нова Пошта', isUE ? p['Адреса в Європі'] : p['Місто Нова Пошта'], 'text', 'Адреса в Європі', true, true);
+    // Дата створення (readonly)
     html += '<div class="vform-field">';
-    html += '<label class="vform-label">Номерація маршруту</label>';
-    html += '<select class="vform-select" id="vRouteSelect-' + pkgId + '" onchange="onRouteSelect(\'' + escAttr(pkgId) + '\')">';
-    html += '<option value="">-- Оберіть --</option>';
-    html += '<option value="200"' + (getRouteFromIntNum(p['Внутрішній №']) === '200' ? ' selected' : '') + '>200</option>';
-    html += '<option value="500"' + (getRouteFromIntNum(p['Внутрішній №']) === '500' ? ' selected' : '') + '>500</option>';
-    html += '<option value="custom">Інше...</option>';
-    html += '</select></div>';
-    html += '<div class="vform-field">';
-    html += '<label class="vform-label">Внутрішній № (авто)</label>';
-    html += '<input class="vform-input" id="vIntNum-' + pkgId + '" value="' + escAttr(p['Внутрішній №'] || '') + '" readonly style="background:#f1f5f9;font-weight:700;">';
+    html += '<label class="vform-label">Дата створення</label>';
+    html += '<div class="vform-readonly-field">' + escHtml(p['Дата створення'] || '—') + '</div>';
+    html += '</div>';
     html += '</div></div></div>';
 
-    // Photo section
-    html += '<div class="vform-section">';
-    html += '<div class="vform-section-title">&#128247; Фото</div>';
-    html += '<div class="vform-photo-section">';
+    // ═══ БЛОК 2 — ІНФОРМАЦІЯ ПЕРЕВІРЯЮЧОГО ═══
+    html += '<div class="vform-block">';
+    html += '<div class="vform-block-header ' + (bs.b2 ? 'active' : 'collapsed') + '" onclick="toggleVerifyBlock(\'' + escAttr(pkgId) + '\', \'b2\')">';
+    html += '<span class="vform-block-title"><span class="block-num">2</span> Інформація перевіряючого</span>';
+    html += '<div class="vform-block-status">';
+    html += '<span class="vform-block-check">' + (hasPhoto ? '&#9989;' : '&#9203;') + '</span>';
+    html += '<span class="vform-block-toggle">&#9660;</span>';
+    html += '</div></div>';
+    html += '<div class="vform-block-body ' + (bs.b2 ? '' : 'collapsed') + '" style="max-height:' + (bs.b2 ? '500px' : '0') + ';">';
+    html += '<div class="vform-grid">';
+    // Перевіряючий (readonly)
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Перевіряючий</label>';
+    html += '<div class="vform-readonly-field">' + escHtml(p['Контроль перевірки'] ? (ctrl || 'Нова') : '—') + '</div>';
+    html += '</div>';
+    // Дата перевірки (readonly)
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Дата перевірки</label>';
+    html += '<div class="vform-readonly-field">' + escHtml(p['Дата перевірки'] || '—') + '</div>';
+    html += '</div>';
+    html += '</div>';
+    // Фото посилки
+    html += '<div class="vform-photo-section" style="margin-top:8px;">';
     if (photo) {
         html += '<img class="vform-photo-thumb" src="' + escAttr(photo) + '" onclick="viewPhoto(\'' + escAttr(photo) + '\')">';
         html += '<div class="vform-photo-status"><strong style="color:var(--success);">&#9989; Фото завантажено</strong><br><span style="font-size:10px;color:var(--text-secondary);">Натисніть щоб переглянути</span></div>';
     } else {
         html += '<div class="vform-photo-placeholder">&#128247;</div>';
-        html += '<div class="vform-photo-status"><strong style="color:var(--warning);">&#9203; Очікується фото</strong><br><span style="font-size:10px;color:var(--text-secondary);">Від перевіряючого або завантажте самі</span></div>';
+        html += '<div class="vform-photo-status"><strong style="color:var(--warning);">&#9203; Очікується фото</strong><br><span style="font-size:10px;color:var(--text-secondary);">Від перевіряючого або завантажте</span></div>';
     }
-    html += '<button class="scan-btn" style="padding:8px 12px;font-size:11px;" onclick="startVerifyPhotoUpload(\'' + escAttr(pkgId) + '\')">&#128247; Завантажити</button>';
-    html += '</div></div>';
+    html += '<button class="scan-btn" style="padding:8px 12px;font-size:11px;" onclick="startVerifyPhotoUpload(\'' + escAttr(pkgId) + '\')">&#128247; ' + (photo ? 'Замінити' : 'Завантажити') + '</button>';
+    html += '</div></div></div>';
 
-    // Verification control
-    html += '<div class="vform-section">';
-    html += '<div class="vform-section-title">&#128203; Контроль</div>';
+    // ═══ БЛОК 3 — ДАНІ ПОСИЛКИ (МЕНЕДЖЕР ЗАПОВНЯЄ) ═══
+    html += '<div class="vform-block">';
+    html += '<div class="vform-block-header ' + (bs.b3 ? 'active' : 'collapsed') + '" onclick="toggleVerifyBlock(\'' + escAttr(pkgId) + '\', \'b3\')">';
+    html += '<span class="vform-block-title"><span class="block-num">3</span> Дані посилки</span>';
+    html += '<div class="vform-block-status">';
+    html += '<span class="vform-block-check">' + (hasData ? '&#9989;' : '&#9888;&#65039;') + '</span>';
+    html += '<span class="vform-block-toggle">&#9660;</span>';
+    html += '</div></div>';
+    html += '<div class="vform-block-body ' + (bs.b3 ? '' : 'collapsed') + '" style="max-height:' + (bs.b3 ? '800px' : '0') + ';">';
     html += '<div class="vform-grid">';
-    html += '<div class="vform-field">';
-    html += '<label class="vform-label">Контроль перевірки</label>';
-    html += '<input class="vform-input" value="' + escAttr(ctrl || 'Нова') + '" readonly style="background:#f1f5f9;">';
+    // Опис (textarea)
+    html += '<div class="vform-field vform-full required">';
+    html += '<label class="vform-label">Опис</label>';
+    html += '<textarea class="vform-textarea" placeholder="Одяг, взуття, аксесуари..." onblur="saveVerifyField(\'' + escAttr(pkgId) + '\', \'Опис\', this.value)">' + escHtml(p['Опис'] || '') + '</textarea>';
     html += '</div>';
-    html += '<div class="vform-field">';
-    html += '<label class="vform-label">Дата перевірки</label>';
-    html += '<input class="vform-input" value="' + escAttr(p['Дата перевірки'] || '—') + '" readonly style="background:#f1f5f9;">';
+    // Вміст (деталі) — textarea
+    html += '<div class="vform-field vform-full">';
+    html += '<label class="vform-label">Вміст (деталі)</label>';
+    html += '<textarea class="vform-textarea" placeholder="Зимова куртка чорна, розмір М..." onblur="saveVerifyField(\'' + escAttr(pkgId) + '\', \'Деталі\', this.value)">' + escHtml(p['Деталі'] || '') + '</textarea>';
     html += '</div>';
-    html += '</div></div>';
+    // Вага
+    html += vformField(pkgId, 'Кг', p['Кг'], 'number', '3.5', false, true);
+    // Оціночна вартість
+    html += vformField(pkgId, 'Оціночна вартість', p['Оціночна вартість'], 'number', '500', false, true);
+    // Кількість позицій
+    html += vformField(pkgId, 'Кількість позицій', p['Кількість позицій'], 'number', '1', false, true);
+    // Дата відправки
+    html += vformField(pkgId, 'Дата відправки', p['Дата відправки'], 'text', 'дд.мм.рррр', false, true);
+    // Таймінг (dropdown)
+    html += '<div class="vform-field required">';
+    html += '<label class="vform-label">Таймінг</label>';
+    var curTiming = p['Таймінг'] || '';
+    html += '<select class="vform-select" onchange="saveVerifyField(\'' + escAttr(pkgId) + '\', \'Таймінг\', this.value)">';
+    html += '<option value="">-- Оберіть --</option>';
+    html += '<option value="ранок"' + (curTiming === 'ранок' ? ' selected' : '') + '>ранок</option>';
+    html += '<option value="день"' + (curTiming === 'день' ? ' selected' : '') + '>день</option>';
+    html += '<option value="вечір"' + (curTiming === 'вечір' ? ' selected' : '') + '>вечір</option>';
+    html += '</select></div>';
+    html += '</div></div></div>';
 
-    // Action buttons
-    var canComplete = !!(p['Кг'] && p['Оціночна вартість'] && p['Внутрішній №'] && photo);
+    // ═══ БЛОК 4 — МАРШРУТ & ВНУТРІШНІЙ НОМЕР ═══
+    html += '<div class="vform-block">';
+    html += '<div class="vform-block-header ' + (bs.b4 ? 'active' : 'collapsed') + '" onclick="toggleVerifyBlock(\'' + escAttr(pkgId) + '\', \'b4\')">';
+    html += '<span class="vform-block-title"><span class="block-num">4</span> Маршрут & номер</span>';
+    html += '<div class="vform-block-status">';
+    html += '<span class="vform-block-check">' + (hasRoute ? '&#9989;' : '&#9888;&#65039;') + '</span>';
+    html += '<span class="vform-block-toggle">&#9660;</span>';
+    html += '</div></div>';
+    html += '<div class="vform-block-body ' + (bs.b4 ? '' : 'collapsed') + '" style="max-height:' + (bs.b4 ? '400px' : '0') + ';">';
+    html += '<div class="vform-grid">';
+    // Номерація маршруту
+    var curRoute = getRouteFromIntNum(p['Внутрішній №']);
+    html += '<div class="vform-field required">';
+    html += '<label class="vform-label">Номерація маршруту</label>';
+    html += '<select class="vform-select" id="vRouteSelect-' + pkgId + '" onchange="onRouteSelect(\'' + escAttr(pkgId) + '\')">';
+    html += '<option value="">-- Оберіть --</option>';
+    html += '<option value="200"' + (curRoute === '200' ? ' selected' : '') + '>200</option>';
+    html += '<option value="500"' + (curRoute === '500' ? ' selected' : '') + '>500</option>';
+    html += '<option value="custom"' + (p['Внутрішній №'] && !curRoute ? ' selected' : '') + '>Інша</option>';
+    html += '</select></div>';
+    // Маршрут (інший текст) — видно тільки при "Інша"
+    var showCustomRoute = (p['Внутрішній №'] && !curRoute);
+    html += '<div class="vform-field vform-conditional ' + (showCustomRoute ? 'visible' : '') + '" id="vRouteCustom-' + pkgId + '">';
+    html += '<label class="vform-label">Маршрут (інший)</label>';
+    html += '<input class="vform-input" id="vRouteCustomInput-' + pkgId + '" placeholder="Введіть номер маршруту" value="' + escAttr(showCustomRoute ? p['Внутрішній №'] : '') + '">';
+    html += '</div>';
+    // Внутрішній №
+    html += '<div class="vform-field">';
+    html += '<label class="vform-label">Внутрішній № (авто)</label>';
+    html += '<input class="vform-input readonly" id="vIntNum-' + pkgId + '" value="' + escAttr(p['Внутрішній №'] || 'Генерується автоматично') + '" readonly>';
+    html += '</div>';
+    html += '</div></div></div>';
+
+    // ═══ БЛОК 5 — ДУБЛІ (УМОВНО) ═══
+    if (hasDups) {
+        html += '<div class="vform-block">';
+        html += '<div class="vform-block-header ' + (bs.b5 ? 'active' : 'collapsed') + '" onclick="toggleVerifyBlock(\'' + escAttr(pkgId) + '\', \'b5\')">';
+        html += '<span class="vform-block-title"><span class="block-num" style="background:var(--warning);">!</span> &#9888; Дублі знайдено (' + dups.length + ')</span>';
+        html += '<span class="vform-block-toggle">&#9660;</span>';
+        html += '</div>';
+        html += '<div class="vform-block-body ' + (bs.b5 ? '' : 'collapsed') + '" style="max-height:' + (bs.b5 ? '300px' : '0') + ';">';
+        html += '<div class="vform-dup-alert" style="margin-bottom:0;">';
+        html += '<div class="vform-dup-title">&#9888; ЗНАЙДЕНО ДУБЛІ:</div>';
+        dups.forEach(function(d) {
+            html += '<div class="vform-dup-item" onclick="openDuplicatePackage(\'' + escAttr(d.package_id) + '\')">&#8226; TTH: ' + escHtml(d.ttn) + ' — ' + escHtml(d.recipient_name) + ' (' + escHtml(d.package_id) + ')</div>';
+        });
+        html += '</div></div></div>';
+    }
+
+    // ═══ БЛОК 6 — КНОПКИ ДІЇ ═══
+    var canComplete = !!(p['Кг'] && p['Оціночна вартість'] && p['Внутрішній №'] && photo && p['Опис'] && p['Дата відправки'] && p['Таймінг']);
     html += '<div class="vform-buttons">';
     if (!isReady) {
-        html += '<button class="vform-btn btn-ready" onclick="completeVerification(\'' + escAttr(pkgId) + '\')" ' + (canComplete ? '' : 'disabled title="Заповніть всі поля, призначте маршрут та завантажте фото"') + '>&#9989; ГОТОВА</button>';
-        html += '<button class="vform-btn btn-reject" onclick="rejectVerification(\'' + escAttr(pkgId) + '\')">&#10060; Відмова</button>';
+        html += '<button class="vform-btn btn-ready" onclick="completeVerification(\'' + escAttr(pkgId) + '\')" ' + (canComplete ? '' : 'disabled title="Заповніть всі обов\'язкові поля, призначте маршрут та завантажте фото"') + '>&#9989; ГОТОВА</button>';
+        html += '<button class="vform-btn btn-edit" onclick="toggleVerifyEdit(\'' + escAttr(pkgId) + '\')">&#9998; РЕДАГУВАТИ</button>';
+        html += '<button class="vform-btn btn-reject" onclick="rejectVerification(\'' + escAttr(pkgId) + '\')">&#10060; ВІДМОВА</button>';
+        html += '<button class="vform-btn btn-refresh" onclick="refreshVerifyCard(\'' + escAttr(pkgId) + '\')">&#128260; ОНОВИТИ</button>';
     } else {
         html += '<button class="vform-btn btn-edit" onclick="reopenVerification(\'' + escAttr(pkgId) + '\')">&#9998; Повернути в перевірку</button>';
+        html += '<button class="vform-btn btn-refresh" onclick="refreshVerifyCard(\'' + escAttr(pkgId) + '\')">&#128260; ОНОВИТИ</button>';
     }
     html += '</div>';
 
     return html;
 }
 
-function vformField(pkgId, col, value, type, placeholder, fullWidth) {
+function vformField(pkgId, col, value, type, placeholder, fullWidth, isRequired) {
     var val = value !== undefined && value !== null ? String(value) : '';
     var cls = fullWidth ? 'vform-field vform-full' : 'vform-field';
+    if (isRequired) cls += ' required';
     return '<div class="' + cls + '">' +
         '<label class="vform-label">' + escHtml(col) + '</label>' +
         '<input class="vform-input" type="' + type + '" value="' + escAttr(val) + '" placeholder="' + escAttr(placeholder || '') + '" ' +
@@ -2421,14 +2548,80 @@ async function saveVerifyField(pkgId, col, newValue) {
     }
 }
 
+// ── Toggle Verify Block (expand/collapse) ──
+function toggleVerifyBlock(pkgId, blockKey) {
+    if (!verifyBlockState[pkgId]) {
+        verifyBlockState[pkgId] = { b1: true, b2: true, b3: true, b4: true, b5: true };
+    }
+    verifyBlockState[pkgId][blockKey] = !verifyBlockState[pkgId][blockKey];
+    var formEl = document.getElementById('vform-' + pkgId);
+    var p = allData.find(x => x['PKG_ID'] === pkgId);
+    if (formEl && p) formEl.innerHTML = renderVerifyForm(p);
+}
+
+// ── Toggle Verify Edit mode (re-render for now) ──
+function toggleVerifyEdit(pkgId) {
+    // Expand all blocks for editing
+    verifyBlockState[pkgId] = { b1: true, b2: true, b3: true, b4: true, b5: true };
+    var formEl = document.getElementById('vform-' + pkgId);
+    var p = allData.find(x => x['PKG_ID'] === pkgId);
+    if (formEl && p) formEl.innerHTML = renderVerifyForm(p);
+    showToast('Режим редагування активовано');
+}
+
+// ── Refresh Verify Card ──
+async function refreshVerifyCard(pkgId) {
+    showLoader('Оновлення...');
+    try {
+        var res = await apiPost('getAll', { sheet: 'ue', filter: {} });
+        if (res.ok && res.data) {
+            res.data.forEach(function(serverPkg) {
+                var idx = allData.findIndex(x => x['PKG_ID'] === serverPkg['PKG_ID']);
+                if (idx !== -1) {
+                    Object.keys(serverPkg).forEach(function(k) {
+                        allData[idx][k] = serverPkg[k];
+                    });
+                    allData[idx]['Борг'] = Math.max(0, (parseFloat(allData[idx]['Сума']) || 0) - (parseFloat(allData[idx]['Завдаток']) || 0));
+                }
+            });
+        }
+        loadVerificationData();
+        showToast('Дані оновлено');
+    } catch(e) {
+        showToast('Помилка: ' + e.message);
+    }
+    hideLoader();
+}
+
+// ── Open Duplicate Package ──
+function openDuplicatePackage(dupPkgId) {
+    openVerifyCardId = dupPkgId;
+    loadDuplicatesForPackage(dupPkgId);
+    renderVerifyCards();
+    var el = document.getElementById('vcard-' + dupPkgId);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 // ── Route Assignment ──
 async function onRouteSelect(pkgId) {
     var select = document.getElementById('vRouteSelect-' + pkgId);
     var routeNum = select.value;
+    var customEl = document.getElementById('vRouteCustom-' + pkgId);
+
+    // Show/hide custom route field
+    if (customEl) {
+        if (routeNum === 'custom') {
+            customEl.classList.add('visible');
+            return; // Wait for user to input custom value and click elsewhere
+        } else {
+            customEl.classList.remove('visible');
+        }
+    }
 
     if (routeNum === 'custom') {
-        routeNum = prompt('Введіть номер маршруту:');
-        if (!routeNum) { select.value = ''; return; }
+        var customInput = document.getElementById('vRouteCustomInput-' + pkgId);
+        routeNum = customInput ? customInput.value : '';
+        if (!routeNum) return;
     }
     if (!routeNum) return;
 
@@ -2457,8 +2650,12 @@ async function completeVerification(pkgId) {
 
     // Client-side validation
     var errors = [];
+    if (!p['Опис']) errors.push('Опис');
     if (!p['Кг']) errors.push('Вага');
     if (!p['Оціночна вартість']) errors.push('Ціна');
+    if (!p['Кількість позицій']) errors.push('Кількість позицій');
+    if (!p['Дата відправки']) errors.push('Дата відправки');
+    if (!p['Таймінг']) errors.push('Таймінг');
     if (!p['Фото посилки']) errors.push('Фото');
     if (!p['Внутрішній №']) errors.push('Маршрут');
 
