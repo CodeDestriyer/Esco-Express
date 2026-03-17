@@ -3144,17 +3144,78 @@ function closeRouteModal() {
     document.getElementById('routeModalOverlay').classList.remove('show');
 }
 
+// Build full parcel data object for route (maps CRM fields → route fields)
+function buildParcelRouteData(p) {
+    if (!p) return null;
+    // Визначаємо напрям для коректного маппінгу адрес
+    var dir = p['Напрям'] || '';
+    var isUE = dir.includes('Україна') || dir.includes('UA') || (p._sheet || '').includes('УК');
+
+    return {
+        'RTE_ID': p['PKG_ID'] || '',
+        'PAX_ID/PKG_ID': p['PKG_ID'] || '',
+        'Тип запису': 'Посилка',
+        'Піб відправника': p['Піб відправника'] || '',
+        'Телефон': p['Телефон реєстратора'] || '',
+        'Телефон реєстратора': p['Телефон реєстратора'] || '',
+        'Піб отримувача': p['Піб отримувача'] || '',
+        'Телефон отримувача': p['Телефон отримувача'] || '',
+        'Напрям': p['Напрям'] || '',
+        'Адреса': p['Адреса відправки'] || '',
+        'Адреса відправки': p['Адреса відправки'] || '',
+        'Адреса прибуття': p['Адреса в Європі'] || '',
+        'Адреса в Європі': p['Адреса в Європі'] || '',
+        'Місто Нова Пошта': p['Місто Нова Пошта'] || '',
+        'Кг': p['Кг'] || '',
+        'Опис': p['Опис'] || '',
+        'Деталі': p['Деталі'] || '',
+        'Кількість позицій': p['Кількість позицій'] || '',
+        'Оціночна вартість': p['Оціночна вартість'] || '',
+        'Номер ТТН': p['Номер ТТН'] || '',
+        'Внутрішній №': p['Внутрішній №'] || '',
+        'Сума': p['Сума'] || '',
+        'Валюта': p['Валюта оплати'] || '',
+        'Валюта оплати': p['Валюта оплати'] || '',
+        'Завдаток': p['Завдаток'] || '',
+        'Валюта завдатку': p['Валюта завдатку'] || '',
+        'Форма оплати': p['Форма оплати'] || '',
+        'Статус оплати': p['Статус оплати'] || '',
+        'Борг': p['Борг'] || '',
+        'Статус': p['Статус ліда'] || 'Новий',
+        'Статус ліда': p['Статус ліда'] || 'Новий',
+        'Статус посилки': p['Статус посилки'] || '',
+        'Примітка': p['Примітка'] || '',
+        'Примітка оплати': p['Примітка оплати'] || '',
+        'Дата відправки': p['Дата відправки'] || '',
+        'Таймінг': p['Таймінг'] || '',
+        'Номер авто': p['Номер авто'] || '',
+        'Дата отримання': p['Дата отримання'] || '',
+        'Дата створення': p['Дата створення'] || '',
+        'PKG_ID': p['PKG_ID'] || '',
+        'Контроль перевірки': p['Контроль перевірки'] || ''
+    };
+}
+
 async function selectRoute(sheetName) {
     closeRouteModal();
     // Bulk mode: assign multiple packages to route
     if (bulkRouteTargetIds.length > 1) {
         var ids = bulkRouteTargetIds.slice();
         bulkRouteTargetIds = [];
-        showLoader('Додаємо в маршрут... 0/' + ids.length);
+
+        // Build full leads data
+        var leadsData = ids.map(function(id) {
+            var p = allData.find(function(x) { return x['PKG_ID'] === id; });
+            return buildParcelRouteData(p);
+        }).filter(Boolean);
+
+        if (leadsData.length === 0) { showToast('Не знайдено посилок'); return; }
+
+        showLoader('Додаємо в маршрут... 0/' + leadsData.length);
         var ok = 0, fail = 0;
-        for (var i = 0; i < ids.length; i++) {
-            showLoader('Додаємо в маршрут... ' + (i + 1) + '/' + ids.length);
-            var res = await apiPost('addToRoute', { pkg_id: ids[i], sheet_name: sheetName, rte_id: sheetName });
+        for (var i = 0; i < leadsData.length; i++) {
+            showLoader('Додаємо в маршрут... ' + (i + 1) + '/' + leadsData.length);
+            var res = await apiPost('addToRoute', { pkg_id: ids[i], sheet_name: sheetName, rte_id: sheetName, lead_data: leadsData[i] });
             if (res.ok) {
                 var p = allData.find(x => x['PKG_ID'] === ids[i]);
                 if (p) p['RTE_ID'] = sheetName;
@@ -3181,13 +3242,15 @@ async function selectRoute(sheetName) {
     }
     // Single mode
     bulkRouteTargetIds = [];
+    var singlePkg = allData.find(x => x['PKG_ID'] === routeTargetPkgId);
+    var leadData = buildParcelRouteData(singlePkg);
+
     showLoader('Додаємо в маршрут...');
-    var singleRes = await apiPost('addToRoute', { pkg_id: routeTargetPkgId, sheet_name: sheetName, rte_id: sheetName });
+    var singleRes = await apiPost('addToRoute', { pkg_id: routeTargetPkgId, sheet_name: sheetName, rte_id: sheetName, lead_data: leadData });
     hideLoader();
     if (singleRes.ok) {
         showToast('Посилку додано в ' + sheetName);
-        var sp = allData.find(x => x['PKG_ID'] === routeTargetPkgId);
-        if (sp) sp['RTE_ID'] = sheetName;
+        if (singlePkg) singlePkg['RTE_ID'] = sheetName;
         renderCards();
         // Інвалідуємо кеш маршруту щоб побачити нову посилку
         var singleRouteIdx = routes.findIndex(s => s.sheetName === sheetName);
@@ -5570,9 +5633,10 @@ async function saveOptimizedToRoute(routeIdx) {
         var ok = 0, fail = 0;
         for (var i = 0; i < pkgIds.length; i++) {
             showLoader('Додаємо в маршрут... ' + (i + 1) + '/' + pkgIds.length);
-            var res = await apiPost('addToRoute', { pkg_id: pkgIds[i], sheet_name: sheet.sheetName, rte_id: sheet.sheetName });
+            var p = allData.find(x => x['PKG_ID'] === pkgIds[i]);
+            var leadData = buildParcelRouteData(p);
+            var res = await apiPost('addToRoute', { pkg_id: pkgIds[i], sheet_name: sheet.sheetName, rte_id: sheet.sheetName, lead_data: leadData });
             if (res.ok) {
-                var p = allData.find(x => x['PKG_ID'] === pkgIds[i]);
                 if (p) p['RTE_ID'] = sheet.sheetName;
                 ok++;
             } else { fail++; }
