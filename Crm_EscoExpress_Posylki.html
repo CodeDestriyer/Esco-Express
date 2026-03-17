@@ -1782,19 +1782,25 @@ function detailBlock(pkgId, label, value, options) {
     var clickEdit = ' onclick="event.stopPropagation(); detailBlockClickEdit(\'' + escAttr(pkgId) + '\', \'' + escAttr(label) + '\', this)"';
     var editBtn = '<div class="detail-block-actions"><button class="detail-micro-btn" onclick="event.stopPropagation(); copyToClipboard(\'' + escAttr(val) + '\')" title="Копіювати">&#128203;</button></div>';
 
-    // Color styling for key fields
+    // Color styling: редаговані=жовтий, заповнені=зелений, порожні=червоний
+    var isEdited = !!_editedFields[pkgId + ':' + label];
     var borderColor = '';
     var valueStyle = '';
-    if (label === 'Статус оплати') {
+
+    if (isEdited) {
+        // Редаговане поле — жовтий
+        borderColor = 'var(--warning)';
+        valueStyle = 'color:#92400e;font-weight:800;';
+    } else if (label === 'Статус оплати') {
         if (val === 'Оплачено') { borderColor = 'var(--success)'; valueStyle = 'color:var(--success);font-weight:800;'; }
         else if (val === 'Частково') { borderColor = 'var(--warning)'; valueStyle = 'color:#92400e;font-weight:800;'; }
-        else if (val === 'Не оплачено') { borderColor = 'var(--danger)'; valueStyle = 'color:var(--danger);font-weight:800;'; }
-    } else if (label === 'Статус посилки' && !isEmpty) {
+        else { borderColor = 'var(--danger)'; valueStyle = 'color:var(--danger);font-weight:800;'; }
+    } else if (label === 'Статус посилки') {
         if (val === 'Доставлено' || val === 'Видано') { borderColor = 'var(--success)'; valueStyle = 'color:var(--success);font-weight:800;'; }
         else if (val === 'В дорозі') { borderColor = 'var(--info)'; valueStyle = 'color:var(--info);font-weight:800;'; }
         else if (val === 'Прийнято' || val === 'На складі') { borderColor = 'var(--warning)'; valueStyle = 'color:#92400e;font-weight:800;'; }
+        else { borderColor = 'var(--danger)'; }
     } else if (label === 'Сума') {
-        // Колір суми залежить від статусу оплати
         var _pData = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
         var _ps = _pData ? (_pData['Статус оплати'] || '').trim() : '';
         if (!isEmpty) {
@@ -1802,14 +1808,12 @@ function detailBlock(pkgId, label, value, options) {
             else if (_ps === 'Частково') { borderColor = 'var(--warning)'; valueStyle = 'color:var(--warning);font-weight:800;'; }
             else { borderColor = 'var(--danger)'; valueStyle = 'color:var(--danger);font-weight:800;'; }
         } else { borderColor = 'var(--danger)'; }
-    } else if (label === 'Оціночна вартість') {
-        if (!isEmpty) { borderColor = 'var(--success)'; valueStyle = 'color:var(--success);font-weight:800;'; }
-        else { borderColor = 'var(--danger)'; }
-    } else if (label === 'Кг') {
-        if (!isEmpty) { borderColor = 'var(--purple)'; valueStyle = 'color:var(--purple);font-weight:800;'; }
-        else { borderColor = 'var(--danger)'; }
     } else if (label === 'Внутрішній №') {
         if (!isEmpty) { borderColor = 'var(--primary)'; valueStyle = 'color:var(--primary);font-size:14px;font-weight:900;'; }
+        else { borderColor = 'var(--danger)'; }
+    } else {
+        // Дефолт для всіх інших полів: заповнене=зелений, порожнє=червоний
+        if (!isEmpty) { borderColor = 'var(--success)'; valueStyle = 'color:var(--success);font-weight:800;'; }
         else { borderColor = 'var(--danger)'; }
     }
 
@@ -1910,14 +1914,10 @@ function cancelInlineEditBlock(pkgId, col) {
         var blockId = 'db-' + pkgId + '-' + col.replace(/\s/g, '_');
         var block = document.getElementById(blockId);
         if (block) {
-            var valueEl = block.querySelector('.detail-block-value');
-            if (valueEl) {
-                var val = p[col] !== undefined && p[col] !== null && p[col] !== '' ? String(p[col]) : '';
-                valueEl.textContent = val || '—';
-                valueEl.className = 'detail-block-value editable' + (!val ? ' empty' : '');
-                valueEl.setAttribute('onclick', "event.stopPropagation(); detailBlockClickEdit('" + escAttr(pkgId) + "', '" + escAttr(col) + "', this)");
-                valueEl.setAttribute('title', 'Натисніть щоб редагувати');
-            }
+            // Перерендерити весь блок з правильними кольорами
+            var val = p[col];
+            var opts = getFieldOptions(col);
+            block.outerHTML = detailBlock(pkgId, col, val, opts);
             return;
         }
     }
