@@ -652,20 +652,6 @@
             <span class="side-menu-item-count" id="mobCountEU">0</span>
         </div>
         <div class="side-menu-divider"></div>
-        <div class="side-menu-section-title">Фінанси</div>
-        <div class="side-menu-item" id="mobUnpaid" onclick="setPayFilter('Не оплачено'); closeSideMenu();">
-            <span class="side-menu-item-left">&#128308; Не оплачено</span>
-            <span class="side-menu-item-count" id="mobCountUnpaid">0</span>
-        </div>
-        <div class="side-menu-item" id="mobPartial" onclick="setPayFilter('Частково'); closeSideMenu();">
-            <span class="side-menu-item-left">&#128992; Частково</span>
-            <span class="side-menu-item-count" id="mobCountPartial">0</span>
-        </div>
-        <div class="side-menu-item" id="mobPaid" onclick="setPayFilter('Оплачено'); closeSideMenu();">
-            <span class="side-menu-item-left">&#128994; Оплачено</span>
-            <span class="side-menu-item-count" id="mobCountPaid">0</span>
-        </div>
-        <div class="side-menu-divider"></div>
         <div class="side-menu-section-title">Перевірка</div>
         <div class="side-menu-item" id="mobVerCheck" onclick="switchToVerification('checking'); closeSideMenu();">
             <span class="side-menu-item-left">&#128269; Перевірка</span>
@@ -691,11 +677,11 @@
     <div class="pc-sidebar" id="pcSidebar">
         <!-- DIRECTION SECTION -->
         <div class="pc-sidebar-section">
-            <div class="pc-sidebar-header" onclick="togglePcSection('direction')">
+            <div class="pc-sidebar-header collapsed" onclick="togglePcSection('direction')">
                 <span class="pc-sidebar-title">&#129517; НАПРЯМОК</span>
                 <span class="pc-sidebar-toggle" id="pcToggleDirection">&#9660;</span>
             </div>
-            <div class="pc-sidebar-content" id="pcSectionDirection">
+            <div class="pc-sidebar-content collapsed" id="pcSectionDirection">
                 <div class="pc-sidebar-item pc-dir-ue active" id="sideDirUE" onclick="setDirection('ue')">
                     <span><span class="item-icon">&#127482;&#127462;&#8594;&#127466;&#127482;</span><span class="item-text"><b>УК</b> &#8594; <b>Європа</b></span></span>
                     <span class="item-count" id="pcCountUE">0</span>
@@ -703,26 +689,6 @@
                 <div class="pc-sidebar-item pc-dir-eu" id="sideDirEU" onclick="setDirection('eu')">
                     <span><span class="item-icon">&#127466;&#127482;&#8594;&#127482;&#127462;</span><span class="item-text"><b>Європа</b> &#8594; <b>УК</b></span></span>
                     <span class="item-count" id="pcCountEU">0</span>
-                </div>
-            </div>
-        </div>
-        <div class="pc-sidebar-section">
-            <div class="pc-sidebar-header collapsed" onclick="togglePcSection('finance')">
-                <span class="pc-sidebar-title">&#128176; ФІНАНСИ</span>
-                <span class="pc-sidebar-toggle" id="pcToggleFinance">&#9660;</span>
-            </div>
-            <div class="pc-sidebar-content collapsed" id="pcSectionFinance">
-                <div class="pc-sidebar-item" id="sideUnpaid" onclick="setPayFilter('Не оплачено')">
-                    <span><span class="item-icon">&#128308;</span><span class="item-text">Не оплачено</span></span>
-                    <span class="item-count" id="pcCountUnpaid">0</span>
-                </div>
-                <div class="pc-sidebar-item" id="sidePartial" onclick="setPayFilter('Частково')">
-                    <span><span class="item-icon">&#128992;</span><span class="item-text">Частково</span></span>
-                    <span class="item-count" id="pcCountPartial">0</span>
-                </div>
-                <div class="pc-sidebar-item" id="sidePaid" onclick="setPayFilter('Оплачено')">
-                    <span><span class="item-icon">&#128994;</span><span class="item-text">Оплачено</span></span>
-                    <span class="item-count" id="pcCountPaid">0</span>
                 </div>
             </div>
         </div>
@@ -1443,14 +1409,6 @@ function updateSidebar() {
         if (payCounts[pay] !== undefined) payCounts[pay]++;
     });
 
-    document.getElementById('pcCountUnpaid').textContent = payCounts['Не оплачено'];
-    document.getElementById('pcCountPartial').textContent = payCounts['Частково'];
-    document.getElementById('pcCountPaid').textContent = payCounts['Оплачено'];
-
-    // Mobile counts
-    document.getElementById('mobCountUnpaid').textContent = payCounts['Не оплачено'];
-    document.getElementById('mobCountPartial').textContent = payCounts['Частково'];
-    document.getElementById('mobCountPaid').textContent = payCounts['Оплачено'];
 
     // Direction counts (popup + PC sidebar + mobile menu)
     var dUE = document.getElementById('countDirUE');
