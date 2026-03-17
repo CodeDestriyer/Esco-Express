@@ -3214,10 +3214,10 @@ function renderVerifyForm(p) {
     html += renderDetailsContent(p);
 
     // ── Кнопки перевірки ──
-    var canComplete = !!(p['Кг'] && p['Оціночна вартість'] && p['Внутрішній №'] && photo);
+    var canComplete = !!(p['Кг'] && p['Оціночна вартість'] && p['Внутрішній №']);
     html += '<div class="vform-buttons">';
     if (!isReady) {
-        html += '<button class="vform-btn btn-ready" onclick="completeVerification(\'' + escAttr(pkgId) + '\')" ' + (canComplete ? '' : 'disabled title="Заповніть вагу, ціну, маршрут та фото"') + '>&#9989; Готова</button>';
+        html += '<button class="vform-btn btn-ready" onclick="completeVerification(\'' + escAttr(pkgId) + '\')" ' + (canComplete ? '' : 'disabled title="Заповніть вагу, ціну та маршрут"') + '>&#9989; Готова</button>';
         html += '<button class="vform-btn btn-reject" onclick="rejectVerification(\'' + escAttr(pkgId) + '\')">&#10060; Відмова</button>';
         html += '<button class="vform-btn btn-transfer" onclick="transferVerification(\'' + escAttr(pkgId) + '\')">&#128197; Перенести</button>';
         html += '<button class="vform-btn btn-refresh" onclick="refreshVerifyCard(\'' + escAttr(pkgId) + '\')">&#128260; Оновити</button>';
@@ -3406,7 +3406,6 @@ async function completeVerification(pkgId) {
     var errors = [];
     if (!p['Кг']) errors.push('Вага');
     if (!p['Оціночна вартість']) errors.push('Ціна');
-    if (!p['Фото посилки']) errors.push('Фото');
     if (!p['Внутрішній №']) errors.push('Маршрут');
 
     if (errors.length > 0) {
