@@ -595,10 +595,6 @@
         </div>
         <div class="side-menu-divider"></div>
         <div class="side-menu-section-title">Перевірка</div>
-        <div class="side-menu-item" id="mobWork" onclick="setFilter('В роботі'); closeSideMenu();">
-            <span class="side-menu-item-left">&#128736; В роботі</span>
-            <span class="side-menu-item-count" id="mobCountWork">0</span>
-        </div>
         <div class="side-menu-item" id="mobVerCheck" onclick="switchToVerification('checking'); closeSideMenu();">
             <span class="side-menu-item-left">&#128269; Перевірка</span>
             <span class="side-menu-item-count" id="mobCountVerCheck">0</span>
@@ -672,10 +668,6 @@
                 <div class="pc-sidebar-item" id="sideVerNew" onclick="switchToVerification('new')">
                     <span><span class="item-icon">&#128313;</span><span class="item-text">Нові</span></span>
                     <span class="item-count" id="pcCountVerNew">0</span>
-                </div>
-                <div class="pc-sidebar-item" id="sideWork" onclick="setFilter('В роботі')">
-                    <span><span class="item-icon">&#128736;</span><span class="item-text">В роботі</span></span>
-                    <span class="item-count" id="pcCountWork">0</span>
                 </div>
                 <div class="pc-sidebar-item" id="sideVerCheck" onclick="switchToVerification('checking')">
                     <span><span class="item-icon">&#128269;</span><span class="item-text">Перевірка</span></span>
@@ -1283,8 +1275,7 @@ function setPayFilter(status) {
 function updateSidebarActive() {
     document.querySelectorAll('.pc-sidebar-item').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.side-menu-item').forEach(el => el.classList.remove('active'));
-    if (currentFilter === 'В роботі') { document.getElementById('sideWork')?.classList.add('active'); document.getElementById('mobWork')?.classList.add('active'); }
-    else if (currentPayFilter === 'Не оплачено') { document.getElementById('sideUnpaid')?.classList.add('active'); document.getElementById('mobUnpaid')?.classList.add('active'); }
+    if (currentPayFilter === 'Не оплачено') { document.getElementById('sideUnpaid')?.classList.add('active'); document.getElementById('mobUnpaid')?.classList.add('active'); }
     else if (currentPayFilter === 'Частково') { document.getElementById('sidePartial')?.classList.add('active'); document.getElementById('mobPartial')?.classList.add('active'); }
     else if (currentPayFilter === 'Оплачено') { document.getElementById('sidePaid')?.classList.add('active'); document.getElementById('mobPaid')?.classList.add('active'); }
 }
@@ -1358,13 +1349,11 @@ function updateSidebar() {
         if (payCounts[pay] !== undefined) payCounts[pay]++;
     });
 
-    document.getElementById('pcCountWork').textContent = counts['В роботі'];
     document.getElementById('pcCountUnpaid').textContent = payCounts['Не оплачено'];
     document.getElementById('pcCountPartial').textContent = payCounts['Частково'];
     document.getElementById('pcCountPaid').textContent = payCounts['Оплачено'];
 
     // Mobile counts
-    document.getElementById('mobCountWork').textContent = counts['В роботі'];
     document.getElementById('mobCountUnpaid').textContent = payCounts['Не оплачено'];
     document.getElementById('mobCountPartial').textContent = payCounts['Частково'];
     document.getElementById('mobCountPaid').textContent = payCounts['Оплачено'];
