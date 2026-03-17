@@ -1748,6 +1748,11 @@ function cancelInlineEditBlock(pkgId) {
     _isInlineEditing = false;
     var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
     if (!p) return;
+    // У перевірці пріоритет — vform, бо details- може існувати в прихованому defaultView
+    if (currentView === 'verification') {
+        var vformEl = document.getElementById('vform-' + pkgId);
+        if (vformEl) { vformEl.innerHTML = renderVerifyForm(p); return; }
+    }
     var detailEl = document.getElementById('details-' + pkgId);
     if (detailEl) detailEl.innerHTML = renderDetailsContent(p);
 }
@@ -1861,13 +1866,20 @@ function switchDetailTab(pkgId, tabId) {
     activeDetailTab[pkgId] = tabId;
     const p = allData.find(x => x['PKG_ID'] === pkgId);
     if (!p) return;
-    // Основний вид — details-{pkgId}, перевірка — vform-{pkgId}
+
+    // У перевірці пріоритет — vform, бо details- може існувати в прихованому defaultView
+    if (currentView === 'verification') {
+        const vformEl = document.getElementById('vform-' + pkgId);
+        if (vformEl) {
+            vformEl.innerHTML = renderVerifyForm(p);
+            return;
+        }
+    }
     const detailEl = document.getElementById('details-' + pkgId);
     if (detailEl) {
         detailEl.innerHTML = renderDetailsContent(p);
         return;
     }
-    // Verification view: оновити лише контент деталей всередині vform
     const vformEl = document.getElementById('vform-' + pkgId);
     if (vformEl) {
         vformEl.innerHTML = renderVerifyForm(p);
@@ -3169,6 +3181,7 @@ function renderVerifyForm(p) {
         html += '<button class="vform-btn btn-ready" onclick="completeVerification(\'' + escAttr(pkgId) + '\')" ' + (canComplete ? '' : 'disabled title="Заповніть вагу, ціну, маршрут та фото"') + '>&#9989; ГОТОВА</button>';
         html += '<button class="vform-btn btn-reject" onclick="rejectVerification(\'' + escAttr(pkgId) + '\')">&#10060; ВІДМОВА</button>';
         html += '<button class="vform-btn btn-refresh" onclick="refreshVerifyCard(\'' + escAttr(pkgId) + '\')">&#128260; ОНОВИТИ</button>';
+        html += '<button class="vform-btn" style="background:#fee2e2;color:#991b1b;" onclick="removeFromVerification(\'' + escAttr(pkgId) + '\')">&#128465; ВИДАЛИТИ З ПЕРЕВІРКИ</button>';
     } else {
         html += '<button class="vform-btn btn-edit" onclick="reopenVerification(\'' + escAttr(pkgId) + '\')">&#9998; Повернути в перевірку</button>';
         html += '<button class="vform-btn btn-refresh" onclick="refreshVerifyCard(\'' + escAttr(pkgId) + '\')">&#128260; ОНОВИТИ</button>';
@@ -3389,6 +3402,25 @@ async function rejectVerification(pkgId) {
         if (p) p['Контроль перевірки'] = 'Відмова';
         openVerifyCardId = null;
         showToast('Посилку відхилено');
+        loadVerificationData();
+    } else {
+        showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Remove from Verification (видалити з перевірки — очистити контроль) ──
+async function removeFromVerification(pkgId) {
+    if (!confirm('Видалити цю посилку з перевірки?')) return;
+
+    showLoader('Видаляємо з перевірки...');
+    var res = await apiPost('updateField', { pkg_id: pkgId, col: 'Контроль перевірки', value: '' });
+    hideLoader();
+
+    if (res.ok) {
+        var p = allData.find(x => x['PKG_ID'] === pkgId);
+        if (p) p['Контроль перевірки'] = '';
+        openVerifyCardId = null;
+        showToast('Посилку видалено з перевірки');
         loadVerificationData();
     } else {
         showToast('Помилка: ' + (res.error || ''));
