@@ -179,20 +179,18 @@
         .detail-micro-btn { width: 20px; height: 20px; border: none; border-radius: 4px; background: var(--bg-main); color: var(--text-secondary); font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .detail-micro-btn:hover { background: var(--primary); color: white; }
         /* ============ INLINE EDIT HIGHLIGHT ============ */
-        .detail-inline-edit { width: 100%; border: 2px solid var(--primary); border-radius: 4px; padding: 4px 6px; font-size: 12px; font-weight: 600; font-family: inherit; outline: none; background: #eff6ff; box-shadow: 0 0 0 3px rgba(26,58,94,0.12); transition: border-color 0.15s, box-shadow 0.15s; }
-        .detail-inline-edit:focus { border-color: var(--info); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+        .detail-inline-edit { width: 100%; border: 1px solid var(--border); border-radius: 4px; padding: 4px 6px; font-size: 12px; font-weight: 600; font-family: inherit; outline: none; background: white; transition: border-color 0.15s; }
+        .detail-inline-edit:focus { border-color: #94a3b8; }
         select.detail-inline-edit { padding: 4px 6px; cursor: pointer; appearance: auto; }
-        .detail-inline-edit.qe-saving { border-color: #f59e0b; background: #fffbeb; }
-        /* Green flash on successful save */
-        @keyframes qeSavedFlash {
-            0% { background: #d1fae5; border-left-color: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.3); }
-            100% { background: transparent; border-left-color: var(--border); box-shadow: none; }
-        }
-        .detail-block.qe-saved { animation: qeSavedFlash 1.5s ease-out forwards; }
+        .detail-inline-edit.qe-saving { border-color: #94a3b8; }
+        /* Subtle save indicator — no flashy colors */
+        .detail-block.qe-saved { }
+        .detail-block-value.qe-just-saved::after { content: '✓'; font-size: 10px; color: #64748b; margin-left: 4px; opacity: 1; transition: opacity 0.8s; }
+        .detail-block-value.qe-just-saved.fade-check::after { opacity: 0; }
 
-        /* Clickable detail values */
+        /* Clickable detail values — subtle hover */
         .detail-block-value.editable { cursor: pointer; transition: background 0.15s; border-radius: 3px; padding: 1px 3px; margin: -1px -3px; }
-        .detail-block-value.editable:hover { background: #eef2ff; }
+        .detail-block-value.editable:hover { background: #f1f5f9; }
 
         /* Smooth card expand animation */
         .card-details { display: none; padding: 0; background: #f8fafc; border-top: 1px solid var(--border); overflow: hidden; max-height: 0; transition: max-height 0.3s ease-out, opacity 0.2s ease-out; opacity: 0; }
@@ -471,18 +469,24 @@
         .vform-dup-title { font-size: 11px; font-weight: 700; color: #92400e; margin-bottom: 4px; }
         .vform-dup-item { font-size: 11px; color: #92400e; padding: 2px 0; cursor: pointer; text-decoration: underline; }
         .vform-dup-item:hover { color: #78350f; }
-        .vform-buttons { display: flex; gap: 8px; padding: 12px; background: white; border-top: 1px solid var(--border); }
-        .vform-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; }
-        .vform-btn.btn-ready { background: var(--success); color: white; }
-        .vform-btn.btn-ready:hover { background: #059669; }
-        .vform-btn.btn-ready:disabled { opacity: 0.5; cursor: not-allowed; }
-        .vform-btn.btn-reject { background: #fee2e2; color: #dc2626; }
-        .vform-btn.btn-reject:hover { background: #dc2626; color: white; }
+        .vform-buttons { display: flex; gap: 6px; padding: 8px 12px; background: white; border-top: 1px solid var(--border); flex-wrap: wrap; }
+        .vform-btn { flex: 1; min-width: 0; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; background: #f8fafc; color: var(--text-primary); }
+        .vform-btn:hover { background: #eef2ff; border-color: var(--primary); color: var(--primary); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+        .vform-btn:active { transform: translateY(0); box-shadow: none; }
+        .vform-btn.btn-ready { background: var(--success); color: white; border-color: var(--success); }
+        .vform-btn.btn-ready:hover { background: #059669; border-color: #059669; color: white; }
+        .vform-btn.btn-ready:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .vform-btn.btn-reject { background: #fef2f2; color: #dc2626; border-color: #fca5a5; }
+        .vform-btn.btn-reject:hover { background: #dc2626; color: white; border-color: #dc2626; }
+        .vform-btn.btn-transfer { background: #fffbeb; color: #d97706; border-color: #fcd34d; }
+        .vform-btn.btn-transfer:hover { background: #d97706; color: white; border-color: #d97706; }
         .vform-btn.btn-edit { background: var(--bg-main); color: var(--text-primary); }
-        .vform-btn.btn-refresh { background: #dbeafe; color: #1d4ed8; }
-        .vform-btn.btn-refresh:hover { background: #bfdbfe; }
+        .vform-btn.btn-edit:hover { background: #e2e8f0; border-color: var(--primary); }
+        .vform-btn.btn-refresh { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
+        .vform-btn.btn-refresh:hover { background: #1d4ed8; color: white; border-color: #1d4ed8; }
+        .vform-btn.btn-remove { background: #fef2f2; color: #991b1b; border-color: #fca5a5; }
+        .vform-btn.btn-remove:hover { background: #991b1b; color: white; border-color: #991b1b; }
         @media (max-width: 600px) {
-            .vform-buttons { flex-wrap: wrap; }
             .vform-btn { min-width: calc(50% - 4px); }
         }
 
@@ -692,6 +696,10 @@
                     <span><span class="item-icon">&#9989;</span><span class="item-text">Готові</span></span>
                     <span class="item-count" id="pcCountVerReady">0</span>
                 </div>
+                <div class="pc-sidebar-item" id="sideVerTransferred" onclick="switchToVerification('transferred')">
+                    <span><span class="item-icon">&#128197;</span><span class="item-text">Перенесені</span></span>
+                    <span class="item-count" id="pcCountVerTransferred">0</span>
+                </div>
             </div>
         </div>
         <!-- ROUTES SECTION -->
@@ -772,6 +780,10 @@
                 <button class="verify-tab" id="vtabReady" onclick="setVerifyTab('ready')">
                     <span class="vtab-count" id="vtabCountReady">0</span>
                     <span class="vtab-label">Готові</span>
+                </button>
+                <button class="verify-tab" id="vtabTransferred" onclick="setVerifyTab('transferred')">
+                    <span class="vtab-count" id="vtabCountTransferred">0</span>
+                    <span class="vtab-label">Перенесені</span>
                 </button>
             </div>
 
@@ -1533,12 +1545,21 @@ function toggleCard(pkgId) {
     savePendingEdits();
 
     if (wasOpen) {
+        // Show save notification on collapse if there were edits
+        if (_cardHadEdits[pkgId]) {
+            showToast('&#10003; Збережено');
+            delete _cardHadEdits[pkgId];
+        }
         openCardId = null;
         delete activeDetailTab[pkgId];
         const el = document.getElementById('details-' + pkgId);
         if (el) el.classList.remove('show');
     } else {
-        // Згорнути попередній
+        // Згорнути попередній — notify if had edits
+        if (prevOpen && _cardHadEdits[prevOpen]) {
+            showToast('&#10003; Збережено');
+            delete _cardHadEdits[prevOpen];
+        }
         if (prevOpen) {
             const prevEl = document.getElementById('details-' + prevOpen);
             if (prevEl) prevEl.classList.remove('show');
@@ -1774,6 +1795,8 @@ function copyToClipboard(text) {
 
 // Flag: user is currently editing inline — block polling re-renders
 var _isInlineEditing = false;
+// Track which cards had edits (for collapse save notification)
+var _cardHadEdits = {};
 
 // Save any pending inline edit before switching cards/tabs (like main lead CRM)
 function savePendingEdits() {
@@ -1811,7 +1834,8 @@ async function qeSave(el) {
 
     if (res.ok) {
         if (p) p[col] = newVal;
-        showToast('Збережено');
+        // Track that this card had saves (for collapse notification)
+        _cardHadEdits[pkgId] = true;
 
         // Recalc debt locally
         if (p && (col === 'Сума' || col === 'Завдаток')) {
@@ -1828,13 +1852,15 @@ async function qeSave(el) {
         _isInlineEditing = false;
         cancelInlineEditBlock(pkgId);
 
-        // Green flash on the saved block
+        // Subtle checkmark on the saved value (no flash)
         var savedBlock = document.getElementById(blockId);
         if (savedBlock) {
-            savedBlock.classList.remove('qe-saved');
-            void savedBlock.offsetWidth; // force reflow for re-trigger
-            savedBlock.classList.add('qe-saved');
-            setTimeout(function() { savedBlock.classList.remove('qe-saved'); }, 1600);
+            var valEl = savedBlock.querySelector('.detail-block-value');
+            if (valEl) {
+                valEl.classList.add('qe-just-saved');
+                setTimeout(function() { valEl.classList.add('fade-check'); }, 800);
+                setTimeout(function() { valEl.classList.remove('qe-just-saved', 'fade-check'); }, 1600);
+            }
         }
     } else {
         if (p) p[col] = oldVal;
@@ -2930,7 +2956,7 @@ function switchToVerification(tab) {
 
     // Update sidebar
     document.querySelectorAll('.pc-sidebar-item').forEach(el => el.classList.remove('active'));
-    var sideId = { 'all': 'sideVerAll', 'new': 'sideVerNew', 'checking': 'sideVerCheck', 'ready': 'sideVerReady' }[currentVerifyTab];
+    var sideId = { 'all': 'sideVerAll', 'new': 'sideVerNew', 'checking': 'sideVerCheck', 'ready': 'sideVerReady', 'transferred': 'sideVerTransferred' }[currentVerifyTab];
     if (sideId) document.getElementById(sideId)?.classList.add('active');
 
     updateVerifyTabs();
@@ -2963,7 +2989,7 @@ function setVerifyTab(tab) {
 
 function updateVerifyTabs() {
     document.querySelectorAll('.verify-tab').forEach(t => t.classList.remove('active'));
-    var tabId = { 'all': 'vtabAll', 'new': 'vtabNew', 'checking': 'vtabChecking', 'ready': 'vtabReady' }[currentVerifyTab];
+    var tabId = { 'all': 'vtabAll', 'new': 'vtabNew', 'checking': 'vtabChecking', 'ready': 'vtabReady', 'transferred': 'vtabTransferred' }[currentVerifyTab];
     if (tabId) document.getElementById(tabId)?.classList.add('active');
 }
 
@@ -2988,25 +3014,28 @@ function getVerifyFiltered() {
             case 'new': return !ctrl || ctrl === 'Нова' || ctrl === '';
             case 'checking': return ctrl === 'В перевірці';
             case 'ready': return ctrl === 'Готова до маршруту';
+            case 'transferred': return ctrl === 'Перенесена';
             default: return true;
         }
     });
 }
 
 function updateVerifyCounts() {
-    var counts = { all: 0, new: 0, checking: 0, ready: 0 };
+    var counts = { all: 0, new: 0, checking: 0, ready: 0, transferred: 0 };
     verifyData.forEach(p => {
         var ctrl = String(p['Контроль перевірки'] || '').trim();
         counts.all++;
         if (!ctrl || ctrl === 'Нова' || ctrl === '') counts.new++;
         else if (ctrl === 'В перевірці') counts.checking++;
         else if (ctrl === 'Готова до маршруту') counts.ready++;
+        else if (ctrl === 'Перенесена') counts.transferred++;
     });
 
     document.getElementById('vtabCountAll').textContent = counts.all;
     document.getElementById('vtabCountNew').textContent = counts.new;
     document.getElementById('vtabCountCheck').textContent = counts.checking;
     document.getElementById('vtabCountReady').textContent = counts.ready;
+    document.getElementById('vtabCountTransferred').textContent = counts.transferred;
 
     // Sidebar counts
     var el;
@@ -3014,6 +3043,7 @@ function updateVerifyCounts() {
     el = document.getElementById('pcCountVerNew'); if (el) el.textContent = counts.new;
     el = document.getElementById('pcCountVerCheck'); if (el) el.textContent = counts.checking;
     el = document.getElementById('pcCountVerReady'); if (el) el.textContent = counts.ready;
+    el = document.getElementById('pcCountVerTransferred'); if (el) el.textContent = counts.transferred;
 
     // Mobile counts
     el = document.getElementById('mobCountVerCheck'); if (el) el.textContent = counts.checking;
@@ -3127,11 +3157,20 @@ function toggleVerifyCard(pkgId) {
     var prevOpen = openVerifyCardId;
 
     if (wasOpen) {
+        // Show save notification on collapse if there were edits
+        if (_cardHadEdits[pkgId]) {
+            showToast('&#10003; Збережено');
+            delete _cardHadEdits[pkgId];
+        }
         openVerifyCardId = null;
         var el = document.getElementById('vform-' + pkgId);
         if (el) el.classList.remove('show');
     } else {
-        // Згорнути попередній без повного ре-рендеру
+        // Згорнути попередній — notify if had edits
+        if (prevOpen && _cardHadEdits[prevOpen]) {
+            showToast('&#10003; Збережено');
+            delete _cardHadEdits[prevOpen];
+        }
         if (prevOpen) {
             var prevEl = document.getElementById('vform-' + prevOpen);
             if (prevEl) prevEl.classList.remove('show');
@@ -3178,13 +3217,14 @@ function renderVerifyForm(p) {
     var canComplete = !!(p['Кг'] && p['Оціночна вартість'] && p['Внутрішній №'] && photo);
     html += '<div class="vform-buttons">';
     if (!isReady) {
-        html += '<button class="vform-btn btn-ready" onclick="completeVerification(\'' + escAttr(pkgId) + '\')" ' + (canComplete ? '' : 'disabled title="Заповніть вагу, ціну, маршрут та фото"') + '>&#9989; ГОТОВА</button>';
-        html += '<button class="vform-btn btn-reject" onclick="rejectVerification(\'' + escAttr(pkgId) + '\')">&#10060; ВІДМОВА</button>';
-        html += '<button class="vform-btn btn-refresh" onclick="refreshVerifyCard(\'' + escAttr(pkgId) + '\')">&#128260; ОНОВИТИ</button>';
-        html += '<button class="vform-btn" style="background:#fee2e2;color:#991b1b;" onclick="removeFromVerification(\'' + escAttr(pkgId) + '\')">&#128465; ВИДАЛИТИ З ПЕРЕВІРКИ</button>';
+        html += '<button class="vform-btn btn-ready" onclick="completeVerification(\'' + escAttr(pkgId) + '\')" ' + (canComplete ? '' : 'disabled title="Заповніть вагу, ціну, маршрут та фото"') + '>&#9989; Готова</button>';
+        html += '<button class="vform-btn btn-reject" onclick="rejectVerification(\'' + escAttr(pkgId) + '\')">&#10060; Відмова</button>';
+        html += '<button class="vform-btn btn-transfer" onclick="transferVerification(\'' + escAttr(pkgId) + '\')">&#128197; Перенести</button>';
+        html += '<button class="vform-btn btn-refresh" onclick="refreshVerifyCard(\'' + escAttr(pkgId) + '\')">&#128260; Оновити</button>';
+        html += '<button class="vform-btn btn-remove" onclick="removeFromVerification(\'' + escAttr(pkgId) + '\')">&#128465; Видалити</button>';
     } else {
-        html += '<button class="vform-btn btn-edit" onclick="reopenVerification(\'' + escAttr(pkgId) + '\')">&#9998; Повернути в перевірку</button>';
-        html += '<button class="vform-btn btn-refresh" onclick="refreshVerifyCard(\'' + escAttr(pkgId) + '\')">&#128260; ОНОВИТИ</button>';
+        html += '<button class="vform-btn btn-edit" onclick="reopenVerification(\'' + escAttr(pkgId) + '\')">&#9998; Повернути</button>';
+        html += '<button class="vform-btn btn-refresh" onclick="refreshVerifyCard(\'' + escAttr(pkgId) + '\')">&#128260; Оновити</button>';
     }
     html += '</div>';
 
@@ -3424,6 +3464,33 @@ async function removeFromVerification(pkgId) {
         loadVerificationData();
     } else {
         showToast('Помилка: ' + (res.error || ''));
+    }
+}
+
+// ── Transfer Verification (Перенести — вибрати нову дату відправки) ──
+async function transferVerification(pkgId) {
+    var p = allData.find(x => x['PKG_ID'] === pkgId);
+    if (!p) return;
+    var currentDate = p['Дата відправки'] || '';
+    var newDate = prompt('Нова дата відправки (дд.мм.рррр):', currentDate);
+    if (newDate === null || !newDate.trim()) return;
+
+    showLoader('Перенесення посилки...');
+    // Update both the date and mark as transferred
+    var res1 = await apiPost('updateField', { pkg_id: pkgId, col: 'Дата відправки', value: newDate.trim() });
+    var res2 = await apiPost('updateField', { pkg_id: pkgId, col: 'Контроль перевірки', value: 'Перенесена' });
+    hideLoader();
+
+    if (res1.ok && res2.ok) {
+        if (p) {
+            p['Дата відправки'] = newDate.trim();
+            p['Контроль перевірки'] = 'Перенесена';
+        }
+        openVerifyCardId = null;
+        showToast('&#128197; Посилку перенесено на ' + newDate.trim());
+        loadVerificationData();
+    } else {
+        showToast('Помилка: ' + ((res1.error || res2.error) || ''));
     }
 }
 
