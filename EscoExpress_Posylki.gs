@@ -646,11 +646,6 @@ function apiAddToRoute(params) {
   var sheetName = params.sheet_name;
   if (!pkgId || !sheetName) return { ok: false, error: 'pkg_id та sheet_name обов\'язкові' };
 
-  // Отримати дані посилки
-  var pkgRes = apiGetOne({ pkg_id: pkgId });
-  if (!pkgRes.ok) return pkgRes;
-  var pkg = pkgRes.data;
-
   // Записати в Marhrut_crm_v6
   var ss = SpreadsheetApp.openById(DB.MARHRUT);
   var sheet = ss.getSheetByName(sheetName);
@@ -661,21 +656,77 @@ function apiAddToRoute(params) {
   var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { return String(h).trim(); });
 
   var lead = {};
-  lead['Тип запису'] = 'Посилка';
-  lead['Напрям'] = pkg['Напрям'] || '';
-  lead['PAX_ID/PKG_ID'] = pkgId;
-  lead['Піб відправника'] = pkg['Піб відправника'] || '';
-  lead['Телефон'] = pkg['Телефон реєстратора'] || '';
-  lead['Піб отримувача'] = pkg['Піб отримувача'] || '';
-  lead['Телефон отримувача'] = pkg['Телефон отримувача'] || '';
-  lead['Адреса'] = pkg['Адреса відправки'] || '';
-  lead['Кг'] = pkg['Кг'] || '';
-  lead['Сума'] = pkg['Сума'] || '';
-  lead['Завдаток'] = pkg['Завдаток'] || '';
-  lead['Борг'] = pkg['Борг'] || '';
-  lead['Статус оплати'] = pkg['Статус оплати'] || '';
-  lead['Статус'] = pkg['Статус ліда'] || pkg['Статус'] || 'Новий';
+
+  // Використовуємо lead_data з фронтенду якщо є (повний набір полів)
+  if (params.lead_data && typeof params.lead_data === 'object') {
+    for (var key in params.lead_data) {
+      if (params.lead_data.hasOwnProperty(key)) {
+        lead[key] = params.lead_data[key];
+      }
+    }
+  }
+
+  // Доповнюємо/перезаписуємо з даних посилки (як fallback)
+  var pkgRes = apiGetOne({ pkg_id: pkgId });
+  if (pkgRes.ok) {
+    var pkg = pkgRes.data;
+    // Заповнюємо тільки порожні поля з даних посилки
+    var fieldMap = {
+      'Тип запису': 'Посилка',
+      'Напрям': pkg['Напрям'] || '',
+      'PAX_ID/PKG_ID': pkgId,
+      'Піб відправника': pkg['Піб відправника'] || '',
+      'Телефон': pkg['Телефон реєстратора'] || '',
+      'Телефон реєстратора': pkg['Телефон реєстратора'] || '',
+      'Піб отримувача': pkg['Піб отримувача'] || '',
+      'Телефон отримувача': pkg['Телефон отримувача'] || '',
+      'Адреса': pkg['Адреса відправки'] || '',
+      'Адреса відправки': pkg['Адреса відправки'] || '',
+      'Адреса прибуття': pkg['Адреса в Європі'] || '',
+      'Адреса в Європі': pkg['Адреса в Європі'] || '',
+      'Місто Нова Пошта': pkg['Місто Нова Пошта'] || '',
+      'Кг': pkg['Кг'] || '',
+      'Опис': pkg['Опис'] || '',
+      'Деталі': pkg['Деталі'] || '',
+      'Кількість позицій': pkg['Кількість позицій'] || '',
+      'Оціночна вартість': pkg['Оціночна вартість'] || '',
+      'Номер ТТН': pkg['Номер ТТН'] || '',
+      'Внутрішній №': pkg['Внутрішній №'] || '',
+      'Сума': pkg['Сума'] || '',
+      'Валюта': pkg['Валюта оплати'] || '',
+      'Валюта оплати': pkg['Валюта оплати'] || '',
+      'Завдаток': pkg['Завдаток'] || '',
+      'Валюта завдатку': pkg['Валюта завдатку'] || '',
+      'Форма оплати': pkg['Форма оплати'] || '',
+      'Статус оплати': pkg['Статус оплати'] || '',
+      'Борг': pkg['Борг'] || '',
+      'Статус': pkg['Статус ліда'] || pkg['Статус'] || 'Новий',
+      'Статус ліда': pkg['Статус ліда'] || 'Новий',
+      'Статус посилки': pkg['Статус посилки'] || '',
+      'Примітка': pkg['Примітка'] || '',
+      'Примітка оплати': pkg['Примітка оплати'] || '',
+      'Дата відправки': pkg['Дата відправки'] || '',
+      'Таймінг': pkg['Таймінг'] || '',
+      'Номер авто': pkg['Номер авто'] || '',
+      'Дата отримання': pkg['Дата отримання'] || '',
+      'Дата створення': pkg['Дата створення'] || '',
+      'PKG_ID': pkgId,
+      'Контроль перевірки': pkg['Контроль перевірки'] || ''
+    };
+    for (var fk in fieldMap) {
+      if (fieldMap.hasOwnProperty(fk) && !lead[fk]) {
+        lead[fk] = fieldMap[fk];
+      }
+    }
+  } else if (!params.lead_data) {
+    // Ні lead_data, ні дані посилки — помилка
+    return pkgRes;
+  }
+
+  // Гарантуємо обов'язкові поля
   lead['RTE_ID'] = params.rte_id || sheetName;
+  lead['PAX_ID/PKG_ID'] = lead['PAX_ID/PKG_ID'] || pkgId;
+  lead['Тип запису'] = lead['Тип запису'] || 'Посилка';
 
   var row = headers.map(function(h) { return lead[h] || ''; });
   sheet.appendRow(row);
@@ -690,6 +741,13 @@ function apiAddToRoute(params) {
   if (params.date) {
     apiUpdateField({ pkg_id: pkgId, col: 'Дата відправки', value: params.date });
   }
+
+  // Інвалідуємо кеш маршруту
+  try {
+    var cache = CacheService.getScriptCache();
+    cache.remove('routeSheet_' + sheetName);
+    cache.remove('routesList_v2');
+  } catch(e) { /* ignore */ }
 
   return { ok: true };
 }
