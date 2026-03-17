@@ -183,6 +183,12 @@
         .detail-inline-edit:focus { border-color: var(--info); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
         select.detail-inline-edit { padding: 4px 6px; cursor: pointer; appearance: auto; }
         .detail-inline-edit.qe-saving { border-color: #f59e0b; background: #fffbeb; }
+        /* Green flash on successful save */
+        @keyframes qeSavedFlash {
+            0% { background: #d1fae5; border-left-color: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.3); }
+            100% { background: transparent; border-left-color: var(--border); box-shadow: none; }
+        }
+        .detail-block.qe-saved { animation: qeSavedFlash 1.5s ease-out forwards; }
 
         /* Clickable detail values */
         .detail-block-value.editable { cursor: pointer; transition: background 0.15s; border-radius: 3px; padding: 1px 3px; margin: -1px -3px; }
@@ -1673,6 +1679,9 @@ function detailBlockClickEdit(pkgId, col, el) {
     var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
     if (!p) return;
 
+    // Block polling re-renders while editing
+    _isInlineEditing = true;
+
     var currentVal = p[col] !== undefined && p[col] !== null ? String(p[col]) : '';
     var selectOptions = getFieldOptions(col);
     var isAddressField = (col === 'Адреса відправки' || col === 'Адреса в Європі');
@@ -1696,6 +1705,7 @@ function detailBlockClickEdit(pkgId, col, el) {
 
 // Cancel inline edit — re-render the detail panel
 function cancelInlineEditBlock(pkgId) {
+    _isInlineEditing = false;
     var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
     if (!p) return;
     var detailEl = document.getElementById('details-' + pkgId);
@@ -1717,6 +1727,9 @@ function copyToClipboard(text) {
     });
 }
 
+// Flag: user is currently editing inline — block polling re-renders
+var _isInlineEditing = false;
+
 // Inline-edit save (used by detail-block click-to-edit)
 var _qeSaving = {};
 async function qeSave(el) {
@@ -1729,6 +1742,7 @@ async function qeSave(el) {
     var oldVal = el.dataset.old || '';
     if (String(newVal) === String(oldVal)) {
         // No change — just re-render to restore block view
+        _isInlineEditing = false;
         cancelInlineEditBlock(pkgId);
         return;
     }
@@ -1737,6 +1751,7 @@ async function qeSave(el) {
     el.classList.add('qe-saving');
 
     var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
+    var blockId = 'db-' + pkgId + '-' + col.replace(/\s/g, '_');
     var res = await apiPost('updateField', { pkg_id: pkgId, col: col, value: newVal });
 
     if (res.ok) {
@@ -1755,11 +1770,22 @@ async function qeSave(el) {
         qeUpdateCardHeader(pkgId);
         // Re-render detail panel to show updated block view
         delete _qeSaving[saveKey];
+        _isInlineEditing = false;
         cancelInlineEditBlock(pkgId);
+
+        // Green flash on the saved block
+        var savedBlock = document.getElementById(blockId);
+        if (savedBlock) {
+            savedBlock.classList.remove('qe-saved');
+            void savedBlock.offsetWidth; // force reflow for re-trigger
+            savedBlock.classList.add('qe-saved');
+            setTimeout(function() { savedBlock.classList.remove('qe-saved'); }, 1600);
+        }
     } else {
         if (p) p[col] = oldVal;
         showToast('Помилка: ' + (res.error || 'невідома'));
         delete _qeSaving[saveKey];
+        _isInlineEditing = false;
         cancelInlineEditBlock(pkgId);
     }
 }
@@ -2867,7 +2893,7 @@ function updateVerifyTabs() {
 }
 
 // ── Load & Filter Verification Data ──
-async function loadVerificationData() {
+async function loadVerificationData(opts) {
     // Filter UE data from allData for verification
     verifyData = allData.filter(p =>
         p._sheet === 'Реєстрація ТТН УК-єв' &&
@@ -2875,7 +2901,7 @@ async function loadVerificationData() {
     );
 
     updateVerifyCounts();
-    renderVerifyCards();
+    renderVerifyCards(opts);
 }
 
 function getVerifyFiltered() {
@@ -2924,7 +2950,10 @@ function updateVerifyCounts() {
 }
 
 // ── Render Verification Cards ──
-function renderVerifyCards() {
+function renderVerifyCards(opts) {
+    // Skip re-render from polling if user is actively editing a field
+    if (opts && opts.fromPolling && (_isInlineEditing || document.querySelector('.detail-inline-edit'))) return;
+
     var filtered = getVerifyFiltered();
     var container = document.getElementById('verifyCardsList');
     var emptyEl = document.getElementById('verifyEmptyState');
@@ -3317,9 +3346,15 @@ function startPolling() {
     stopPolling();
     pollingTimer = setInterval(async function() {
         if (currentView !== 'verification') { stopPolling(); return; }
+        // Skip polling re-render if user is actively editing a field
+        if (_isInlineEditing) return;
+        // Also check if there's an active inline edit input/select in the DOM
+        if (document.querySelector('.detail-inline-edit')) return;
         try {
             var res = await apiPost('getAll', { sheet: 'ue', filter: {} });
             if (res.ok && res.data) {
+                // Double-check editing state after async call
+                if (_isInlineEditing || document.querySelector('.detail-inline-edit')) return;
                 // Merge updated data
                 res.data.forEach(function(serverPkg) {
                     var idx = allData.findIndex(x => x['PKG_ID'] === serverPkg['PKG_ID']);
@@ -3336,7 +3371,7 @@ function startPolling() {
                         allData.push(serverPkg);
                     }
                 });
-                loadVerificationData();
+                loadVerificationData({ fromPolling: true });
             }
         } catch(e) {
             // Silent fail on polling
