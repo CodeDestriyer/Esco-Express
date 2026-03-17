@@ -1995,7 +1995,7 @@ function renderRouteCard(r, idx, sheetName) {
     const seat = r['Місце в авто'] || '';
     const seats = r['Кількість місць'] || 1;
     const from = r['Адреса відправки'] || '';
-    const to = r['Адреса прибуття'] || '';
+    const to = r['Адреса прибуття'] || r['Адреса отримувача'] || '';
     const price = r['Сума'] || '';
     const curr = r['Валюта'] || '';
     const deposit = r['Завдаток'] || '';
