@@ -1242,6 +1242,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (npRes.ok) hasNpApiKey = npRes.hasKey || false;
         updateSidebar();
         applyFilters();
+        // Update verification sidebar counts on load
+        verifyData = allData.filter(p =>
+            p._sheet === 'Реєстрація ТТН УК-єв' &&
+            String(p['Статус CRM']) !== 'Архів'
+        );
+        updateVerifyCounts();
     } catch (e) {
         showToast('Помилка завантаження: ' + e.message);
     }
