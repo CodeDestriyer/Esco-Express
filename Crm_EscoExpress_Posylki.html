@@ -3333,13 +3333,19 @@ function renderSingleVerifyCard(p) {
     var ttn = p['Номер ТТН'] || '';
     var recipient = p['Піб отримувача'] || '';
     var phone = p['Телефон отримувача'] || '';
+    var sender = p['Піб відправника'] || '';
+    var addressTo = p['Адреса в Європі'] || '';
+    var smartId = p['Ід_смарт'] || '';
     var ctrl = String(p['Контроль перевірки'] || '').trim();
     var photo = p['Фото посилки'] || '';
     var weight = p['Кг'] || '';
-    var price = p['Оціночна вартість'] || '';
-    var intNum = p['Внутрішній №'] || '';
-    var date = p['Дата перевірки'] || p['Дата створення'] || '';
+    var qty = p['Кількість позицій'] || '';
     var desc = p['Опис'] || '';
+    var intNum = p['Внутрішній №'] || '';
+    var sum = p['Сума'] || '';
+    var currency = p['Валюта оплати'] || 'UAH';
+    var payStatus = p['Статус оплати'] || '';
+    var date = p['Дата перевірки'] || p['Дата створення'] || '';
     var isOpen = openVerifyCardId === pkgId;
 
     var statusClass = '';
@@ -3349,8 +3355,13 @@ function renderSingleVerifyCard(p) {
     else if (!recipient && !phone) { statusClass = 'vcard-unknown'; dotClass = 'dot-unknown'; }
     else if (ctrl === 'В перевірці' && !photo) { dotClass = 'dot-waiting'; }
 
-    var hasData = !!(weight && price);
     var hasPhoto = !!photo;
+    var hasWeight = !!weight;
+    var hasQty = !!qty;
+    var hasDesc = !!desc;
+    var hasIntNum = !!intNum;
+    var hasSum = !!(sum && parseFloat(sum));
+    var hasPayStatus = !!payStatus;
 
     // Check for cached duplicates
     var dups = verifyDuplicatesCache[pkgId] || [];
@@ -3363,13 +3374,19 @@ function renderSingleVerifyCard(p) {
     html += '<div class="vcard-status-dot ' + dotClass + '"></div>';
     html += '<div class="vcard-info">';
     html += '<div class="vcard-ttn">TTH: ' + escHtml(ttn || '—') + '</div>';
-    html += '<div class="vcard-recipient">' + (recipient ? escHtml(recipient) + (phone ? ' (' + escHtml(phone) + ')' : '') : '<span style="color:var(--danger);">Невідомий отримувач</span>') + '</div>';
+    html += '<div class="vcard-recipient">' + (sender ? '&#128100; ' + escHtml(sender) : '') + (sender && recipient ? ' &#8594; ' : '') + (recipient ? escHtml(recipient) : '<span style="color:var(--danger);">Невідомий отримувач</span>') + (phone ? ' (' + escHtml(phone) + ')' : '') + '</div>';
+    if (addressTo) html += '<div class="vcard-recipient" style="margin-top:2px;">&#128205; ' + escHtml(addressTo) + '</div>';
+    if (smartId) html += '<div class="vcard-recipient" style="margin-top:1px;font-size:10px;opacity:0.7;">ID: ' + escHtml(smartId) + '</div>';
     html += '<div class="vcard-meta">';
-    html += '<span class="vcard-tag ' + (hasPhoto ? 'tag-photo-yes' : 'tag-photo-no') + '">Фото: ' + (hasPhoto ? '&#9989;' : '&#10060;') + '</span>';
-    html += '<span class="vcard-tag ' + (hasData ? 'tag-data-yes' : 'tag-data-no') + '">Дані: ' + (hasData ? '&#9989;' : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + (hasPhoto ? 'tag-photo-yes' : 'tag-photo-no') + '">&#128247; Фото: ' + (hasPhoto ? '&#9989;' : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + (hasWeight ? 'tag-data-yes' : 'tag-data-no') + '">&#9878; Вага: ' + (hasWeight ? escHtml(weight) + 'кг' : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + (hasQty ? 'tag-data-yes' : 'tag-data-no') + '">&#128230; К-сть: ' + (hasQty ? escHtml(qty) : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + (hasDesc ? 'tag-data-yes' : 'tag-data-no') + '">&#128196; Опис: ' + (hasDesc ? '&#9989;' : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + (hasIntNum ? 'tag-data-yes' : 'tag-data-no') + '">&#128666; №: ' + (hasIntNum ? escHtml(intNum) : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + (hasSum ? 'tag-data-yes' : 'tag-data-no') + '">&#128176; ' + (hasSum ? escHtml(sum) + ' ' + escHtml(currency) : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + (hasPayStatus ? 'tag-data-yes' : 'tag-data-no') + '">&#128178; ' + (hasPayStatus ? escHtml(payStatus) : '&#10060;') + '</span>';
     if (hasDups) html += '<span class="vcard-tag tag-dup">&#9888; Дублі: ' + dups.length + '</span>';
     if (!recipient) html += '<span class="vcard-tag tag-unknown">&#10067; НЕВІДОМИЙ</span>';
-    if (intNum) html += '<span class="vcard-tag tag-route">&#128666; ' + escHtml(intNum) + '</span>';
     html += '</div></div>';
     html += '<div class="vcard-right">';
     if (intNum) html += '<div class="vcard-intnum">' + escHtml(intNum) + '</div>';
