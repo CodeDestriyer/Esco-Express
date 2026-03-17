@@ -1775,7 +1775,9 @@ function renderDetailsContent(p) {
 // ── DETAIL BLOCK — renders read-only block with click-to-edit ──
 function detailBlock(pkgId, label, value, options) {
     var val = value !== undefined && value !== null && value !== '' ? String(value) : '';
-    var isEmpty = !val;
+    // Для числових полів "0" вважати порожнім (кількість 0 = немає даних)
+    var numericEmptyFields = ['Кількість позицій', 'Кг'];
+    var isEmpty = !val || (numericEmptyFields.indexOf(label) !== -1 && val === '0');
     var escapedVal = escHtml(val || '—');
     var blockId = 'db-' + pkgId + '-' + label.replace(/\s/g, '_');
 
@@ -2212,8 +2214,8 @@ function qeUpdateCardHeader(pkgId) {
         var currency = p['Валюта оплати'] || 'UAH';
         var payStatus = p['Статус оплати'] || '';
         var hasPhoto = !!photo;
-        var hasWeight = !!weight;
-        var hasQty = !!qty;
+        var hasWeight = !!(weight && weight !== '0');
+        var hasQty = !!(qty && qty !== '0');
         var hasDesc = !!desc;
         var hasIntNum = !!intNum;
         var hasSum = !!(sum && parseFloat(sum));
@@ -3562,8 +3564,8 @@ function renderSingleVerifyCard(p) {
     }
 
     var hasPhoto = !!photo;
-    var hasWeight = !!weight;
-    var hasQty = !!qty;
+    var hasWeight = !!(weight && weight !== '0');
+    var hasQty = !!(qty && qty !== '0');
     var hasDesc = !!desc;
     var hasIntNum = !!intNum;
     var hasSum = !!(sum && parseFloat(sum));
