@@ -371,6 +371,9 @@
         /* ROUTE MODAL */
         .route-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 600; align-items: center; justify-content: center; }
         .route-modal-overlay.show { display: flex; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 600; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: white; border-radius: 10px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
         .route-modal { background: white; border-radius: 16px; padding: 20px; max-width: 400px; width: 90%; max-height: 70vh; overflow-y: auto; }
         .route-modal-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 12px; }
         .route-item { padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
@@ -460,6 +463,53 @@
         .bulk-toolbar-btn.verify-route:hover { background: #6d28d9; }
         .bulk-toolbar-btn.verify-reopen { background: #2563eb; color: white; }
         .bulk-toolbar-btn.verify-reopen:hover { background: #1d4ed8; }
+        .bulk-toolbar-btn.optimize { background: var(--purple); color: white; }
+        .bulk-toolbar-btn.optimize:hover { background: #7c3aed; }
+
+        /* ============ OPTIMIZATION STYLES ============ */
+        .optimize-info { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #e3f2fd, #bbdefb); padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; }
+        .optimize-info-icon { font-size: 24px; }
+        .optimize-info-text { font-size: 14px; color: #0d47a1; }
+        .optimize-section { margin-bottom: 16px; }
+        .optimize-label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); font-size: 13px; }
+        .optimize-radio-group { display: flex; flex-direction: column; gap: 8px; }
+        .optimize-radio { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+        .optimize-radio:hover { border-color: var(--primary); background: rgba(15,52,96,0.03); }
+        .optimize-radio.selected { border-color: var(--primary); background: rgba(15,52,96,0.08); }
+        .optimize-radio-icon { font-size: 20px; }
+        .optimize-radio-text { display: flex; flex-direction: column; }
+        .optimize-radio-text strong { font-size: 13px; }
+        .optimize-radio-text small { font-size: 11px; color: var(--text-secondary); }
+        .optimize-input { width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; background: white; }
+        .optimize-input:focus { outline: none; border-color: var(--primary); }
+        .optimize-hint { display: block; font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+        .optimize-method { background: #fff3e0; padding: 10px 14px; border-radius: 8px; font-size: 12px; color: #e65100; text-align: center; }
+        .optimize-loading { text-align: center; padding: 30px; }
+        .optimize-spinner { border: 3px solid var(--border); border-top: 3px solid var(--primary); border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+        .optimize-loading-text { font-weight: 600; color: var(--primary); margin-bottom: 4px; }
+        .optimize-result-header { font-size: 18px; font-weight: 700; color: var(--success); text-align: center; margin-bottom: 16px; }
+        .optimize-stats { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+        .optimize-stat-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+        .optimize-stat-row:last-child { border-bottom: none; }
+        .optimize-stat-label { color: var(--text-secondary); }
+        .optimize-stat-value { font-weight: 600; }
+        .optimize-not-geocoded { background: #fff5f5; border: 1px solid #fecaca; border-radius: 10px; padding: 12px; margin-bottom: 16px; }
+        .optimize-not-geocoded-title { font-size: 13px; font-weight: 600; color: #dc2626; margin-bottom: 8px; }
+        .optimize-not-geocoded-list { font-size: 12px; color: #991b1b; }
+        .optimize-not-geocoded-item { padding: 4px 0; border-bottom: 1px solid #fecaca; }
+        .optimize-not-geocoded-item:last-child { border-bottom: none; }
+        .optimize-map-links { display: flex; flex-direction: column; gap: 8px; }
+        .optimize-map-btn { display: block; padding: 14px; background: linear-gradient(135deg, var(--primary), #1e4976); color: white; text-decoration: none; border-radius: 10px; text-align: center; font-weight: 700; font-size: 14px; transition: transform 0.2s; }
+        .optimize-map-btn:hover { transform: scale(1.02); }
+        .optimize-route-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
+        .optimize-route-table th { text-align: left; padding: 8px; background: #f8fafc; border-bottom: 2px solid var(--border); font-size: 10px; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; }
+        .optimize-route-table td { padding: 8px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+        .optimize-route-table tr:hover { background: #f0f4f8; }
+        .opt-order-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: var(--primary); color: white; border-radius: 50%; font-size: 11px; font-weight: 700; }
+        .opt-dist-badge { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .opt-time-badge { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .opt-eta-badge { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+
         .vcard-checkbox { width: 18px; height: 18px; min-width: 18px; cursor: pointer; accent-color: var(--primary); margin: 0; }
 
         /* SIDE MENU DIVIDER */
@@ -667,6 +717,10 @@
         <div class="side-menu-section-title" onclick="toggleMobileRoutesList()" style="cursor:pointer;">🗺️ Маршрути <span id="mobileCountRoutes" style="float:right;font-size:11px;opacity:0.7;">0</span></div>
         <div id="mobileRoutesList" style="display:none;padding-left:12px;"></div>
         <div class="side-menu-divider"></div>
+        <div class="side-menu-item" onclick="runOptimization(); closeSideMenu();" style="background:rgba(139,92,246,0.3);">
+            <span class="side-menu-item-left">&#9889; Оптимізація маршруту</span>
+        </div>
+        <div class="side-menu-divider"></div>
         <div class="side-menu-item" onclick="openAddForm(); closeSideMenu();">
             <span class="side-menu-item-left">&#10133; Нова посилка</span>
         </div>
@@ -841,6 +895,7 @@
                         <div class="route-subtitle" id="routeSubtitle"></div>
                     </div>
                     <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button style="background:rgba(139,92,246,0.9);color:white;font-size:11px;padding:8px 14px;border:1px solid rgba(139,92,246,0.5);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;" onclick="optimizeRouteOrder()">&#9889; Оптимізувати порядок</button>
                         <button style="background:rgba(255,255,255,0.2);color:white;font-size:11px;padding:8px 14px;border:1px solid rgba(255,255,255,0.3);border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;" onclick="loadRoutes()">&#128260; Оновити</button>
                     </div>
                 </div>
@@ -889,6 +944,7 @@
     <span class="bulk-toolbar-count" id="bulkCount">0 обрано</span>
     <button class="bulk-toolbar-btn select-all" onclick="toggleSelectAll()">&#9745; Вибрати всі</button>
     <button class="bulk-toolbar-btn route" onclick="bulkRouteAssign()">&#128666; В маршрут</button>
+    <button class="bulk-toolbar-btn optimize" onclick="bulkOptimize()">&#9889; Оптимізація</button>
     <button class="bulk-toolbar-btn archive" onclick="bulkArchive()">&#128230; Архів</button>
     <button class="bulk-toolbar-btn cancel" onclick="clearSelection()">&#10005; Скасувати</button>
 </div>
@@ -938,6 +994,153 @@
         <div class="col-cfg-footer">
             <button class="bs-btn cancel" onclick="resetColCfg()">🔄 Скинути</button>
             <button class="bs-btn primary" onclick="saveColCfg()">💾 Зберегти</button>
+        </div>
+    </div>
+</div>
+
+<!-- OPTIMIZE MODAL -->
+<div class="modal-overlay" id="optimizeModal" onclick="if(event.target===this)closeOptimizeModal()">
+    <div class="modal" style="max-width:520px">
+        <div class="modal-header" style="background:var(--primary);color:white;padding:14px 16px;border-radius:10px 10px 0 0;">
+            <span style="font-size:15px;font-weight:700;">&#128640; Оптимізація маршруту</span>
+            <button style="background:rgba(255,255,255,0.2);border:none;color:white;width:28px;height:28px;border-radius:6px;font-size:16px;cursor:pointer;" onclick="closeOptimizeModal()">&#215;</button>
+        </div>
+        <div id="optimizeFormBody" style="padding:16px;">
+            <div class="optimize-info">
+                <span class="optimize-info-icon">&#128230;</span>
+                <span class="optimize-info-text">Заявок для оптимізації: <strong id="optimizeCount">0</strong></span>
+            </div>
+            <div class="optimize-section">
+                <label class="optimize-label">&#128203; Оптимізувати по:</label>
+                <div class="optimize-radio-group">
+                    <label class="optimize-radio selected" id="optFrom" onclick="selectOptimizeBy('from')">
+                        <span class="optimize-radio-icon">&#128205;</span>
+                        <span class="optimize-radio-text">
+                            <strong>Адреса ВІДПРАВКИ</strong>
+                            <small>де забирати посилки</small>
+                        </span>
+                    </label>
+                    <label class="optimize-radio" id="optTo" onclick="selectOptimizeBy('to')">
+                        <span class="optimize-radio-icon">&#127937;</span>
+                        <span class="optimize-radio-text">
+                            <strong>Адреса ПРИБУТТЯ</strong>
+                            <small>де доставляти посилки</small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="optimize-section">
+                <label class="optimize-label">&#128205; Точка старту:</label>
+                <select class="optimize-input" id="optimizeStartSelect" onchange="onOptPointSelect('start')">
+                    <optgroup label="&#127359;&#65039; Паркінги / Ночівлі">
+                        <option value="">— Оберіть точку —</option>
+                        <option value="Im Gsteig 1, Kusnacht ZH 8700, Switzerland">&#128716;&#65039; Цюрих ночівля (Sonnenhof, Küsnacht)</option>
+                        <option value="Dorflistrasse 90, 8050 Zürich, Switzerland">&#127359;&#65039; Цюрих (Parking Theater 11)</option>
+                        <option value="Bahnhofplatz, 6300 Zug, Switzerland">&#127359;&#65039; Цуг (Bahnhofplatz)</option>
+                        <option value="Tourist Bus Parking Landenberg, Alpenquai, 6005 Luzern, Switzerland">&#127359;&#65039; Люцерн (Landenberg)</option>
+                        <option value="Parkplatz 7c, Beundenfeld, 3014 Bern, Switzerland">&#127359;&#65039; Берн (Beundenfeld)</option>
+                        <option value="Meret Oppenheim Strasse, SBB Station, 4053 Basel, Switzerland">&#127359;&#65039; Базель (SBB Station)</option>
+                        <option value="Bahnhofplatz 8b, 9000 St. Gallen, Switzerland">&#127359;&#65039; Сен-Гален (Bahnhofplatz)</option>
+                        <option value="Avenue des Roses 13, 1009 Pully, Switzerland">&#128716;&#65039; Женева ночівля (Pully)</option>
+                        <option value="Avenue du Grey 43, 1004 Lausanne, Switzerland">&#127359;&#65039; Лозана (паркінг)</option>
+                        <option value="Route des Châtaigniers 7, 1816 Montreux, Switzerland">&#127359;&#65039; Монтре</option>
+                        <option value="P+R Bout-du-Monde, Route de Vessy 12, 1206 Genève, Switzerland">&#127359;&#65039; Женева (P+R Bout-du-Monde)</option>
+                    </optgroup>
+                    <optgroup label="&#128646; Вокзали (Французька Швейцарія)">
+                        <option value="Gare de Genève-Cornavin, Genève, Switzerland">&#128646; Geneva (Gare Cornavin)</option>
+                        <option value="Gare de Nyon, Nyon, Switzerland">&#128646; Nyon</option>
+                        <option value="Gare de Lausanne, Lausanne, Switzerland">&#128646; Lausanne</option>
+                        <option value="Gare de Vevey, Vevey, Switzerland">&#128646; Vevey</option>
+                        <option value="Gare de Montreux, Montreux, Switzerland">&#128646; Montreux</option>
+                        <option value="Gare d'Yverdon-les-Bains, Yverdon, Switzerland">&#128646; Yverdon</option>
+                        <option value="Gare de Fribourg, Fribourg, Switzerland">&#128646; Fribourg</option>
+                        <option value="Gare de Payerne, Payerne, Switzerland">&#128646; Payerne</option>
+                        <option value="Bern Bahnhof, Bern, Switzerland">&#128646; Bern</option>
+                    </optgroup>
+                    <optgroup label="&#128646; Вокзали (Німецька Швейцарія)">
+                        <option value="Bahnhof Oftringen, Oftringen, Switzerland">&#128646; Oftringen</option>
+                        <option value="Bahnhof Aarau, Aarau, Switzerland">&#128646; Aarau</option>
+                        <option value="Bahnhof Baden, Baden, Switzerland">&#128646; Baden</option>
+                        <option value="Bahnhof Wettingen, Wettingen, Switzerland">&#128646; Wettingen</option>
+                        <option value="Zürich HB, Zürich, Switzerland">&#128646; Zürich HB</option>
+                        <option value="Bahnhof Winterthur, Winterthur, Switzerland">&#128646; Winterthur</option>
+                        <option value="Bahnhof Wil, Wil SG, Switzerland">&#128646; Wil</option>
+                        <option value="Bahnhof St. Gallen, St. Gallen, Switzerland">&#128646; St. Gallen</option>
+                    </optgroup>
+                    <optgroup label="&#9999;&#65039; Інше">
+                        <option value="__custom__">&#9999;&#65039; Ввести вручну...</option>
+                    </optgroup>
+                </select>
+                <input type="text" class="optimize-input" id="optimizeStart" placeholder="Введіть адресу старту..." style="display:none;margin-top:6px;">
+                <small class="optimize-hint">Звідки починається маршрут</small>
+            </div>
+            <div class="optimize-section">
+                <label class="optimize-label">&#127937; Точка закінчення:</label>
+                <select class="optimize-input" id="optimizeEndSelect" onchange="onOptPointSelect('end')">
+                    <optgroup label="&#127359;&#65039; Паркінги / Ночівлі">
+                        <option value="">— Остання точка маршруту —</option>
+                        <option value="Im Gsteig 1, Kusnacht ZH 8700, Switzerland">&#128716;&#65039; Цюрих ночівля (Sonnenhof, Küsnacht)</option>
+                        <option value="Dorflistrasse 90, 8050 Zürich, Switzerland">&#127359;&#65039; Цюрих (Parking Theater 11)</option>
+                        <option value="Bahnhofplatz, 6300 Zug, Switzerland">&#127359;&#65039; Цуг (Bahnhofplatz)</option>
+                        <option value="Tourist Bus Parking Landenberg, Alpenquai, 6005 Luzern, Switzerland">&#127359;&#65039; Люцерн (Landenberg)</option>
+                        <option value="Parkplatz 7c, Beundenfeld, 3014 Bern, Switzerland">&#127359;&#65039; Берн (Beundenfeld)</option>
+                        <option value="Meret Oppenheim Strasse, SBB Station, 4053 Basel, Switzerland">&#127359;&#65039; Базель (SBB Station)</option>
+                        <option value="Bahnhofplatz 8b, 9000 St. Gallen, Switzerland">&#127359;&#65039; Сен-Гален (Bahnhofplatz)</option>
+                        <option value="Avenue des Roses 13, 1009 Pully, Switzerland">&#128716;&#65039; Женева ночівля (Pully)</option>
+                        <option value="Avenue du Grey 43, 1004 Lausanne, Switzerland">&#127359;&#65039; Лозана (паркінг)</option>
+                        <option value="Route des Châtaigniers 7, 1816 Montreux, Switzerland">&#127359;&#65039; Монтре</option>
+                        <option value="P+R Bout-du-Monde, Route de Vessy 12, 1206 Genève, Switzerland">&#127359;&#65039; Женева (P+R Bout-du-Monde)</option>
+                    </optgroup>
+                    <optgroup label="&#128646; Вокзали (Французька Швейцарія)">
+                        <option value="Gare de Genève-Cornavin, Genève, Switzerland">&#128646; Geneva (Gare Cornavin)</option>
+                        <option value="Gare de Nyon, Nyon, Switzerland">&#128646; Nyon</option>
+                        <option value="Gare de Lausanne, Lausanne, Switzerland">&#128646; Lausanne</option>
+                        <option value="Gare de Vevey, Vevey, Switzerland">&#128646; Vevey</option>
+                        <option value="Gare de Montreux, Montreux, Switzerland">&#128646; Montreux</option>
+                        <option value="Gare d'Yverdon-les-Bains, Yverdon, Switzerland">&#128646; Yverdon</option>
+                        <option value="Gare de Fribourg, Fribourg, Switzerland">&#128646; Fribourg</option>
+                        <option value="Gare de Payerne, Payerne, Switzerland">&#128646; Payerne</option>
+                        <option value="Bern Bahnhof, Bern, Switzerland">&#128646; Bern</option>
+                    </optgroup>
+                    <optgroup label="&#128646; Вокзали (Німецька Швейцарія)">
+                        <option value="Bahnhof Oftringen, Oftringen, Switzerland">&#128646; Oftringen</option>
+                        <option value="Bahnhof Aarau, Aarau, Switzerland">&#128646; Aarau</option>
+                        <option value="Bahnhof Baden, Baden, Switzerland">&#128646; Baden</option>
+                        <option value="Bahnhof Wettingen, Wettingen, Switzerland">&#128646; Wettingen</option>
+                        <option value="Zürich HB, Zürich, Switzerland">&#128646; Zürich HB</option>
+                        <option value="Bahnhof Winterthur, Winterthur, Switzerland">&#128646; Winterthur</option>
+                        <option value="Bahnhof Wil, Wil SG, Switzerland">&#128646; Wil</option>
+                        <option value="Bahnhof St. Gallen, St. Gallen, Switzerland">&#128646; St. Gallen</option>
+                    </optgroup>
+                    <optgroup label="&#9999;&#65039; Інше">
+                        <option value="__custom__">&#9999;&#65039; Ввести вручну...</option>
+                    </optgroup>
+                </select>
+                <input type="text" class="optimize-input" id="optimizeEnd" placeholder="Введіть адресу фінішу..." style="display:none;margin-top:6px;">
+                <small class="optimize-hint">Де закінчується маршрут (необов'язково)</small>
+            </div>
+            <div class="optimize-method">
+                &#128506;&#65039; Google Directions API — відстань та час до кожної точки
+            </div>
+        </div>
+        <div id="optimizeResultBody" style="display:none;padding:16px;"></div>
+        <div id="optimizeLoadingBody" style="display:none;padding:16px;">
+            <div class="optimize-loading">
+                <div class="optimize-spinner"></div>
+                <div class="optimize-loading-text" id="optimizeLoadingText">Оптимізація маршруту...</div>
+                <small id="optimizeLoadingProgress">Це може зайняти 10-30 секунд</small>
+            </div>
+        </div>
+        <div id="optimizeFormFooter" style="display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--border);">
+            <button class="bs-btn cancel" onclick="closeOptimizeModal()">Скасувати</button>
+            <button class="bs-btn primary" onclick="startOptimization()">&#128640; Оптимізувати</button>
+        </div>
+        <div id="optimizeResultFooter" style="display:none;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--border);flex-wrap:wrap;">
+            <button class="bs-btn cancel" onclick="closeOptimizeModal()">Закрити</button>
+            <div style="position:relative;display:inline-block;" id="optRouteSelectWrap">
+                <button class="bs-btn primary" style="background:var(--purple);" onclick="toggleOptRouteDropdown()">&#128506;&#65039; В маршрут</button>
+                <div id="optRouteDropdown" style="display:none;position:absolute;bottom:100%;left:0;min-width:260px;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);padding:6px;margin-bottom:6px;max-height:250px;overflow-y:auto;z-index:999;"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -4800,6 +5003,661 @@ async function confirmDeleteRoute(idx) {
         _origSwitchToParcels();
     };
 })();
+
+// ================================================================
+// ROUTE OPTIMIZATION WITH DISTANCE & TIME
+// ================================================================
+let optimizeParcelsList = [];
+let optimizeBy = 'from'; // 'from' or 'to'
+const OPTIMIZE_MAX_WAYPOINTS = 23;
+let optimizedOrderIds = [];
+let lastOptimizedParcels = [];
+
+function _optSleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function closeOptimizeModal() {
+    document.getElementById('optimizeModal').classList.remove('show');
+}
+
+function runOptimization() {
+    if (!filteredData || !filteredData.length) return showToast('Немає заявок для оптимізації');
+    window._optimizeRouteContext = null;
+    openOptimizeModal(filteredData);
+}
+
+function bulkOptimize() {
+    const ids = getSelectedIds();
+    if (!ids.length) return showToast('Оберіть посилки');
+    const selected = ids.map(id => allData.find(p => p['PKG_ID'] === id)).filter(Boolean);
+    if (!selected.length) return showToast('Оберіть посилки');
+    window._optimizeRouteContext = null;
+    openOptimizeModal(selected);
+}
+
+function openOptimizeModal(parcelsList) {
+    optimizeParcelsList = parcelsList;
+    optimizeBy = 'from';
+    document.getElementById('optimizeCount').textContent = parcelsList.length;
+    document.getElementById('optimizeStartSelect').value = '';
+    document.getElementById('optimizeEndSelect').value = '';
+    document.getElementById('optimizeStart').value = '';
+    document.getElementById('optimizeEnd').value = '';
+    document.getElementById('optimizeStart').style.display = 'none';
+    document.getElementById('optimizeEnd').style.display = 'none';
+    document.getElementById('optFrom').classList.add('selected');
+    document.getElementById('optTo').classList.remove('selected');
+    document.getElementById('optimizeFormBody').style.display = 'block';
+    document.getElementById('optimizeResultBody').style.display = 'none';
+    document.getElementById('optimizeLoadingBody').style.display = 'none';
+    document.getElementById('optimizeFormFooter').style.display = 'flex';
+    document.getElementById('optimizeResultFooter').style.display = 'none';
+    document.getElementById('optimizeModal').classList.add('show');
+}
+
+function onOptPointSelect(which) {
+    const sel = document.getElementById(which === 'start' ? 'optimizeStartSelect' : 'optimizeEndSelect');
+    const inp = document.getElementById(which === 'start' ? 'optimizeStart' : 'optimizeEnd');
+    if (sel.value === '__custom__') {
+        inp.style.display = 'block';
+        inp.focus();
+    } else {
+        inp.style.display = 'none';
+        inp.value = '';
+    }
+}
+
+function getOptAddress(which) {
+    const sel = document.getElementById(which === 'start' ? 'optimizeStartSelect' : 'optimizeEndSelect');
+    const inp = document.getElementById(which === 'start' ? 'optimizeStart' : 'optimizeEnd');
+    if (sel.value === '__custom__') return inp.value.trim();
+    return sel.value || '';
+}
+
+function selectOptimizeBy(by) {
+    optimizeBy = by;
+    document.getElementById('optFrom').classList.toggle('selected', by === 'from');
+    document.getElementById('optTo').classList.toggle('selected', by === 'to');
+}
+
+// Geocode via Google Maps JS API
+function geocodeClient(address) {
+    return new Promise(resolve => {
+        if (!window.mapsGeocoder) return resolve(null);
+        let settled = false;
+        const timeout = setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, 10000);
+        try {
+            window.mapsGeocoder.geocode({ address }, (results, status) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timeout);
+                if (status === 'OK' && results && results[0]) {
+                    resolve({ lat: results[0].geometry.location.lat(), lng: results[0].geometry.location.lng() });
+                } else {
+                    resolve(null);
+                }
+            });
+        } catch(e) { if (!settled) { settled = true; clearTimeout(timeout); resolve(null); } }
+    });
+}
+
+// Google Directions API — optimize waypoints + get legs (distance/time)
+function optimizeDirectionsClient(geocodedItems, startCoords, endCoords) {
+    return new Promise((resolve, reject) => {
+        if (!window.mapsDirections) return reject(new Error('Maps API not ready'));
+        let settled = false;
+        const timeout = setTimeout(() => { if (!settled) { settled = true; reject(new Error('Directions timeout')); } }, 30000);
+
+        const waypoints = geocodedItems.map(p => ({
+            location: new google.maps.LatLng(p.coords.lat, p.coords.lng),
+            stopover: true
+        }));
+
+        const origin = new google.maps.LatLng(startCoords.lat, startCoords.lng);
+        let destination, routeWaypoints;
+
+        if (endCoords) {
+            destination = new google.maps.LatLng(endCoords.lat, endCoords.lng);
+            routeWaypoints = waypoints;
+        } else {
+            destination = waypoints[waypoints.length - 1].location;
+            routeWaypoints = waypoints.slice(0, -1);
+        }
+
+        window.mapsDirections.route({
+            origin, destination,
+            waypoints: routeWaypoints,
+            optimizeWaypoints: true,
+            travelMode: google.maps.TravelMode.DRIVING
+        }, (response, status) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeout);
+            if (status === 'OK') {
+                const route = response.routes[0];
+                const order = route.waypoint_order;
+                const legs = route.legs;
+                let finalOrder;
+                if (endCoords) {
+                    finalOrder = order;
+                } else {
+                    finalOrder = order.slice();
+                    finalOrder.push(geocodedItems.length - 1);
+                }
+                resolve({ order: finalOrder, legs });
+            } else {
+                reject(new Error('Directions API: ' + status));
+            }
+        });
+    });
+}
+
+// Fallback: Nearest Neighbor
+function nearestNeighborClient(geocodedItems, startCoords) {
+    const n = geocodedItems.length;
+    if (n === 0) return [];
+    if (n === 1) return [0];
+
+    function haversine(c1, c2) {
+        const R = 6371;
+        const dLat = (c2.lat - c1.lat) * Math.PI / 180;
+        const dLng = (c2.lng - c1.lng) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(c1.lat*Math.PI/180) * Math.cos(c2.lat*Math.PI/180) * Math.sin(dLng/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    let currentIdx = 0, minDist = Infinity;
+    for (let i = 0; i < n; i++) {
+        const d = haversine(startCoords, geocodedItems[i].coords);
+        if (d < minDist) { minDist = d; currentIdx = i; }
+    }
+
+    const visited = Array(n).fill(false);
+    const tour = [currentIdx];
+    visited[currentIdx] = true;
+
+    for (let step = 1; step < n; step++) {
+        let nearest = -1, nearDist = Infinity;
+        for (let j = 0; j < n; j++) {
+            if (!visited[j]) {
+                const d = haversine(geocodedItems[currentIdx].coords, geocodedItems[j].coords);
+                if (d < nearDist) { nearDist = d; nearest = j; }
+            }
+        }
+        if (nearest === -1) break;
+        tour.push(nearest);
+        visited[nearest] = true;
+        currentIdx = nearest;
+    }
+    return tour;
+}
+
+// Generate Google Maps links (chunks of 25)
+function generateOptimizeMapLinks(orderedItems, startAddr, endAddr) {
+    const MAX_PER_MAP = 25;
+    const links = [];
+    if (orderedItems.length === 0) return links;
+
+    const perChunk = MAX_PER_MAP - 1;
+    let chunkStart = 0;
+    while (chunkStart < orderedItems.length) {
+        const chunkEnd = Math.min(chunkStart + perChunk, orderedItems.length);
+        const chunk = orderedItems.slice(chunkStart, chunkEnd);
+        const origin = chunkStart === 0 ? (startAddr || 'Ужгород') : orderedItems[chunkStart - 1].address;
+        let destination, waypointItems;
+        if (chunkEnd >= orderedItems.length && endAddr) {
+            destination = endAddr;
+            waypointItems = chunk;
+        } else {
+            destination = chunk[chunk.length - 1].address;
+            waypointItems = chunk.slice(0, -1);
+        }
+        let url = 'https://www.google.com/maps/dir/' + encodeURIComponent(origin);
+        waypointItems.forEach(p => { url += '/' + encodeURIComponent(p.address); });
+        url += '/' + encodeURIComponent(destination);
+        links.push({ url, from: chunkStart + 1, to: chunkEnd, total: orderedItems.length });
+        chunkStart = chunkEnd;
+    }
+    return links;
+}
+
+function formatDuration(seconds) {
+    if (!seconds) return '—';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return h + ' год ' + m + ' хв';
+    return m + ' хв';
+}
+
+function formatDistance(meters) {
+    if (!meters) return '—';
+    if (meters < 1000) return meters + ' м';
+    return (meters / 1000).toFixed(1) + ' км';
+}
+
+// Apply optimized order to filteredData
+function applyOptimizedOrder() {
+    if (!optimizedOrderIds.length) return;
+    const idSet = new Set(optimizedOrderIds);
+    const byId = {};
+    for (const p of filteredData) byId[p['PKG_ID']] = p;
+    const ordered = [];
+    for (const id of optimizedOrderIds) {
+        if (byId[id]) { ordered.push(byId[id]); delete byId[id]; }
+    }
+    for (const p of filteredData) {
+        if (!idSet.has(p['PKG_ID'])) ordered.push(p);
+    }
+    filteredData = ordered;
+}
+
+// MAIN OPTIMIZATION
+async function startOptimization() {
+    if (!optimizeParcelsList.length) return;
+    if (!window.mapsApiReady || !window.mapsGeocoder) {
+        showToast('Google Maps API не завантажено. Перезавантажте сторінку.');
+        return;
+    }
+
+    document.getElementById('optimizeFormBody').style.display = 'none';
+    document.getElementById('optimizeLoadingBody').style.display = 'block';
+    document.getElementById('optimizeFormFooter').style.display = 'none';
+
+    function updateOptStatus(text, progress) {
+        const el = document.getElementById('optimizeLoadingText');
+        const pr = document.getElementById('optimizeLoadingProgress');
+        if (el && text) el.textContent = text;
+        if (pr && progress !== undefined) pr.textContent = progress;
+    }
+
+    const startAddress = getOptAddress('start') || 'Ужгород';
+    const endAddress = getOptAddress('end');
+    const addrField = optimizeBy === 'from' ? 'Адреса відправки' : 'Адреса прибуття';
+    const optimizeLabel = optimizeBy === 'from' ? 'Адреса ВІДПРАВКИ' : 'Адреса ПРИБУТТЯ';
+
+    try {
+        const allItems = optimizeParcelsList.map(p => ({
+            pkgId: p['PKG_ID'] || p['PAX_ID'] || '',
+            name: p['Піб відправника'] || p['Піб'] || '',
+            phone: p['Телефон реєстратора'] || p['Телефон пасажира'] || '',
+            receiver: p['Піб отримувача'] || '',
+            kg: p['Кг'] || '',
+            fromAddr: p['Адреса відправки'] || '',
+            toAddr: p['Адреса прибуття'] || '',
+            address: p[addrField] || '',
+            coords: null,
+            _origData: p
+        }));
+
+        const withAddress = allItems.filter(p => p.address && p.address.trim());
+        const withoutAddress = allItems.filter(p => !p.address || !p.address.trim());
+
+        if (withAddress.length === 0) {
+            throw new Error('Жодна посилка не має адреси ("' + addrField + '")');
+        }
+
+        // Geocode all addresses
+        updateOptStatus('Геокодування адрес...', '0 / ' + withAddress.length);
+        const geocoded = [];
+        const notGeocodedList = [];
+
+        for (let i = 0; i < withAddress.length; i++) {
+            const shortAddr = withAddress[i].address.length > 30 ? withAddress[i].address.substring(0, 30) + '...' : withAddress[i].address;
+            updateOptStatus('📍 ' + shortAddr, (i + 1) + ' / ' + withAddress.length);
+            const coords = await geocodeClient(withAddress[i].address);
+            if (coords) {
+                withAddress[i].coords = coords;
+                geocoded.push(withAddress[i]);
+            } else {
+                notGeocodedList.push({ pkgId: withAddress[i].pkgId, name: withAddress[i].name, address: withAddress[i].address });
+            }
+            if (i < withAddress.length - 1) await _optSleep(150);
+        }
+
+        if (geocoded.length === 0) {
+            throw new Error('Жодну адресу не вдалось геокодувати!');
+        }
+
+        // Geocode start & end
+        updateOptStatus('📍 Геокодування старту...', '');
+        const startCoords = await geocodeClient(startAddress) || { lat: 48.6209, lng: 22.2879 };
+        let endCoords = null;
+        if (endAddress) {
+            updateOptStatus('📍 Геокодування фінішу...', '');
+            endCoords = await geocodeClient(endAddress);
+        }
+
+        // Optimize route
+        updateOptStatus('🗺️ Оптимізація маршруту...', geocoded.length + ' точок');
+        let optimizedOrder = null;
+        let legs = null;
+        let method = '';
+
+        if (geocoded.length <= OPTIMIZE_MAX_WAYPOINTS) {
+            try {
+                const result = await optimizeDirectionsClient(geocoded, startCoords, endCoords);
+                optimizedOrder = result.order;
+                legs = result.legs;
+                method = 'Google Directions API (реальні дороги)';
+            } catch(e) {
+                console.warn('Directions fallback:', e.message);
+            }
+        }
+
+        if (!optimizedOrder || optimizedOrder.length === 0) {
+            optimizedOrder = nearestNeighborClient(geocoded, startCoords);
+            method = 'Nearest Neighbor (по прямій)';
+        }
+
+        const orderedItems = optimizedOrder.map(idx => geocoded[idx]);
+        const mapLinks = generateOptimizeMapLinks(orderedItems, startAddress, endAddress);
+
+        // Build leg info
+        const legInfo = [];
+        let cumulativeTime = 0;
+        let cumulativeDist = 0;
+        if (legs && legs.length > 0) {
+            for (let i = 0; i < orderedItems.length; i++) {
+                const legIdx = i;
+                if (legIdx < legs.length) {
+                    const dist = legs[legIdx].distance ? legs[legIdx].distance.value : 0;
+                    const dur = legs[legIdx].duration ? legs[legIdx].duration.value : 0;
+                    cumulativeDist += dist;
+                    cumulativeTime += dur;
+                    legInfo.push({
+                        segmentDist: dist,
+                        segmentTime: dur,
+                        totalDist: cumulativeDist,
+                        totalTime: cumulativeTime,
+                        segmentDistText: legs[legIdx].distance ? legs[legIdx].distance.text : '',
+                        segmentTimeText: legs[legIdx].duration ? legs[legIdx].duration.text : ''
+                    });
+                } else {
+                    legInfo.push({ segmentDist: 0, segmentTime: 0, totalDist: cumulativeDist, totalTime: cumulativeTime, segmentDistText: '', segmentTimeText: '' });
+                }
+            }
+        }
+
+        // Save optimized order
+        optimizedOrderIds = orderedItems.map(p => p.pkgId);
+        lastOptimizedParcels = orderedItems;
+        applyOptimizedOrder();
+
+        // Show result
+        document.getElementById('optimizeLoadingBody').style.display = 'none';
+        showOptimizationResult({
+            optimizeBy: optimizeLabel,
+            start: startAddress,
+            end: endAddress || '(остання точка)',
+            stats: { total: withAddress.length, geocoded: geocoded.length, optimized: orderedItems.length },
+            method,
+            mapLinks,
+            orderedItems,
+            legInfo,
+            notGeocodedList,
+            totalDist: cumulativeDist,
+            totalTime: cumulativeTime
+        });
+
+        renderCards();
+
+    } catch(err) {
+        console.error('Optimize error:', err);
+        document.getElementById('optimizeFormBody').style.display = 'block';
+        document.getElementById('optimizeLoadingBody').style.display = 'none';
+        document.getElementById('optimizeFormFooter').style.display = 'flex';
+        showToast(err.message);
+    }
+}
+
+function showOptimizationResult(data) {
+    document.getElementById('optimizeResultBody').style.display = 'block';
+    document.getElementById('optimizeResultFooter').style.display = 'flex';
+
+    let html = '<div class="optimize-result-header">✅ Маршрут оптимізовано!</div>';
+
+    html += '<div class="optimize-stats">';
+    html += '<div class="optimize-stat-row"><span class="optimize-stat-label">📋 По:</span><span class="optimize-stat-value">' + data.optimizeBy + '</span></div>';
+    html += '<div class="optimize-stat-row"><span class="optimize-stat-label">📍 Старт:</span><span class="optimize-stat-value">' + data.start + '</span></div>';
+    html += '<div class="optimize-stat-row"><span class="optimize-stat-label">🏁 Фініш:</span><span class="optimize-stat-value">' + data.end + '</span></div>';
+    html += '<div class="optimize-stat-row"><span class="optimize-stat-label">📦 Посилок:</span><span class="optimize-stat-value">' + data.stats.optimized + ' / ' + data.stats.total + '</span></div>';
+    html += '<div class="optimize-stat-row"><span class="optimize-stat-label">🗺️ Метод:</span><span class="optimize-stat-value">' + data.method + '</span></div>';
+    if (data.totalDist > 0) {
+        html += '<div class="optimize-stat-row"><span class="optimize-stat-label">📏 Загальна відстань:</span><span class="optimize-stat-value">' + formatDistance(data.totalDist) + '</span></div>';
+        html += '<div class="optimize-stat-row"><span class="optimize-stat-label">⏱️ Загальний час:</span><span class="optimize-stat-value">' + formatDuration(data.totalTime) + '</span></div>';
+    }
+    html += '</div>';
+
+    // Route table
+    html += '<div style="overflow-x:auto;margin-bottom:16px;">';
+    html += '<table class="optimize-route-table">';
+    html += '<thead><tr><th>#</th><th>Відправник</th><th>Адреса</th><th>Відстань</th><th>Час їзди</th><th>ETA від старту</th></tr></thead>';
+    html += '<tbody>';
+    data.orderedItems.forEach((p, i) => {
+        const leg = data.legInfo[i] || {};
+        html += '<tr>';
+        html += '<td><span class="opt-order-num">' + (i + 1) + '</span></td>';
+        html += '<td><strong>' + (p.name || '—') + '</strong><br><small style="color:var(--text-secondary)">' + (p.phone || '') + (p.kg ? ' · ' + p.kg + 'кг' : '') + '</small></td>';
+        html += '<td style="max-width:180px;word-break:break-word;">' + (p.address || '—') + '</td>';
+        html += '<td><span class="opt-dist-badge">' + (leg.segmentDistText || '—') + '</span></td>';
+        html += '<td><span class="opt-time-badge">' + (leg.segmentTimeText || '—') + '</span></td>';
+        html += '<td><span class="opt-eta-badge">' + formatDuration(leg.totalTime) + '</span></td>';
+        html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+
+    // Not geocoded
+    if (data.notGeocodedList && data.notGeocodedList.length > 0) {
+        html += '<div class="optimize-not-geocoded">';
+        html += '<div class="optimize-not-geocoded-title">⚠️ Не вдалось знайти адреси (' + data.notGeocodedList.length + '):</div>';
+        html += '<div class="optimize-not-geocoded-list">';
+        data.notGeocodedList.forEach(item => {
+            html += '<div class="optimize-not-geocoded-item"><strong>' + item.pkgId + '</strong> ' + (item.name ? '(' + item.name + ')' : '') + '<br><small>' + item.address + '</small></div>';
+        });
+        html += '</div></div>';
+    }
+
+    // Map links
+    html += '<div class="optimize-map-links">';
+    if (data.mapLinks.length === 1) {
+        html += '<a href="' + data.mapLinks[0].url + '" target="_blank" class="optimize-map-btn">🗺️ Відкрити маршрут на карті</a>';
+    } else {
+        data.mapLinks.forEach((link, i) => {
+            html += '<a href="' + link.url + '" target="_blank" class="optimize-map-btn">🗺️ Частина ' + (i + 1) + ' (точки ' + link.from + '-' + link.to + ')</a>';
+        });
+    }
+    html += '</div>';
+
+    document.getElementById('optimizeResultBody').innerHTML = html;
+
+    // Route save button
+    const routeWrap = document.getElementById('optRouteSelectWrap');
+    if (window._optimizeRouteContext) {
+        routeWrap.innerHTML = '<button class="bs-btn primary" style="background:var(--purple);" onclick="reorderRouteAfterOptimize()">💾 Зберегти порядок в маршруті</button>';
+    } else {
+        routeWrap.innerHTML = '<button class="bs-btn primary" style="background:var(--purple);" onclick="toggleOptRouteDropdown()">🗺️ В маршрут</button>'
+            + '<div id="optRouteDropdown" style="display:none;position:absolute;bottom:100%;left:0;min-width:260px;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);padding:6px;margin-bottom:6px;max-height:250px;overflow-y:auto;z-index:999;"></div>';
+    }
+}
+
+// ================================================================
+// "В МАРШРУТ" з результатів оптимізації
+// ================================================================
+function toggleOptRouteDropdown() {
+    const dd = document.getElementById('optRouteDropdown');
+    if (dd.style.display === 'block') { dd.style.display = 'none'; return; }
+    if (routes.length === 0) {
+        dd.innerHTML = '<div style="padding:14px;text-align:center;color:var(--text-secondary);font-size:12px;">Немає доступних маршрутів</div>';
+    } else {
+        dd.innerHTML = routes.map((sheet, idx) => {
+            const name = (sheet.sheetName || '').replace('Маршрут_', '');
+            const cnt = sheet.rowCount || 0;
+            return '<button onclick="saveOptimizedToRoute(' + idx + ')" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 12px;border:none;background:white;cursor:pointer;border-radius:6px;font-size:12px;font-family:inherit;transition:background 0.15s;" onmouseover="this.style.background=\'#f0f4f8\'" onmouseout="this.style.background=\'white\'">'
+                + '<span style="font-weight:700;">🗺️ ' + escHtml(name) + '</span>'
+                + '<span style="color:var(--text-secondary);font-size:11px;">📦' + cnt + '</span>'
+                + '</button>';
+        }).join('');
+    }
+    dd.style.display = 'block';
+    setTimeout(() => {
+        document.addEventListener('click', function closeOptDD(e) {
+            if (!document.getElementById('optRouteSelectWrap')?.contains(e.target)) {
+                dd.style.display = 'none';
+                document.removeEventListener('click', closeOptDD);
+            }
+        });
+    }, 10);
+}
+
+async function saveOptimizedToRoute(routeIdx) {
+    const sheet = routes[routeIdx];
+    if (!sheet) return;
+    var ddEl = document.getElementById('optRouteDropdown');
+    if (ddEl) ddEl.style.display = 'none';
+
+    const pkgIds = optimizedOrderIds.length ? optimizedOrderIds : lastOptimizedParcels.map(p => p.pkgId);
+    if (!pkgIds.length) return showToast('Немає даних для переносу');
+
+    closeOptimizeModal();
+    showLoader('Переносимо ' + pkgIds.length + ' посилок в маршрут...');
+
+    try {
+        var ok = 0, fail = 0;
+        for (var i = 0; i < pkgIds.length; i++) {
+            showLoader('Додаємо в маршрут... ' + (i + 1) + '/' + pkgIds.length);
+            var res = await apiPost('addToRoute', { pkg_id: pkgIds[i], sheet_name: sheet.sheetName, rte_id: sheet.sheetName });
+            if (res.ok) {
+                var p = allData.find(x => x['PKG_ID'] === pkgIds[i]);
+                if (p) p['RTE_ID'] = sheet.sheetName;
+                ok++;
+            } else { fail++; }
+        }
+        hideLoader();
+        if (ok > 0) {
+            routes[routeIdx].rows = null;
+            routes[routeIdx].rowCount = (routes[routeIdx].rowCount || 0) + ok;
+            renderRouteSidebar();
+        }
+        clearSelection();
+        renderCards();
+        showToast('✅ ' + ok + ' посилок перенесено в ' + sheet.sheetName.replace('Маршрут_', '') + ' (оптимізований порядок)' + (fail ? ', ' + fail + ' помилок' : ''));
+
+        // Auto-propose optimization of route order
+        autoOptimizeRoutePrompt(routeIdx, sheet.sheetName);
+    } catch (e) {
+        hideLoader();
+        showToast('❌ Помилка: ' + e.message);
+    }
+}
+
+// ================================================================
+// ОПТИМІЗАЦІЯ ПОРЯДКУ В МАРШРУТІ
+// ================================================================
+async function optimizeRouteOrder() {
+    if (activeRouteIdx === null || activeRouteIdx >= routes.length) return showToast('Оберіть маршрут');
+    const sheet = routes[activeRouteIdx];
+    const rows = sheet.rows || [];
+
+    if (rows.length < 2) return showToast('Потрібно мінімум 2 записи для оптимізації');
+
+    // Convert route rows to format for optimization
+    const fakeParcels = rows.map(r => ({
+        'PKG_ID': r['RTE_ID'] || r['PAX_ID/PKG_ID'] || r['PKG_ID'] || '',
+        'Піб відправника': r['Піб відправника'] || r['Піб пасажира'] || '',
+        'Телефон реєстратора': r['Телефон'] || r['Телефон пасажира'] || '',
+        'Кг': r['Кг'] || '',
+        'Адреса відправки': r['Адреса'] || r['Адреса відправки'] || '',
+        'Адреса прибуття': r['Адреса прибуття'] || '',
+    }));
+
+    openOptimizeModal(fakeParcels);
+    window._optimizeRouteContext = {
+        sheetName: sheet.sheetName,
+        allRows: rows
+    };
+}
+
+// Auto-propose to optimize order after adding leads
+function autoOptimizeRoutePrompt(routeIdx, sheetName) {
+    const idx = routes.findIndex(r => r.sheetName === sheetName);
+    if (idx === -1) return;
+    const sheet = routes[idx];
+    const rows = sheet.rows || [];
+    if (rows.length < 2) return;
+
+    const name = sheetName.replace('Маршрут_', '');
+    if (confirm('Оптимізувати порядок записів у маршруті "' + name + '"? (' + rows.length + ' записів)')) {
+        activeRouteIdx = idx;
+        optimizeRouteOrder();
+    }
+}
+
+// Reorder route rows after optimization
+async function reorderRouteAfterOptimize() {
+    const ctx = window._optimizeRouteContext;
+    if (!ctx || !optimizedOrderIds.length) return;
+
+    const sheetName = ctx.sheetName;
+    const allRows = ctx.allRows;
+
+    // Build optimized order
+    const byId = {};
+    for (const r of allRows) {
+        const id = r['RTE_ID'] || r['PAX_ID/PKG_ID'] || r['PKG_ID'] || '';
+        byId[id] = r;
+    }
+
+    const orderedRows = [];
+    for (const id of optimizedOrderIds) {
+        if (byId[id]) orderedRows.push(byId[id]);
+    }
+    // Add those not in optimized list
+    for (const r of allRows) {
+        const id = r['RTE_ID'] || r['PAX_ID/PKG_ID'] || r['PKG_ID'] || '';
+        if (!optimizedOrderIds.includes(id)) orderedRows.push(r);
+    }
+
+    showLoader('Оновлення порядку в маршруті...');
+    try {
+        // Delete all rows from route
+        for (let i = 0; i < allRows.length; i++) {
+            showLoader('Видалення ' + (i + 1) + '/' + allRows.length + '...');
+            const pkgId = allRows[i]['PAX_ID/PKG_ID'] || allRows[i]['PKG_ID'] || '';
+            if (pkgId) await apiPost('removeFromRoute', { pkg_id: pkgId });
+        }
+
+        // Re-add in optimized order
+        for (let i = 0; i < orderedRows.length; i++) {
+            showLoader('Додаємо ' + (i + 1) + '/' + orderedRows.length + '...');
+            const pkgId = orderedRows[i]['PAX_ID/PKG_ID'] || orderedRows[i]['PKG_ID'] || '';
+            if (pkgId) await apiPost('addToRoute', { pkg_id: pkgId, sheet_name: sheetName, rte_id: sheetName });
+        }
+
+        hideLoader();
+        showToast('✅ Порядок в маршруті оновлено!');
+        window._optimizeRouteContext = null;
+        closeOptimizeModal();
+        loadRoutes();
+    } catch (e) {
+        hideLoader();
+        showToast('❌ Помилка: ' + e.message);
+    }
+}
+
+// ================================================================
+// Google Maps API initialization
+// ================================================================
+window.mapsApiReady = false;
+window.mapsGeocoder = null;
+window.mapsDirections = null;
+
+function initMapsAPI() {
+    window.mapsApiReady = true;
+    window.mapsGeocoder = new google.maps.Geocoder();
+    window.mapsDirections = new google.maps.DirectionsService();
+    console.log('Google Maps API ready');
+}
+
 </script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDbSS6XSCJ3MafbrSp-rIX1-x130bwzevo&callback=initMapsAPI"></script>
 </body>
 </html>
