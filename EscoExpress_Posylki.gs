@@ -653,7 +653,7 @@ function apiAddToRoute(params) {
 
   var lastCol = sheet.getLastColumn();
   if (lastCol < 1) return { ok: false, error: 'Аркуш порожній' };
-  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { return String(h).trim(); });
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { return String(h).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); });
 
   var lead = {};
 
@@ -794,7 +794,7 @@ function apiUpdateRouteField(params) {
   var lastCol = sheet.getLastColumn();
   if (lastRow < 2 || lastCol < 1) return { ok: false, error: 'Аркуш порожній' };
 
-  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { return String(h).trim(); });
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { return String(h).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(); });
   var colIdx = headers.indexOf(col);
   if (colIdx === -1) return { ok: false, error: 'Колонка не знайдена: ' + col };
 
@@ -873,7 +873,9 @@ function apiGetRouteSheet(params) {
     return { ok: true, data: { sheetName: sheetName, headers: [], rows: [], rowCount: 0 } };
   }
 
-  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) { return String(h).trim(); });
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h) {
+    return String(h).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+  });
   var dataRows = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
 
   var rows = [];
