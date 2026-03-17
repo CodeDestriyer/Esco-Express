@@ -120,7 +120,7 @@
         .card-header-top { display: flex; align-items: stretch; }
         .card-checkbox-wrap { display: flex; align-items: center; justify-content: center; padding: 10px 8px; background: var(--bg-main); border-right: 1px solid var(--border); flex-shrink: 0; }
         .card-checkbox { width: 18px; height: 18px; cursor: pointer; }
-        .card-body { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; overflow: hidden; cursor: pointer; }
+        .card-body { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; overflow: hidden; cursor: pointer; -webkit-user-select: text; user-select: text; }
         .card-body:hover { background: #fafbfc; }
 
         .card-top-row { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; min-height: 24px; }
@@ -156,9 +156,7 @@
         .card-route-text { font-weight: 700; color: var(--text-primary); flex: 1; }
         .card-route-text.empty { color: var(--warning); font-weight: 600; }
 
-        /* Details panel */
-        .card-details { display: none; padding: 0; background: #f8fafc; border-top: 1px solid var(--border); }
-        .card-details.show { display: block; }
+        /* Details panel - base (animation overridden in quick-edit section) */
 
         .detail-accordion-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 10px; background: #f1f5f9; border-bottom: 1px solid var(--border); }
         .detail-tab { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 16px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--text-secondary); transition: all 0.15s; white-space: nowrap; }
@@ -182,6 +180,36 @@
         .detail-micro-btn:hover { background: var(--primary); color: white; }
         .detail-inline-edit { width: 100%; border: 1px solid var(--primary); border-radius: 4px; padding: 2px 4px; font-size: 12px; font-weight: 600; font-family: inherit; outline: none; background: white; }
         select.detail-inline-edit { padding: 3px 4px; cursor: pointer; appearance: auto; }
+
+        /* ============ QUICK EDIT — table-like fast editing ============ */
+        .quick-edit-panel { padding: 10px 12px; background: #f8fafc; }
+        .quick-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+        .quick-edit-row { display: flex; align-items: center; gap: 6px; min-height: 32px; }
+        .quick-edit-label { font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; min-width: 70px; flex-shrink: 0; white-space: nowrap; }
+        .quick-edit-input { flex: 1; border: 1px solid var(--border); border-radius: 5px; padding: 5px 8px; font-size: 13px; font-weight: 600; font-family: inherit; outline: none; background: white; transition: border-color 0.15s, box-shadow 0.15s, background 0.3s; min-width: 0; }
+        .quick-edit-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,58,94,0.15); }
+        .quick-edit-input.qe-saving { border-color: #f59e0b; background: #fffbeb; }
+        .quick-edit-input.qe-saved { border-color: var(--success); background: #f0fdf4; }
+        .quick-edit-input.qe-error { border-color: var(--danger); background: #fef2f2; }
+        select.quick-edit-input { padding: 4px 6px; cursor: pointer; appearance: auto; }
+        .quick-edit-row-full { grid-column: 1 / -1; }
+        .quick-edit-divider { grid-column: 1 / -1; height: 0; margin: 2px 0; }
+        .quick-edit-section-label { grid-column: 1 / -1; font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; padding: 4px 0 0; border-top: 1px solid var(--border); margin-top: 2px; }
+        .quick-edit-section-label:first-child { border-top: none; margin-top: 0; }
+
+        /* Smooth card expand animation */
+        .card-details { display: none; padding: 0; background: #f8fafc; border-top: 1px solid var(--border); overflow: hidden; max-height: 0; transition: max-height 0.3s ease-out, opacity 0.2s ease-out; opacity: 0; }
+        .card-details.show { display: block; max-height: 2000px; opacity: 1; transition: max-height 0.4s ease-in, opacity 0.2s ease-in; }
+
+        /* Clickable detail values */
+        .detail-block-value.editable { cursor: pointer; transition: background 0.15s; border-radius: 3px; padding: 1px 3px; margin: -1px -3px; }
+        .detail-block-value.editable:hover { background: #eef2ff; }
+
+        @media (max-width: 600px) {
+            .quick-edit-grid { grid-template-columns: 1fr; }
+            .quick-edit-row-full { grid-column: 1; }
+            .quick-edit-section-label { grid-column: 1; }
+        }
 
         /* PAYMENTS TAB */
         .payments-loading { text-align: center; padding: 24px; color: var(--text-secondary); font-size: 12px; }
@@ -1425,7 +1453,7 @@ function renderCards() {
         return '<div class="lead-card ' + statusClass + '" id="card-' + pkgId + '">' +
             '<div class="card-header"><div class="card-header-top">' +
             '<div class="card-checkbox-wrap"><input type="checkbox" class="card-checkbox" value="' + pkgId + '"></div>' +
-            '<div class="card-body" onclick="toggleCard(\'' + pkgId + '\')">' +
+            '<div class="card-body" onclick="smartToggleCard(event, \'' + pkgId + '\')">' +
             '<div class="card-top-row">' +
             '<span class="card-direction ' + dirBadge + '">' + dirText + '</span>' +
             (ttn ? '<span class="card-phone">TTH: ' + escHtml(ttn) + '</span>' : '') +
@@ -1460,6 +1488,38 @@ function renderCards() {
     }).join('');
 
     updateSidebar();
+}
+
+// ── SMART TOGGLE — розрізняє копіювання тексту від розгортання ──
+var _cardMouseDownTime = 0;
+var _cardMouseDownX = 0;
+var _cardMouseDownY = 0;
+
+document.addEventListener('mousedown', function(e) {
+    _cardMouseDownTime = Date.now();
+    _cardMouseDownX = e.clientX;
+    _cardMouseDownY = e.clientY;
+});
+
+function smartToggleCard(e, pkgId) {
+    // Якщо є виділений текст — юзер копіює, не розгортати
+    var sel = window.getSelection();
+    if (sel && sel.toString().trim().length > 0) return;
+
+    // Якщо клік був на інтерактивному елементі — не розгортати
+    var tag = e.target.tagName;
+    if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'A' || tag === 'SELECT') return;
+    if (e.target.closest && (e.target.closest('button') || e.target.closest('a') || e.target.closest('.card-checkbox-wrap') || e.target.closest('.card-actions-toggle'))) return;
+
+    // Якщо юзер протягнув мишку (drag > 5px) — це виділення тексту
+    var dx = Math.abs(e.clientX - _cardMouseDownX);
+    var dy = Math.abs(e.clientY - _cardMouseDownY);
+    if (dx > 5 || dy > 5) return;
+
+    // Якщо тримав більше 300мс — скоріше за все виділяв текст
+    if (Date.now() - _cardMouseDownTime > 300) return;
+
+    toggleCard(pkgId);
 }
 
 // ── TOGGLE CARD ──
@@ -1531,15 +1591,21 @@ function getPkgSections(isUE) {
 function renderDetailsContent(p) {
     const isUE = p._sheet === 'Реєстрація ТТН УК-єв';
     const pkgId = p['PKG_ID'];
-    const activeTab = activeDetailTab[pkgId] || 'basic';
+    const activeTab = activeDetailTab[pkgId] || 'quickedit';
     const sections = getPkgSections(isUE);
 
-    // Tabs row
+    // Tabs row — Quick Edit first
     let tabsHtml = '<div class="detail-accordion-tabs">' +
+        '<span class="detail-tab ' + (activeTab === 'quickedit' ? 'active' : '') + '" onclick="switchDetailTab(\'' + pkgId + '\', \'quickedit\')" style="' + (activeTab === 'quickedit' ? '' : '') + '">&#9889; Швидке</span>' +
         sections.map(function(s) {
             return '<span class="detail-tab ' + (activeTab === s.key ? 'active' : '') + '" onclick="switchDetailTab(\'' + pkgId + '\', \'' + s.key + '\')">' + s.title + '</span>';
         }).join('') +
         '</div>';
+
+    // Quick Edit tab
+    if (activeTab === 'quickedit') {
+        return tabsHtml + '<div class="detail-tab-panel active">' + renderQuickEdit(p, isUE) + '</div>';
+    }
 
     // Find active section
     const section = sections.find(function(s) { return s.key === activeTab; }) || sections[0];
@@ -1611,12 +1677,223 @@ function detailBlock(pkgId, label, value, options) {
     const escapedVal = escHtml(val || '—');
     const id = 'db-' + pkgId + '-' + label.replace(/\s/g, '_');
 
-    let editBtn = '<div class="detail-block-actions"><button class="detail-micro-btn" onclick="startInlineEdit(\'' + escAttr(pkgId) + '\', \'' + escAttr(label) + '\', this)" title="Редагувати">&#9998;</button></div>';
+    // Click on value to edit directly + copy button
+    var clickEdit = ' onclick="detailBlockClickEdit(\'' + escAttr(pkgId) + '\', \'' + escAttr(label) + '\', this)"';
+    let editBtn = '<div class="detail-block-actions"><button class="detail-micro-btn" onclick="event.stopPropagation(); copyToClipboard(\'' + escAttr(val) + '\')" title="Копіювати">&#128203;</button></div>';
 
     return '<div class="detail-block" id="' + id + '">' +
         '<div class="detail-block-label">' + escHtml(label) + '</div>' +
-        '<div class="detail-block-value ' + (isEmpty ? 'empty' : '') + '">' + escapedVal + '</div>' +
+        '<div class="detail-block-value editable ' + (isEmpty ? 'empty' : '') + '"' + clickEdit + ' title="Натисніть щоб редагувати">' + escapedVal + '</div>' +
         editBtn + '</div>';
+}
+
+function detailBlockClickEdit(pkgId, col, el) {
+    // Create a virtual button reference for startInlineEdit
+    var block = el.closest('.detail-block');
+    if (!block) return;
+    startInlineEdit(pkgId, col, block.querySelector('.detail-micro-btn') || el);
+}
+
+function copyToClipboard(text) {
+    if (!text || text === '—') return;
+    navigator.clipboard.writeText(text).then(function() {
+        showToast('Скопійовано');
+    }).catch(function() {
+        // Fallback
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Скопійовано');
+    });
+}
+
+// ================================================================
+// QUICK EDIT — table-like fast editing panel
+// ================================================================
+function getQuickEditFields(isUE) {
+    var fields = [
+        // Відправник / отримувач
+        { label: '&#128100; Контакти', divider: true },
+        { col: 'Піб відправника', label: 'Відправник', type: 'text' },
+        { col: 'Телефон реєстратора', label: 'Тел. відпр.', type: 'tel' },
+        { col: 'Піб отримувача', label: 'Отримувач', type: 'text' },
+        { col: 'Телефон отримувача', label: 'Тел. отрим.', type: 'tel' },
+        { col: 'Адреса відправки', label: 'Адреса відпр.', type: 'select' },
+        { col: isUE ? 'Адреса в Європі' : 'Місто Нова Пошта', label: isUE ? 'Адреса ЄВ' : 'Місто НП', type: isUE ? 'select' : 'text' },
+        // Посилка
+        { label: '&#128230; Посилка', divider: true },
+        { col: 'Опис', label: 'Опис', type: 'text', full: true },
+        { col: 'Кг', label: 'Вага кг', type: 'number' },
+        { col: 'Кількість позицій', label: 'К-сть', type: 'number' },
+        { col: 'Статус посилки', label: 'Статус пос.', type: 'select' },
+    ];
+    if (isUE) {
+        fields.push({ col: 'Номер ТТН', label: 'ТТН', type: 'text' });
+        fields.push({ col: 'Внутрішній №', label: 'Внутр. №', type: 'text' });
+    }
+    fields = fields.concat([
+        // Фінанси
+        { label: '&#128176; Фінанси', divider: true },
+        { col: 'Сума', label: 'Сума', type: 'number' },
+        { col: 'Валюта оплати', label: 'Валюта', type: 'select' },
+        { col: 'Завдаток', label: 'Завдаток', type: 'number' },
+        { col: 'Валюта завдатку', label: 'Вал. завд.', type: 'select' },
+        { col: 'Форма оплати', label: 'Форма опл.', type: 'select' },
+    ]);
+    if (isUE) {
+        fields = fields.concat([
+            { label: '&#128176; Накладний платіж', divider: true },
+            { col: 'Сума НП', label: 'Сума НП', type: 'number' },
+            { col: 'Валюта НП', label: 'Валюта НП', type: 'select' },
+            { col: 'Форма НП', label: 'Форма НП', type: 'select' },
+            { col: 'Статус НП', label: 'Статус НП', type: 'select' },
+        ]);
+    }
+    fields = fields.concat([
+        // Статуси
+        { label: '&#128202; Статуси', divider: true },
+        { col: 'Статус ліда', label: 'Статус', type: 'select' },
+        { col: 'Статус оплати', label: 'Оплата', type: 'select' },
+        { col: 'Тег', label: 'Тег', type: 'text' },
+        // Примітки
+        { label: '&#128221; Інше', divider: true },
+        { col: 'Примітка', label: 'Примітка', type: 'text', full: true },
+        { col: 'Дата відправки', label: 'Дата відпр.', type: 'text' },
+        { col: 'Таймінг', label: 'Таймінг', type: 'text' },
+    ]);
+    return fields;
+}
+
+function renderQuickEdit(p, isUE) {
+    var pkgId = p['PKG_ID'];
+    var fields = getQuickEditFields(isUE);
+    var html = '<div class="quick-edit-panel" onclick="event.stopPropagation()"><div class="quick-edit-grid">';
+
+    fields.forEach(function(f) {
+        if (f.divider) {
+            html += '<div class="quick-edit-section-label">' + f.label + '</div>';
+            return;
+        }
+        var val = p[f.col] || '';
+        var fullClass = f.full ? ' quick-edit-row-full' : '';
+        var inputId = 'qe-' + pkgId + '-' + f.col.replace(/\s/g, '_');
+        var selectOpts = getFieldOptions(f.col);
+
+        html += '<div class="quick-edit-row' + fullClass + '">';
+        html += '<label class="quick-edit-label" for="' + inputId + '">' + f.label + '</label>';
+
+        if (f.type === 'select' && selectOpts) {
+            var isAddr = (f.col === 'Адреса відправки' || f.col === 'Адреса в Європі');
+            var optsHtml = '';
+            if (isAddr && val && selectOpts.indexOf(val) === -1) {
+                optsHtml += '<option value="' + escAttr(val) + '" selected>' + escHtml(val) + '</option>';
+            }
+            optsHtml += selectOpts.map(function(o) { return '<option value="' + escAttr(o) + '"' + (o === val ? ' selected' : '') + '>' + escHtml(o) + '</option>'; }).join('');
+            html += '<select class="quick-edit-input" id="' + inputId + '" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(f.col) + '" data-old="' + escAttr(String(val)) + '" onchange="qeSave(this)">' + optsHtml + '</select>';
+        } else {
+            var inputType = f.type === 'number' ? 'number' : (f.type === 'tel' ? 'tel' : 'text');
+            html += '<input class="quick-edit-input" id="' + inputId + '" type="' + inputType + '" value="' + escAttr(String(val)) + '" placeholder="' + escAttr(f.label) + '" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(f.col) + '" data-old="' + escAttr(String(val)) + '" onblur="qeSave(this)" onkeydown="qeKeyNav(event, this)"' + (inputType === 'number' ? ' step="any"' : '') + '>';
+        }
+        html += '</div>';
+    });
+
+    // Борг — read-only display
+    var debt = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
+    html += '<div class="quick-edit-row"><span class="quick-edit-label" style="color:var(--danger)">БОРГ</span><span id="qe-debt-' + pkgId + '" style="font-size:15px;font-weight:800;color:' + (debt > 0 ? 'var(--danger)' : 'var(--success)') + '">' + debt + ' ' + (p['Валюта оплати'] || 'UAH') + '</span></div>';
+
+    html += '</div></div>';
+    return html;
+}
+
+// Tab / Enter navigation between quick-edit fields
+function qeKeyNav(event, el) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        qeSave(el);
+        var inputs = Array.from(el.closest('.quick-edit-grid').querySelectorAll('.quick-edit-input'));
+        var idx = inputs.indexOf(el);
+        if (idx < inputs.length - 1) {
+            inputs[idx + 1].focus();
+            if (inputs[idx + 1].select) inputs[idx + 1].select();
+        }
+    } else if (event.key === 'Escape') {
+        el.value = el.dataset.old || '';
+        el.blur();
+    }
+}
+
+// Quick-edit auto-save
+var _qeSaveTimers = {};
+async function qeSave(el) {
+    var pkgId = el.dataset.pkg;
+    var col = el.dataset.col;
+    var newVal = el.value;
+    var oldVal = el.dataset.old || '';
+    if (String(newVal) === String(oldVal)) return;
+
+    var timerKey = pkgId + '-' + col;
+    if (_qeSaveTimers[timerKey]) clearTimeout(_qeSaveTimers[timerKey]);
+
+    _qeSaveTimers[timerKey] = setTimeout(async function() {
+        delete _qeSaveTimers[timerKey];
+        el.classList.add('qe-saving');
+        el.classList.remove('qe-saved', 'qe-error');
+
+        var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
+        var res = await apiPost('updateField', { pkg_id: pkgId, col: col, value: newVal });
+
+        el.classList.remove('qe-saving');
+        if (res.ok) {
+            if (p) p[col] = newVal;
+            el.classList.add('qe-saved');
+            el.dataset.old = newVal;
+            showToast('Збережено');
+            setTimeout(function() { el.classList.remove('qe-saved'); }, 1500);
+
+            // Recalc debt locally
+            if (p && (col === 'Сума' || col === 'Завдаток')) {
+                p['Борг'] = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
+                var dep = parseFloat(p['Завдаток']) || 0;
+                if (dep > 0 && p['Борг'] > 0) p['Статус оплати'] = 'Частково';
+                else if (dep > 0 && p['Борг'] === 0) p['Статус оплати'] = 'Оплачено';
+                else p['Статус оплати'] = 'Не оплачено';
+                // Update debt display
+                var debtEl = document.getElementById('qe-debt-' + pkgId);
+                if (debtEl) {
+                    debtEl.textContent = p['Борг'] + ' ' + (p['Валюта оплати'] || 'UAH');
+                    debtEl.style.color = p['Борг'] > 0 ? 'var(--danger)' : 'var(--success)';
+                }
+                // Update payment status select
+                var payEl = document.getElementById('qe-' + pkgId + '-Статус_оплати');
+                if (payEl) { payEl.value = p['Статус оплати']; payEl.dataset.old = p['Статус оплати']; }
+            }
+            // Update card header info without full re-render
+            qeUpdateCardHeader(pkgId);
+        } else {
+            if (p) p[col] = oldVal;
+            el.value = oldVal;
+            el.classList.add('qe-error');
+            showToast('Помилка: ' + (res.error || 'невідома'));
+            setTimeout(function() { el.classList.remove('qe-error'); }, 2000);
+        }
+    }, 150);
+}
+
+// Update card header without re-rendering (to keep focus in quick edit)
+function qeUpdateCardHeader(pkgId) {
+    var cardEl = document.getElementById('card-' + pkgId);
+    if (!cardEl) return;
+    var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
+    if (!p) return;
+    var nameEl = cardEl.querySelector('.card-name');
+    if (nameEl) {
+        var sender = p['Піб відправника'] || '';
+        var receiver = p['Піб отримувача'] || '';
+        nameEl.innerHTML = '&#128100; ' + escHtml(sender) + (sender && receiver ? ' &#8594; ' : '') + escHtml(receiver);
+    }
 }
 
 function switchDetailTab(pkgId, tabId) {
@@ -1630,7 +1907,7 @@ function switchDetailTab(pkgId, tabId) {
 
 // ── INLINE EDIT ──
 function startInlineEdit(pkgId, col, btn) {
-    const block = btn.closest('.detail-block');
+    const block = btn.closest ? btn.closest('.detail-block') : btn;
     const valueEl = block.querySelector('.detail-block-value');
     const p = allData.find(x => x['PKG_ID'] === pkgId);
     if (!p) return;
