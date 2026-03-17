@@ -1639,8 +1639,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function silentSync() {
     if (document.querySelector('.modal-overlay.show')) return;
     if (document.querySelector('.bottom-sheet-overlay.show')) return;
-    // Не робити повний sync, якщо є інлайн-редагування
-    if (document.querySelector('.detail-inline-edit')) return;
 
     Promise.all([
         apiPost('getAll', { sheet: 'all' }),
@@ -2609,71 +2607,7 @@ function render() {
         return;
     }
 
-    // Smart render: update existing cards in place instead of destroying all DOM
-    const existingCards = list.querySelectorAll('.lead-card');
-    const existingMap = {};
-    existingCards.forEach(card => {
-        const detailsEl = card.querySelector('.card-details');
-        if (detailsEl && detailsEl.id) {
-            const paxId = detailsEl.id.replace('details-', '');
-            existingMap[paxId] = card;
-        }
-    });
-
-    const filteredIds = new Set(filtered.map(p => p['PAX_ID']));
-    const needsFullRender = filtered.length !== existingCards.length ||
-        filtered.some(p => !existingMap[p['PAX_ID']]);
-
-    if (needsFullRender) {
-        // Full render needed (list changed) — but preserve open details
-        const openPaxId = openDetailsId;
-        const openDetailsContent = openPaxId ?
-            document.getElementById('details-' + openPaxId)?.innerHTML : null;
-
-        list.innerHTML = filtered.map(p => renderCard(p)).join('');
-
-        // Restore open details content if it was preserved
-        if (openPaxId && openDetailsContent) {
-            const detailsEl = document.getElementById('details-' + openPaxId);
-            if (detailsEl && detailsEl.classList.contains('show')) {
-                detailsEl.innerHTML = openDetailsContent;
-            }
-        }
-    } else {
-        // Same cards — update only card headers (keep details panels intact)
-        filtered.forEach(p => {
-            const paxId = p['PAX_ID'];
-            const card = existingMap[paxId];
-            if (!card) return;
-
-            // Update card header content (phone, price, badges, etc.)
-            const isOpen = openDetailsId === paxId;
-            const isActionsOpen = openActionsId === paxId;
-            const leadStatus = p['Статус ліда'] || '';
-            const statusClass = leadStatus === 'Новий' ? 'status-new' : leadStatus === 'В роботі' ? 'status-work' : leadStatus === 'Підтверджено' ? 'status-confirmed' : leadStatus === 'Відмова' ? 'status-refused' : '';
-
-            // Update status class
-            card.className = 'lead-card ' + statusClass + (selectedIds.has(paxId) ? ' selected' : '');
-
-            // Update details show/hide without destroying content
-            const detailsEl = card.querySelector('.card-details');
-            if (detailsEl) {
-                if (isOpen && !detailsEl.classList.contains('show')) {
-                    detailsEl.classList.add('show');
-                    detailsEl.innerHTML = renderDetails(p);
-                } else if (!isOpen && detailsEl.classList.contains('show')) {
-                    detailsEl.classList.remove('show');
-                }
-            }
-
-            // Update actions show/hide
-            const actionsEl = card.querySelector('.card-actions');
-            if (actionsEl) {
-                if (isActionsOpen) actionsEl.classList.add('show');
-                else actionsEl.classList.remove('show');
-            }
-        });
-    }
+    list.innerHTML = filtered.map(p => renderCard(p)).join('');
 }
 
 function renderCard(p) {
@@ -3025,41 +2959,23 @@ function smartToggleDetails(e, id) {
 }
 
 function toggleDetails(id) {
-    const prevOpen = openDetailsId;
     if (openDetailsId === id) {
         openDetailsId = null;
         delete activeDetailTab[id];
-        // Просто згорнути деталі без повного ре-рендеру
-        const el = document.getElementById('details-' + id);
-        if (el) el.classList.remove('show');
     } else {
-        // Згорнути попередній
-        if (prevOpen) {
-            const prevEl = document.getElementById('details-' + prevOpen);
-            if (prevEl) prevEl.classList.remove('show');
-        }
         openDetailsId = id;
         const p = passengers.find(x => x['PAX_ID'] === id);
-        const el = document.getElementById('details-' + id);
-        if (el && p) {
-            el.innerHTML = renderDetails(p);
-            el.classList.add('show');
+        if (p) {
+            const el = document.getElementById('details-' + id);
+            if (el) el.innerHTML = renderDetails(p);
         }
     }
+    render();
 }
 
 function toggleCardActions(id) {
-    const prevId = openActionsId;
     openActionsId = openActionsId === id ? null : id;
-    // Toggle without full re-render
-    if (prevId) {
-        const prevEl = document.getElementById('actions-' + prevId);
-        if (prevEl) prevEl.classList.remove('show');
-    }
-    if (openActionsId) {
-        const el = document.getElementById('actions-' + openActionsId);
-        if (el) el.classList.add('show');
-    }
+    render();
 }
 
 // ================================================================
