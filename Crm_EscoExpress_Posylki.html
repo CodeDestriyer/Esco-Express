@@ -1739,17 +1739,11 @@ function renderDetailsContent(p) {
             // Editable block — click to edit
             panelHtml += detailBlock(pkgId, realCol, val, opts);
         });
-        panelHtml += '</div>';
-
-        // Photo as regular column block in parcel tab
+        // Photo as regular column block inside the grid
         if (section.hasPhoto) {
             panelHtml += photoBlock(pkgId, p['Фото посилки']);
-            if (isUE && p['Номер ТТН']) {
-                panelHtml += '<div style="margin-top:12px;"><button class="bs-btn primary" style="padding:8px 16px;font-size:11px;" onclick="trackTTN(\'' + escAttr(pkgId) + '\', \'' + escAttr(p['Номер ТТН']) + '\')">&#128230; Відстежити ТТН</button>';
-                if (hasNpApiKey) panelHtml += ' <button class="bs-btn cancel" style="padding:8px 16px;font-size:11px;" onclick="autoTrackTTN(\'' + escAttr(pkgId) + '\', \'' + escAttr(p['Номер ТТН']) + '\')">&#128260; Оновити статус</button>';
-                panelHtml += '</div>';
-            }
         }
+        panelHtml += '</div>';
         // Rating for parcel tab
         if (section.hasRating) {
             panelHtml += '<div class="detail-section-title">Рейтинг</div>' + renderRating(pkgId, p['Рейтинг'], p['Коментар рейтингу']);
@@ -1777,9 +1771,34 @@ function detailBlock(pkgId, label, value, options) {
     var clickEdit = ' onclick="event.stopPropagation(); detailBlockClickEdit(\'' + escAttr(pkgId) + '\', \'' + escAttr(label) + '\', this)"';
     var editBtn = '<div class="detail-block-actions"><button class="detail-micro-btn" onclick="event.stopPropagation(); copyToClipboard(\'' + escAttr(val) + '\')" title="Копіювати">&#128203;</button></div>';
 
-    return '<div class="detail-block" id="' + blockId + '">' +
+    // Color styling for key fields
+    var borderColor = '';
+    var valueStyle = '';
+    if (label === 'Статус оплати') {
+        if (val === 'Оплачено') { borderColor = 'var(--success)'; valueStyle = 'color:var(--success);font-weight:800;'; }
+        else if (val === 'Частково') { borderColor = 'var(--warning)'; valueStyle = 'color:#92400e;font-weight:800;'; }
+        else if (val === 'Не оплачено') { borderColor = 'var(--danger)'; valueStyle = 'color:var(--danger);font-weight:800;'; }
+    } else if (label === 'Статус посилки' && !isEmpty) {
+        if (val === 'Доставлено' || val === 'Видано') { borderColor = 'var(--success)'; valueStyle = 'color:var(--success);font-weight:800;'; }
+        else if (val === 'В дорозі') { borderColor = 'var(--info)'; valueStyle = 'color:var(--info);font-weight:800;'; }
+        else if (val === 'Прийнято' || val === 'На складі') { borderColor = 'var(--warning)'; valueStyle = 'color:#92400e;font-weight:800;'; }
+    } else if (label === 'Сума' || label === 'Оціночна вартість') {
+        if (!isEmpty) { borderColor = 'var(--success)'; valueStyle = 'color:var(--success);font-weight:800;'; }
+        else { borderColor = 'var(--danger)'; }
+    } else if (label === 'Кг') {
+        if (!isEmpty) { borderColor = 'var(--purple)'; valueStyle = 'color:var(--purple);font-weight:800;'; }
+        else { borderColor = 'var(--danger)'; }
+    } else if (label === 'Внутрішній №') {
+        if (!isEmpty) { borderColor = 'var(--primary)'; valueStyle = 'color:var(--primary);font-size:14px;font-weight:900;'; }
+        else { borderColor = 'var(--danger)'; }
+    }
+
+    var blockStyle = borderColor ? ' style="border-left-color:' + borderColor + '"' : '';
+    var valStyleAttr = valueStyle ? ' style="' + valueStyle + '"' : '';
+
+    return '<div class="detail-block" id="' + blockId + '"' + blockStyle + '>' +
         '<div class="detail-block-label">' + escHtml(label) + '</div>' +
-        '<div class="detail-block-value editable ' + (isEmpty ? 'empty' : '') + '"' + clickEdit + ' title="Натисніть щоб редагувати">' + escapedVal + '</div>' +
+        '<div class="detail-block-value editable ' + (isEmpty ? 'empty' : '') + '"' + clickEdit + ' title="Натисніть щоб редагувати"' + valStyleAttr + '>' + escapedVal + '</div>' +
         editBtn + '</div>';
 }
 
@@ -2952,6 +2971,18 @@ function escAttr(s) {
     return String(s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
+function formatDateShort(dateStr) {
+    if (!dateStr) return '';
+    try {
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        var dd = String(d.getDate()).padStart(2, '0');
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var yyyy = d.getFullYear();
+        return dd + '.' + mm + '.' + yyyy;
+    } catch(e) { return dateStr; }
+}
+
 // ── SIDEBAR COLLAPSE ──
 function togglePcSidebar() {
     const sidebar = document.getElementById('pcSidebar');
@@ -3469,8 +3500,9 @@ function renderSingleVerifyCard(p) {
     if (!recipient) html += '<span class="vcard-tag tag-unknown">&#10067; НЕВІДОМИЙ</span>';
     html += '</div></div>';
     html += '<div class="vcard-right">';
-    if (intNum) html += '<div class="vcard-intnum">' + escHtml(intNum) + '</div>';
-    html += '<div class="vcard-time">' + escHtml(date) + '</div>';
+    if (intNum) html += '<div class="vcard-intnum" style="font-size:18px;font-weight:900;color:var(--primary);background:var(--bg-main);padding:2px 10px;border-radius:6px;">' + escHtml(intNum) + '</div>';
+    if (hasSum) html += '<div style="font-size:13px;font-weight:800;color:var(--success);">' + escHtml(sum) + ' ' + escHtml(currency) + '</div>';
+    html += '<div class="vcard-time">' + escHtml(formatDateShort(date)) + '</div>';
     html += '</div></div>';
 
     // Expandable form
