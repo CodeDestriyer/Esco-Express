@@ -1807,6 +1807,9 @@ function detailBlockClickEdit(pkgId, col, el) {
         // Remove parent onclick so it doesn't intercept clicks inside the dropdown
         valueEl.removeAttribute('onclick');
         valueEl.removeAttribute('title');
+        // Temporarily allow overflow on card-details so dropdown is not clipped
+        var cardDetails = valueEl.closest('.card-details');
+        if (cardDetails) cardDetails.style.overflow = 'visible';
         // Smooth open — start closed, open on next frame
         var wrap = valueEl.querySelector('.qe-dropdown-wrap');
         if (wrap) {
@@ -1825,6 +1828,9 @@ function detailBlockClickEdit(pkgId, col, el) {
 // Cancel inline edit — restore just the value text, NO full re-render (like passenger CRM)
 function cancelInlineEditBlock(pkgId, col) {
     _isInlineEditing = false;
+    // Restore overflow on card-details (was set to visible for dropdown)
+    var cardDetailsEl = document.querySelector('.card-details[style*="overflow"]');
+    if (cardDetailsEl) cardDetailsEl.style.overflow = '';
     if (col) {
         // Restore just this one field — no full re-render
         var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
