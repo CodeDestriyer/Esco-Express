@@ -1844,9 +1844,17 @@ function qeUpdateCardHeader(pkgId) {
 function switchDetailTab(pkgId, tabId) {
     activeDetailTab[pkgId] = tabId;
     const p = allData.find(x => x['PKG_ID'] === pkgId);
-    if (p) {
-        const detailEl = document.getElementById('details-' + pkgId);
-        if (detailEl) detailEl.innerHTML = renderDetailsContent(p);
+    if (!p) return;
+    // Основний вид — details-{pkgId}, перевірка — vform-{pkgId}
+    const detailEl = document.getElementById('details-' + pkgId);
+    if (detailEl) {
+        detailEl.innerHTML = renderDetailsContent(p);
+        return;
+    }
+    // Verification view: оновити лише контент деталей всередині vform
+    const vformEl = document.getElementById('vform-' + pkgId);
+    if (vformEl) {
+        vformEl.innerHTML = renderVerifyForm(p);
     }
 }
 
@@ -2990,8 +2998,12 @@ function updateVerifyCounts() {
 
 // ── Render Verification Cards ──
 function renderVerifyCards(opts) {
-    // Skip re-render from polling if user is actively editing a field
-    if (opts && opts.fromPolling && (_isInlineEditing || document.querySelector('.detail-inline-edit'))) return;
+    // Skip re-render from polling if user is actively editing or has open card
+    if (opts && opts.fromPolling) {
+        if (_isInlineEditing || document.querySelector('.detail-inline-edit')) return;
+        // Якщо відкрита картка — лише оновити лічильники, не перебудовувати DOM
+        if (openVerifyCardId) return;
+    }
 
     var filtered = getVerifyFiltered();
     var container = document.getElementById('verifyCardsList');
@@ -3007,7 +3019,19 @@ function renderVerifyCards(opts) {
     }
     emptyEl.style.display = 'none';
 
+    // Зберегти відкриту форму перед ре-рендером
+    var openId = openVerifyCardId;
+    var openFormContent = openId ? document.getElementById('vform-' + openId)?.innerHTML : null;
+
     container.innerHTML = filtered.map(p => renderSingleVerifyCard(p)).join('');
+
+    // Відновити відкриту форму
+    if (openId && openFormContent) {
+        var formEl = document.getElementById('vform-' + openId);
+        if (formEl && formEl.classList.contains('show')) {
+            formEl.innerHTML = openFormContent;
+        }
+    }
 }
 
 function renderSingleVerifyCard(p) {
@@ -3069,18 +3093,28 @@ function renderSingleVerifyCard(p) {
 
 function toggleVerifyCard(pkgId) {
     var wasOpen = openVerifyCardId === pkgId;
-    openVerifyCardId = wasOpen ? null : pkgId;
+    var prevOpen = openVerifyCardId;
 
-    if (!wasOpen) {
-        // Load duplicates for this package
+    if (wasOpen) {
+        openVerifyCardId = null;
+        var el = document.getElementById('vform-' + pkgId);
+        if (el) el.classList.remove('show');
+    } else {
+        // Згорнути попередній без повного ре-рендеру
+        if (prevOpen) {
+            var prevEl = document.getElementById('vform-' + prevOpen);
+            if (prevEl) prevEl.classList.remove('show');
+        }
+        openVerifyCardId = pkgId;
         loadDuplicatesForPackage(pkgId);
-    }
-
-    renderVerifyCards();
-
-    if (!wasOpen) {
-        var el = document.getElementById('vcard-' + pkgId);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        var p = allData.find(x => x['PKG_ID'] === pkgId);
+        var el = document.getElementById('vform-' + pkgId);
+        if (el && p) {
+            el.innerHTML = renderVerifyForm(p);
+            el.classList.add('show');
+        }
+        var cardEl = document.getElementById('vcard-' + pkgId);
+        if (cardEl) cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 
