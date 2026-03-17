@@ -1283,11 +1283,10 @@ function apiCompleteVerification(params) {
 
   var obj = rowToObj(found.headers, found.data);
 
-  // Перевірки обов'язкових полів
+  // Перевірки обов'язкових полів (фото не обов'язкове)
   var errors = [];
   if (!obj['Кг'] && !params.skip_validation) errors.push('Вага не заповнена');
   if (!obj['Оціночна вартість'] && !params.skip_validation) errors.push('Ціна не заповнена');
-  if (!obj['Фото посилки'] && !params.skip_validation) errors.push('Фото не завантажено');
   if (!obj['Внутрішній №'] && !params.skip_validation) errors.push('Маршрут не призначено');
   if (errors.length > 0) return { ok: false, error: errors.join('; ') };
 
