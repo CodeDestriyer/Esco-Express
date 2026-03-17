@@ -1403,6 +1403,11 @@ function renderCards() {
     }
     empty.style.display = 'none';
 
+    // Зберегти відкритий контент деталей перед ре-рендером
+    const openPkgId = openCardId;
+    const openDetailsContent = openPkgId ?
+        document.getElementById('details-' + openPkgId)?.innerHTML : null;
+
     const visCols = getVisibleCardColumns();
 
     container.innerHTML = filteredData.map(p => {
@@ -1476,6 +1481,14 @@ function renderCards() {
             '</div></div>';
     }).join('');
 
+    // Відновити відкриті деталі після ре-рендеру
+    if (openPkgId && openDetailsContent) {
+        const detailsEl = document.getElementById('details-' + openPkgId);
+        if (detailsEl && detailsEl.classList.contains('show')) {
+            detailsEl.innerHTML = openDetailsContent;
+        }
+    }
+
     updateSidebar();
 }
 
@@ -1514,19 +1527,43 @@ function smartToggleCard(e, pkgId) {
 // ── TOGGLE CARD ──
 function toggleCard(pkgId) {
     const wasOpen = openCardId === pkgId;
-    openCardId = wasOpen ? null : pkgId;
-    // Re-render to update details
-    renderCards();
-    if (!wasOpen) {
-        const el = document.getElementById('card-' + pkgId);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const prevOpen = openCardId;
+
+    if (wasOpen) {
+        openCardId = null;
+        delete activeDetailTab[pkgId];
+        const el = document.getElementById('details-' + pkgId);
+        if (el) el.classList.remove('show');
+    } else {
+        // Згорнути попередній
+        if (prevOpen) {
+            const prevEl = document.getElementById('details-' + prevOpen);
+            if (prevEl) prevEl.classList.remove('show');
+        }
+        openCardId = pkgId;
+        const p = allData.find(x => x['PKG_ID'] === pkgId);
+        const el = document.getElementById('details-' + pkgId);
+        if (el && p) {
+            el.innerHTML = renderDetailsContent(p);
+            el.classList.add('show');
+        }
+        const cardEl = document.getElementById('card-' + pkgId);
+        if (cardEl) cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 
 // ── TOGGLE CARD ACTIONS (separate from details, like passenger card) ──
 function toggleCardActions(pkgId) {
+    const prevId = openActionsId;
     openActionsId = openActionsId === pkgId ? null : pkgId;
-    renderCards();
+    if (prevId) {
+        const prevEl = document.getElementById('actions-' + prevId);
+        if (prevEl) prevEl.classList.remove('show');
+    }
+    if (openActionsId) {
+        const el = document.getElementById('actions-' + openActionsId);
+        if (el) el.classList.add('show');
+    }
 }
 
 // ── SECTION DEFINITIONS (data-driven, configurable) ──
@@ -2613,6 +2650,8 @@ document.addEventListener('DOMContentLoaded', function() { updateAvatarUI(); });
 
 // ── SILENT SYNC ──
 async function silentSync() {
+    // Не синхронізувати під час інлайн-редагування
+    if (_isInlineEditing || document.querySelector('.detail-inline-edit') || document.querySelector('.qe-input')) return;
     showLoader('Синхронізація...');
     await reloadData();
     showToast('Дані оновлено');
