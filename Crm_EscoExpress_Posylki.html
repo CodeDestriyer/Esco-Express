@@ -178,27 +178,19 @@
         .detail-block:hover .detail-block-actions { opacity: 1; }
         .detail-micro-btn { width: 20px; height: 20px; border: none; border-radius: 4px; background: var(--bg-main); color: var(--text-secondary); font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .detail-micro-btn:hover { background: var(--primary); color: white; }
-        .detail-inline-edit { width: 100%; border: 1px solid var(--primary); border-radius: 4px; padding: 2px 4px; font-size: 12px; font-weight: 600; font-family: inherit; outline: none; background: white; }
-        select.detail-inline-edit { padding: 3px 4px; cursor: pointer; appearance: auto; }
+        /* ============ INLINE EDIT HIGHLIGHT ============ */
+        .detail-inline-edit { width: 100%; border: 2px solid var(--primary); border-radius: 4px; padding: 4px 6px; font-size: 12px; font-weight: 600; font-family: inherit; outline: none; background: #eff6ff; box-shadow: 0 0 0 3px rgba(26,58,94,0.12); transition: border-color 0.15s, box-shadow 0.15s; }
+        .detail-inline-edit:focus { border-color: var(--info); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+        select.detail-inline-edit { padding: 4px 6px; cursor: pointer; appearance: auto; }
+        .detail-inline-edit.qe-saving { border-color: #f59e0b; background: #fffbeb; }
 
-        /* ============ INLINE EDITABLE FIELDS in tabs ============ */
-        .quick-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
-        .quick-edit-row { display: flex; align-items: center; gap: 6px; min-height: 32px; }
-        .quick-edit-label { font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; min-width: 70px; flex-shrink: 0; white-space: nowrap; }
-        .quick-edit-input { flex: 1; border: 1px solid var(--border); border-radius: 5px; padding: 5px 8px; font-size: 13px; font-weight: 600; font-family: inherit; outline: none; background: white; transition: border-color 0.15s, box-shadow 0.15s, background 0.3s; min-width: 0; }
-        .quick-edit-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,58,94,0.15); }
-        .quick-edit-input.qe-saving { border-color: #f59e0b; background: #fffbeb; }
-        .quick-edit-input.qe-saved { border-color: var(--success); background: #f0fdf4; }
-        .quick-edit-input.qe-error { border-color: var(--danger); background: #fef2f2; }
-        select.quick-edit-input { padding: 4px 6px; cursor: pointer; appearance: auto; }
+        /* Clickable detail values */
+        .detail-block-value.editable { cursor: pointer; transition: background 0.15s; border-radius: 3px; padding: 1px 3px; margin: -1px -3px; }
+        .detail-block-value.editable:hover { background: #eef2ff; }
 
         /* Smooth card expand animation */
         .card-details { display: none; padding: 0; background: #f8fafc; border-top: 1px solid var(--border); overflow: hidden; max-height: 0; transition: max-height 0.3s ease-out, opacity 0.2s ease-out; opacity: 0; }
         .card-details.show { display: block; max-height: 2000px; opacity: 1; transition: max-height 0.4s ease-in, opacity 0.2s ease-in; }
-
-        @media (max-width: 600px) {
-            .quick-edit-grid { grid-template-columns: 1fr; }
-        }
 
         /* PAYMENTS TAB */
         .payments-loading { text-align: center; padding: 24px; color: var(--text-secondary); font-size: 12px; }
@@ -910,6 +902,7 @@
 <!-- ADD PARCEL FORM -->
 <div class="bottom-sheet-overlay" id="addFormOverlay">
     <div class="bottom-sheet">
+        <form id="addParcelForm" onsubmit="return false;" autocomplete="off">
         <div class="bottom-sheet-handle"></div>
         <div class="bs-title" id="addFormTitle">&#128230; Нова посилка</div>
         <!-- DIRECTION SELECTOR (styled) -->
@@ -1096,9 +1089,10 @@
             <input class="bs-input" id="fNote" placeholder="Примітка">
         </div>
         <div class="bs-footer">
-            <button class="bs-btn cancel" onclick="closeAddForm()">Скасувати</button>
-            <button class="bs-btn primary" onclick="saveParcel()">Зберегти</button>
+            <button class="bs-btn cancel" type="button" onclick="closeAddForm()">Скасувати</button>
+            <button class="bs-btn primary" type="button" onclick="saveParcel()">Зберегти</button>
         </div>
+        </form>
     </div>
 </div>
 
@@ -1584,9 +1578,9 @@ function renderDetailsContent(p) {
     const sections = getPkgSections(isUE);
 
     // Tabs row
-    let tabsHtml = '<div class="detail-accordion-tabs">' +
+    let tabsHtml = '<div class="detail-accordion-tabs" onclick="event.stopPropagation()">' +
         sections.map(function(s) {
-            return '<span class="detail-tab ' + (activeTab === s.key ? 'active' : '') + '" onclick="switchDetailTab(\'' + pkgId + '\', \'' + s.key + '\')">' + s.title + '</span>';
+            return '<span class="detail-tab ' + (activeTab === s.key ? 'active' : '') + '" onclick="event.stopPropagation(); switchDetailTab(\'' + escAttr(pkgId) + '\', \'' + s.key + '\')">' + s.title + '</span>';
         }).join('') +
         '</div>';
 
@@ -1598,7 +1592,7 @@ function renderDetailsContent(p) {
         panelHtml = '<div class="detail-tab-panel active"><div class="payments-loading" id="pay-' + pkgId + '"><span class="pay-spinner"></span> Завантаження платежів...</div></div>';
         loadPayments(pkgId);
     } else if (section.fields) {
-        panelHtml = '<div class="detail-tab-panel active" onclick="event.stopPropagation()"><div class="quick-edit-grid">';
+        panelHtml = '<div class="detail-tab-panel active" onclick="event.stopPropagation()"><div class="details-grid">';
         section.fields.forEach(function(col) {
             // Адаптація адреси для ЄВ→УК
             var realCol = col;
@@ -1611,16 +1605,16 @@ function renderDetailsContent(p) {
             // Спеціальний блок для Борг — read-only
             if (col === 'Борг') {
                 var debt = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
-                panelHtml += '<div class="quick-edit-row"><span class="quick-edit-label" style="color:var(--danger)">БОРГ</span><span id="qe-debt-' + pkgId + '" style="font-size:15px;font-weight:800;color:' + (debt > 0 ? 'var(--danger)' : 'var(--success)') + '">' + debt + ' ' + (p['Валюта оплати'] || 'UAH') + '</span></div>';
+                panelHtml += '<div class="detail-block" style="border-left-color:var(--danger)"><div class="detail-block-label">БОРГ</div><div class="detail-block-value" id="qe-debt-' + escAttr(pkgId) + '" style="color:' + (debt > 0 ? 'var(--danger)' : 'var(--success)') + ';font-size:16px;font-weight:800;">' + debt + ' ' + escHtml(p['Валюта оплати'] || 'UAH') + '</div></div>';
                 return;
             }
-            // Readonly fields for system tab — just display
+            // Readonly fields for system tab — display with copy
             if (section.readonly && !opts) {
-                panelHtml += '<div class="quick-edit-row"><span class="quick-edit-label">' + escHtml(realCol) + '</span><span style="font-size:12px;font-weight:600;color:var(--text-primary);flex:1;word-break:break-all;">' + escHtml(val || '—') + ' <button class="detail-micro-btn" style="display:inline;vertical-align:middle;" onclick="event.stopPropagation(); copyToClipboard(\'' + escAttr(String(val || '')) + '\')" title="Копіювати">&#128203;</button></span></div>';
+                panelHtml += '<div class="detail-block"><div class="detail-block-label">' + escHtml(realCol) + '</div><div class="detail-block-value">' + escHtml(val || '—') + '</div><div class="detail-block-actions"><button class="detail-micro-btn" onclick="event.stopPropagation(); copyToClipboard(\'' + escAttr(String(val || '')) + '\')" title="Копіювати">&#128203;</button></div></div>';
                 return;
             }
-            // Editable inline input
-            panelHtml += renderEditableField(pkgId, realCol, val, opts);
+            // Editable block — click to edit
+            panelHtml += detailBlock(pkgId, realCol, val, opts);
         });
         panelHtml += '</div>';
 
@@ -1655,26 +1649,57 @@ function renderDetailsContent(p) {
     return tabsHtml + panelHtml;
 }
 
-// ── EDITABLE FIELD — renders inline input/select directly ──
-function renderEditableField(pkgId, col, value, selectOptions) {
+// ── DETAIL BLOCK — renders read-only block with click-to-edit ──
+function detailBlock(pkgId, label, value, options) {
     var val = value !== undefined && value !== null && value !== '' ? String(value) : '';
-    var inputId = 'qe-' + pkgId + '-' + col.replace(/\s/g, '_');
-    var isAddr = (col === 'Адреса відправки' || col === 'Адреса в Європі');
-    var html = '<div class="quick-edit-row">';
-    html += '<label class="quick-edit-label" for="' + inputId + '">' + escHtml(col) + '</label>';
+    var isEmpty = !val;
+    var escapedVal = escHtml(val || '—');
+    var blockId = 'db-' + pkgId + '-' + label.replace(/\s/g, '_');
+
+    var clickEdit = ' onclick="event.stopPropagation(); detailBlockClickEdit(\'' + escAttr(pkgId) + '\', \'' + escAttr(label) + '\', this)"';
+    var editBtn = '<div class="detail-block-actions"><button class="detail-micro-btn" onclick="event.stopPropagation(); copyToClipboard(\'' + escAttr(val) + '\')" title="Копіювати">&#128203;</button></div>';
+
+    return '<div class="detail-block" id="' + blockId + '">' +
+        '<div class="detail-block-label">' + escHtml(label) + '</div>' +
+        '<div class="detail-block-value editable ' + (isEmpty ? 'empty' : '') + '"' + clickEdit + ' title="Натисніть щоб редагувати">' + escapedVal + '</div>' +
+        editBtn + '</div>';
+}
+
+// Click on a detail-block value to start inline editing
+function detailBlockClickEdit(pkgId, col, el) {
+    var block = el.closest('.detail-block');
+    if (!block) return;
+    var valueEl = block.querySelector('.detail-block-value');
+    var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
+    if (!p) return;
+
+    var currentVal = p[col] !== undefined && p[col] !== null ? String(p[col]) : '';
+    var selectOptions = getFieldOptions(col);
+    var isAddressField = (col === 'Адреса відправки' || col === 'Адреса в Європі');
 
     if (selectOptions) {
         var optsHtml = '';
-        if (isAddr && val && selectOptions.indexOf(val) === -1) {
-            optsHtml += '<option value="' + escAttr(val) + '" selected>' + escHtml(val) + '</option>';
+        if (isAddressField && currentVal && selectOptions.indexOf(currentVal) === -1) {
+            optsHtml += '<option value="' + escAttr(currentVal) + '" selected>' + escHtml(currentVal) + '</option>';
         }
-        optsHtml += selectOptions.map(function(o) { return '<option value="' + escAttr(o) + '"' + (o === val ? ' selected' : '') + '>' + escHtml(o) + '</option>'; }).join('');
-        html += '<select class="quick-edit-input" id="' + inputId + '" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(val) + '" onchange="qeSave(this)">' + optsHtml + '</select>';
+        optsHtml += selectOptions.map(function(o) { return '<option value="' + escAttr(o) + '"' + (o === currentVal ? ' selected' : '') + '>' + escHtml(o) + '</option>'; }).join('');
+        valueEl.innerHTML = '<select class="detail-inline-edit" autocomplete="off" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(currentVal) + '" onchange="qeSave(this)" onblur="qeSave(this)">' + optsHtml + '</select>';
+        var sel = block.querySelector('select');
+        if (sel) sel.focus();
     } else {
-        html += '<input class="quick-edit-input" id="' + inputId + '" type="text" value="' + escAttr(val) + '" placeholder="' + escAttr(col) + '" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(val) + '" onblur="qeSave(this)" onkeydown="qeKeyNav(event, this)">';
+        valueEl.innerHTML = '<input class="detail-inline-edit" autocomplete="off" value="' + escAttr(currentVal) + '" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(currentVal) + '" onblur="qeSave(this)" onkeydown="if(event.key===\'Enter\'){qeSave(this);}if(event.key===\'Escape\'){cancelInlineEditBlock(\'' + escAttr(pkgId) + '\');}">';
+        var inp = block.querySelector('input');
+        if (inp) { inp.focus(); inp.select(); }
     }
-    html += '</div>';
-    return html;
+    valueEl.classList.remove('editable');
+}
+
+// Cancel inline edit — re-render the detail panel
+function cancelInlineEditBlock(pkgId) {
+    var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
+    if (!p) return;
+    var detailEl = document.getElementById('details-' + pkgId);
+    if (detailEl) detailEl.innerHTML = renderDetailsContent(p);
 }
 
 function copyToClipboard(text) {
@@ -1692,78 +1717,51 @@ function copyToClipboard(text) {
     });
 }
 
-// Tab / Enter navigation between editable fields in tabs
-function qeKeyNav(event, el) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        qeSave(el);
-        var inputs = Array.from(el.closest('.quick-edit-grid').querySelectorAll('.quick-edit-input'));
-        var idx = inputs.indexOf(el);
-        if (idx < inputs.length - 1) {
-            inputs[idx + 1].focus();
-            if (inputs[idx + 1].select) inputs[idx + 1].select();
-        }
-    } else if (event.key === 'Escape') {
-        el.value = el.dataset.old || '';
-        el.blur();
-    }
-}
-
-// Quick-edit auto-save
-var _qeSaveTimers = {};
+// Inline-edit save (used by detail-block click-to-edit)
+var _qeSaving = {};
 async function qeSave(el) {
     var pkgId = el.dataset.pkg;
     var col = el.dataset.col;
+    if (!pkgId || !col) return;
+    var saveKey = pkgId + '-' + col;
+    if (_qeSaving[saveKey]) return; // prevent double-fire
     var newVal = el.value;
     var oldVal = el.dataset.old || '';
-    if (String(newVal) === String(oldVal)) return;
+    if (String(newVal) === String(oldVal)) {
+        // No change — just re-render to restore block view
+        cancelInlineEditBlock(pkgId);
+        return;
+    }
 
-    var timerKey = pkgId + '-' + col;
-    if (_qeSaveTimers[timerKey]) clearTimeout(_qeSaveTimers[timerKey]);
+    _qeSaving[saveKey] = true;
+    el.classList.add('qe-saving');
 
-    _qeSaveTimers[timerKey] = setTimeout(async function() {
-        delete _qeSaveTimers[timerKey];
-        el.classList.add('qe-saving');
-        el.classList.remove('qe-saved', 'qe-error');
+    var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
+    var res = await apiPost('updateField', { pkg_id: pkgId, col: col, value: newVal });
 
-        var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
-        var res = await apiPost('updateField', { pkg_id: pkgId, col: col, value: newVal });
+    if (res.ok) {
+        if (p) p[col] = newVal;
+        showToast('Збережено');
 
-        el.classList.remove('qe-saving');
-        if (res.ok) {
-            if (p) p[col] = newVal;
-            el.classList.add('qe-saved');
-            el.dataset.old = newVal;
-            showToast('Збережено');
-            setTimeout(function() { el.classList.remove('qe-saved'); }, 1500);
-
-            // Recalc debt locally
-            if (p && (col === 'Сума' || col === 'Завдаток')) {
-                p['Борг'] = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
-                var dep = parseFloat(p['Завдаток']) || 0;
-                if (dep > 0 && p['Борг'] > 0) p['Статус оплати'] = 'Частково';
-                else if (dep > 0 && p['Борг'] === 0) p['Статус оплати'] = 'Оплачено';
-                else p['Статус оплати'] = 'Не оплачено';
-                // Update debt display
-                var debtEl = document.getElementById('qe-debt-' + pkgId);
-                if (debtEl) {
-                    debtEl.textContent = p['Борг'] + ' ' + (p['Валюта оплати'] || 'UAH');
-                    debtEl.style.color = p['Борг'] > 0 ? 'var(--danger)' : 'var(--success)';
-                }
-                // Update payment status select
-                var payEl = document.getElementById('qe-' + pkgId + '-Статус_оплати');
-                if (payEl) { payEl.value = p['Статус оплати']; payEl.dataset.old = p['Статус оплати']; }
-            }
-            // Update card header info without full re-render
-            qeUpdateCardHeader(pkgId);
-        } else {
-            if (p) p[col] = oldVal;
-            el.value = oldVal;
-            el.classList.add('qe-error');
-            showToast('Помилка: ' + (res.error || 'невідома'));
-            setTimeout(function() { el.classList.remove('qe-error'); }, 2000);
+        // Recalc debt locally
+        if (p && (col === 'Сума' || col === 'Завдаток')) {
+            p['Борг'] = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
+            var dep = parseFloat(p['Завдаток']) || 0;
+            if (dep > 0 && p['Борг'] > 0) p['Статус оплати'] = 'Частково';
+            else if (dep > 0 && p['Борг'] === 0) p['Статус оплати'] = 'Оплачено';
+            else p['Статус оплати'] = 'Не оплачено';
         }
-    }, 150);
+        // Update card header info without full re-render
+        qeUpdateCardHeader(pkgId);
+        // Re-render detail panel to show updated block view
+        delete _qeSaving[saveKey];
+        cancelInlineEditBlock(pkgId);
+    } else {
+        if (p) p[col] = oldVal;
+        showToast('Помилка: ' + (res.error || 'невідома'));
+        delete _qeSaving[saveKey];
+        cancelInlineEditBlock(pkgId);
+    }
 }
 
 // Update card header without re-rendering (to keep focus in quick edit)
