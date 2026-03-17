@@ -1418,7 +1418,8 @@ function renderCards() {
 
         let routeStrip = '';
         if (rteId) {
-            routeStrip = '<div class="card-route-strip has-route"><span class="card-route-icon2">&#9989;</span><span class="card-route-text">В маршруті: ' + rteId + '</span></div>';
+            const rteName = rteId.replace(/^Маршрут_/, '');
+            routeStrip = '<div class="card-route-strip has-route"><span class="card-route-icon2">&#9989;</span><span class="card-route-text">В маршруті: ' + escHtml(rteName) + '</span></div>';
         }
 
         return '<div class="lead-card ' + statusClass + '" id="card-' + pkgId + '">' +
