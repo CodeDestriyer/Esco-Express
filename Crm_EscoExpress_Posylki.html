@@ -3628,7 +3628,7 @@ function toggleVerifyCard(pkgId) {
         var pCollapse = allData.find(x => x['PKG_ID'] === pkgId);
         var vcCollapse = document.getElementById('vcard-' + pkgId);
         if (vcCollapse && pCollapse) {
-            vcCollapse.outerHTML = renderVerifyCard(pCollapse);
+            vcCollapse.outerHTML = renderSingleVerifyCard(pCollapse);
         }
     } else {
         // Згорнути попередній — notify if had edits
@@ -3642,7 +3642,7 @@ function toggleVerifyCard(pkgId) {
             var vcPrev = document.getElementById('vcard-' + prevOpen);
             if (vcPrev && pPrev) {
                 openVerifyCardId = null; // тимчасово щоб рендер закрив форму
-                vcPrev.outerHTML = renderVerifyCard(pPrev);
+                vcPrev.outerHTML = renderSingleVerifyCard(pPrev);
             }
         }
         openVerifyCardId = pkgId;
@@ -3651,7 +3651,7 @@ function toggleVerifyCard(pkgId) {
         // Перерендерити поточну картку повністю з актуальними даними
         var vcCard = document.getElementById('vcard-' + pkgId);
         if (vcCard && p) {
-            vcCard.outerHTML = renderVerifyCard(p);
+            vcCard.outerHTML = renderSingleVerifyCard(p);
         }
         var cardEl = document.getElementById('vcard-' + pkgId);
         if (cardEl) cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
