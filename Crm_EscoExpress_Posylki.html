@@ -1793,7 +1793,16 @@ function detailBlock(pkgId, label, value, options) {
         if (val === 'Доставлено' || val === 'Видано') { borderColor = 'var(--success)'; valueStyle = 'color:var(--success);font-weight:800;'; }
         else if (val === 'В дорозі') { borderColor = 'var(--info)'; valueStyle = 'color:var(--info);font-weight:800;'; }
         else if (val === 'Прийнято' || val === 'На складі') { borderColor = 'var(--warning)'; valueStyle = 'color:#92400e;font-weight:800;'; }
-    } else if (label === 'Сума' || label === 'Оціночна вартість') {
+    } else if (label === 'Сума') {
+        // Колір суми залежить від статусу оплати
+        var _pData = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
+        var _ps = _pData ? (_pData['Статус оплати'] || '').trim() : '';
+        if (!isEmpty) {
+            if (_ps === 'Оплачено') { borderColor = 'var(--success)'; valueStyle = 'color:var(--success);font-weight:800;'; }
+            else if (_ps === 'Частково') { borderColor = 'var(--warning)'; valueStyle = 'color:var(--warning);font-weight:800;'; }
+            else { borderColor = 'var(--danger)'; valueStyle = 'color:var(--danger);font-weight:800;'; }
+        } else { borderColor = 'var(--danger)'; }
+    } else if (label === 'Оціночна вартість') {
         if (!isEmpty) { borderColor = 'var(--success)'; valueStyle = 'color:var(--success);font-weight:800;'; }
         else { borderColor = 'var(--danger)'; }
     } else if (label === 'Кг') {
@@ -2241,8 +2250,31 @@ function qeUpdateCardHeader(pkgId) {
             if (rightEl) {
                 var newEl = document.createElement('div');
                 newEl.className = 'vcard-intnum';
+                newEl.style.cssText = 'font-size:18px;font-weight:900;color:var(--primary);background:var(--bg-main);padding:2px 10px;border-radius:6px;';
                 newEl.textContent = intNum;
                 rightEl.insertBefore(newEl, rightEl.firstChild);
+            }
+        }
+        // Оновити суму та колір справа у vcard
+        var rightEl = vcardEl.querySelector('.vcard-right');
+        if (rightEl) {
+            var vSumEl = rightEl.querySelector('.vcard-sum-display');
+            var _vSumColor = payStatus === 'Оплачено' ? 'var(--success)' : payStatus === 'Частково' ? 'var(--warning)' : (hasSum ? 'var(--danger)' : 'var(--success)');
+            if (vSumEl) {
+                if (hasSum) {
+                    vSumEl.style.color = _vSumColor;
+                    vSumEl.textContent = sum + ' ' + currency;
+                } else {
+                    vSumEl.style.display = 'none';
+                }
+            } else if (hasSum) {
+                var newSumEl = document.createElement('div');
+                newSumEl.className = 'vcard-sum-display';
+                newSumEl.style.cssText = 'font-size:13px;font-weight:800;color:' + _vSumColor + ';';
+                newSumEl.textContent = sum + ' ' + currency;
+                var intE = rightEl.querySelector('.vcard-intnum');
+                if (intE) intE.insertAdjacentElement('afterend', newSumEl);
+                else rightEl.insertBefore(newSumEl, rightEl.firstChild);
             }
         }
     }
@@ -3565,7 +3597,7 @@ function renderSingleVerifyCard(p) {
     html += '<div class="vcard-right">';
     if (intNum) html += '<div class="vcard-intnum" style="font-size:18px;font-weight:900;color:var(--primary);background:var(--bg-main);padding:2px 10px;border-radius:6px;">' + escHtml(intNum) + '</div>';
     var vSumColor = payStatus === 'Оплачено' ? 'var(--success)' : payStatus === 'Частково' ? 'var(--warning)' : (hasSum ? 'var(--danger)' : 'var(--success)');
-    if (hasSum) html += '<div style="font-size:13px;font-weight:800;color:' + vSumColor + ';">' + escHtml(sum) + ' ' + escHtml(currency) + '</div>';
+    if (hasSum) html += '<div class="vcard-sum-display" style="font-size:13px;font-weight:800;color:' + vSumColor + ';">' + escHtml(sum) + ' ' + escHtml(currency) + '</div>';
     html += '<div class="vcard-time">' + escHtml(formatDateShort(date)) + '</div>';
     html += '</div></div>';
 
@@ -3592,8 +3624,12 @@ function toggleVerifyCard(pkgId) {
             delete _cardHadEdits[pkgId];
         }
         openVerifyCardId = null;
-        var el = document.getElementById('vform-' + pkgId);
-        if (el) el.classList.remove('show');
+        // Перерендерити всю картку (хедер + форма) з актуальними даними
+        var pCollapse = allData.find(x => x['PKG_ID'] === pkgId);
+        var vcCollapse = document.getElementById('vcard-' + pkgId);
+        if (vcCollapse && pCollapse) {
+            vcCollapse.outerHTML = renderVerifyCard(pCollapse);
+        }
     } else {
         // Згорнути попередній — notify if had edits
         if (prevOpen && _cardHadEdits[prevOpen]) {
@@ -3601,16 +3637,21 @@ function toggleVerifyCard(pkgId) {
             delete _cardHadEdits[prevOpen];
         }
         if (prevOpen) {
-            var prevEl = document.getElementById('vform-' + prevOpen);
-            if (prevEl) prevEl.classList.remove('show');
+            // Перерендерити попередню картку при згортанні
+            var pPrev = allData.find(x => x['PKG_ID'] === prevOpen);
+            var vcPrev = document.getElementById('vcard-' + prevOpen);
+            if (vcPrev && pPrev) {
+                openVerifyCardId = null; // тимчасово щоб рендер закрив форму
+                vcPrev.outerHTML = renderVerifyCard(pPrev);
+            }
         }
         openVerifyCardId = pkgId;
         loadDuplicatesForPackage(pkgId);
         var p = allData.find(x => x['PKG_ID'] === pkgId);
-        var el = document.getElementById('vform-' + pkgId);
-        if (el && p) {
-            el.innerHTML = renderVerifyForm(p);
-            el.classList.add('show');
+        // Перерендерити поточну картку повністю з актуальними даними
+        var vcCard = document.getElementById('vcard-' + pkgId);
+        if (vcCard && p) {
+            vcCard.outerHTML = renderVerifyCard(p);
         }
         var cardEl = document.getElementById('vcard-' + pkgId);
         if (cardEl) cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
