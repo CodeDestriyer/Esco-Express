@@ -1478,7 +1478,9 @@ function renderCards() {
         const weight = p['Кг'] || '';
         const sum = parseFloat(p['Сума']) || 0;
         const deposit = parseFloat(p['Завдаток']) || 0;
-        const debt = Math.max(0, sum - deposit);
+        const rawDebt = Math.max(0, sum - deposit);
+        const payStatus = (p['Статус оплати'] || '').trim();
+        const debt = payStatus === 'Оплачено' ? 0 : rawDebt;
         const currency = p['Валюта оплати'] || 'UAH';
         const status = p['Статус ліда'] || 'Новий';
         const pkgStatus = p['Статус посилки'] || '';
@@ -1488,6 +1490,10 @@ function renderCards() {
         const tag = p['Тег'] || '';
 
         const v = key => visCols.includes(key);
+
+        // Колір суми на картці за статусом оплати: оплачено=зелений, частково=жовтий, не оплачено=червоний
+        const sumColor = payStatus === 'Оплачено' ? 'var(--success)' : payStatus === 'Частково' ? 'var(--warning)' : sum > 0 ? 'var(--danger)' : 'var(--success)';
+        const debtColor = payStatus === 'Оплачено' ? 'var(--success)' : payStatus === 'Частково' ? '#d97706' : '#ef4444';
 
         const statusClass = status === 'Новий' ? 'status-new' : status === 'В роботі' ? 'status-work' : status === 'Підтверджено' ? 'status-confirmed' : status === 'Відмова' ? 'status-refused' : '';
         const dirBadge = isUE ? 'dir-badge-ua-eu' : 'dir-badge-eu-ua';
@@ -1510,9 +1516,9 @@ function renderCards() {
             (ttn ? '<span class="card-phone">TTH: ' + escHtml(ttn) + '</span>' : '') +
             (v('weight') && weight ? '<span class="card-weight">' + weight + ' кг</span>' : '') +
             '<div class="card-price-wrap">' +
-            (v('sum') ? '<span class="card-price">' + sum + ' ' + currency + '</span>' : '') +
+            (v('sum') ? '<span class="card-price" style="color:' + sumColor + ';">' + sum + ' ' + currency + '</span>' : '') +
             (v('deposit') && deposit > 0 ? '<span class="card-deposit has-deposit">завд: ' + deposit + '</span>' : '') +
-            (v('debt') && debt > 0 ? '<span class="card-deposit" style="color:#ef4444;font-weight:700;">борг: ' + debt + '</span>' : '') +
+            (v('debt') && debt > 0 ? '<span class="card-deposit" style="color:' + debtColor + ';font-weight:700;">борг: ' + debt + '</span>' : '') +
             '</div></div>' +
             '<div class="card-row2-wrap">' +
             '<div class="card-info-row">' + (v('pkgId') ? '<span class="card-id">' + pkgId + '</span>' : '') + (v('sender') || v('receiver') ? '<span class="card-name">&#128100; ' + (v('sender') ? escHtml(sender) : '') + (v('sender') && v('receiver') ? ' &#8594; ' : '') + (v('receiver') ? escHtml(receiver) : '') + '</span>' : '') + '</div>' +
@@ -1726,10 +1732,14 @@ function renderDetailsContent(p) {
             var val = p[realCol];
             var opts = getFieldOptions(realCol);
 
-            // Спеціальний блок для Борг — read-only
+            // Спеціальний блок для Борг — read-only, колір за статусом оплати
             if (col === 'Борг') {
-                var debt = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
-                panelHtml += '<div class="detail-block" style="border-left-color:var(--danger)"><div class="detail-block-label">БОРГ</div><div class="detail-block-value" id="qe-debt-' + escAttr(pkgId) + '" style="color:' + (debt > 0 ? 'var(--danger)' : 'var(--success)') + ';font-size:16px;font-weight:800;">' + debt + ' ' + escHtml(p['Валюта оплати'] || 'UAH') + '</div></div>';
+                var rawDebt = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
+                var pStat = (p['Статус оплати'] || '').trim();
+                var debtVal = pStat === 'Оплачено' ? 0 : rawDebt;
+                var debtColor = pStat === 'Оплачено' ? 'var(--success)' : pStat === 'Частково' ? 'var(--warning)' : 'var(--danger)';
+                var debtBorder = debtColor;
+                panelHtml += '<div class="detail-block" style="border-left-color:' + debtBorder + '"><div class="detail-block-label">БОРГ</div><div class="detail-block-value" id="qe-debt-' + escAttr(pkgId) + '" style="color:' + debtColor + ';font-size:16px;font-weight:800;">' + debtVal + ' ' + escHtml(p['Валюта оплати'] || 'UAH') + '</div></div>';
                 return;
             }
             // Readonly fields for system tab — display with copy
@@ -1855,9 +1865,19 @@ function detailBlockClickEdit(pkgId, col, el) {
         if (selEl) { selEl.focus(); selEl.click(); }
         return;
     } else {
-        valueEl.innerHTML = '<input class="detail-inline-edit" autocomplete="off" value="' + escAttr(currentVal) + '" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(currentVal) + '" onblur="qeSave(this)" onkeydown="if(event.key===\'Enter\'){qeSave(this);}if(event.key===\'Escape\'){cancelInlineEditBlock(\'' + escAttr(pkgId) + '\',\'' + escAttr(col) + '\');}">';
+        // Поля дат — використовувати календар (type="date")
+        var isDateField = (col === 'Дата відправки' || col === 'Дата отримання' || col === 'Дата перевірки');
+        var inputType = isDateField ? 'date' : 'text';
+        var dateVal = currentVal;
+        // Спроба конвертувати дату з dd.mm.yyyy у yyyy-mm-dd для HTML date input
+        if (isDateField && currentVal) {
+            var dParts = currentVal.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+            if (dParts) dateVal = dParts[3] + '-' + dParts[2].padStart(2,'0') + '-' + dParts[1].padStart(2,'0');
+        }
+        var dateOnChange = isDateField ? ' onchange="qeSave(this)"' : '';
+        valueEl.innerHTML = '<input class="detail-inline-edit" type="' + inputType + '" autocomplete="off" value="' + escAttr(dateVal) + '" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(currentVal) + '"' + dateOnChange + ' onblur="qeSave(this)" onkeydown="if(event.key===\'Enter\'){qeSave(this);}if(event.key===\'Escape\'){cancelInlineEditBlock(\'' + escAttr(pkgId) + '\',\'' + escAttr(col) + '\');}">';
         var inp = block.querySelector('input');
-        if (inp) { inp.focus(); inp.select(); }
+        if (inp) { inp.focus(); if (!isDateField) inp.select(); }
     }
     valueEl.classList.remove('editable');
 }
@@ -2064,6 +2084,12 @@ async function qeSave(el) {
     var saveKey = pkgId + '-' + col;
     if (_qeSaving[saveKey]) return; // prevent double-fire
     var newVal = el.value;
+    // Конвертувати дату з yyyy-mm-dd (HTML date input) у dd.mm.yyyy для збереження
+    var isDateCol = (col === 'Дата відправки' || col === 'Дата отримання' || col === 'Дата перевірки');
+    if (isDateCol && newVal) {
+        var dMatch = newVal.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (dMatch) newVal = dMatch[3] + '.' + dMatch[2] + '.' + dMatch[1];
+    }
     var oldVal = el.dataset.old || '';
     if (String(newVal) === String(oldVal)) {
         // No change — restore field text only (no full re-render)
@@ -2097,6 +2123,25 @@ async function qeSave(el) {
         else if (dep > 0 && p['Борг'] === 0) p['Статус оплати'] = 'Оплачено';
         else p['Статус оплати'] = 'Не оплачено';
     }
+    // Коли статус оплати змінюється вручну — перерахувати борг
+    if (p && col === 'Статус оплати') {
+        var rawD = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
+        p['Борг'] = newVal === 'Оплачено' ? 0 : rawD;
+    }
+    // Оновити блок Борг у деталях (якщо відкритий)
+    if (p && (col === 'Сума' || col === 'Завдаток' || col === 'Статус оплати')) {
+        var debtEl = document.getElementById('qe-debt-' + pkgId);
+        if (debtEl) {
+            var dPS = (p['Статус оплати'] || '').trim();
+            var dRaw = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
+            var dVal = dPS === 'Оплачено' ? 0 : dRaw;
+            var dClr = dPS === 'Оплачено' ? 'var(--success)' : dPS === 'Частково' ? 'var(--warning)' : 'var(--danger)';
+            debtEl.textContent = dVal + ' ' + (p['Валюта оплати'] || 'UAH');
+            debtEl.style.color = dClr;
+            var debtBlock = debtEl.closest('.detail-block');
+            if (debtBlock) debtBlock.style.borderLeftColor = dClr;
+        }
+    }
     // Update card header info without full re-render
     qeUpdateCardHeader(pkgId);
 
@@ -2126,6 +2171,23 @@ function qeUpdateCardHeader(pkgId) {
             var sender = p['Піб відправника'] || '';
             var receiver = p['Піб отримувача'] || '';
             nameEl.innerHTML = '&#128100; ' + escHtml(sender) + (sender && receiver ? ' &#8594; ' : '') + escHtml(receiver);
+        }
+        // Оновити суму та борг з коректними кольорами
+        var priceWrap = cardEl.querySelector('.card-price-wrap');
+        if (priceWrap) {
+            var cSum = parseFloat(p['Сума']) || 0;
+            var cDep = parseFloat(p['Завдаток']) || 0;
+            var cPaySt = (p['Статус оплати'] || '').trim();
+            var cRawDebt = Math.max(0, cSum - cDep);
+            var cDebt = cPaySt === 'Оплачено' ? 0 : cRawDebt;
+            var cCurr = p['Валюта оплати'] || 'UAH';
+            var cSumColor = cPaySt === 'Оплачено' ? 'var(--success)' : cPaySt === 'Частково' ? 'var(--warning)' : (cSum > 0 ? 'var(--danger)' : 'var(--success)');
+            var cDebtColor = cPaySt === 'Оплачено' ? 'var(--success)' : cPaySt === 'Частково' ? '#d97706' : '#ef4444';
+            var ph = '';
+            ph += '<span class="card-price" style="color:' + cSumColor + ';">' + cSum + ' ' + escHtml(cCurr) + '</span>';
+            if (cDep > 0) ph += '<span class="card-deposit has-deposit">завд: ' + cDep + '</span>';
+            if (cDebt > 0) ph += '<span class="card-deposit" style="color:' + cDebtColor + ';font-weight:700;">борг: ' + cDebt + '</span>';
+            priceWrap.innerHTML = ph;
         }
     }
 
@@ -3502,7 +3564,8 @@ function renderSingleVerifyCard(p) {
     html += '</div></div>';
     html += '<div class="vcard-right">';
     if (intNum) html += '<div class="vcard-intnum" style="font-size:18px;font-weight:900;color:var(--primary);background:var(--bg-main);padding:2px 10px;border-radius:6px;">' + escHtml(intNum) + '</div>';
-    if (hasSum) html += '<div style="font-size:13px;font-weight:800;color:var(--success);">' + escHtml(sum) + ' ' + escHtml(currency) + '</div>';
+    var vSumColor = payStatus === 'Оплачено' ? 'var(--success)' : payStatus === 'Частково' ? 'var(--warning)' : (hasSum ? 'var(--danger)' : 'var(--success)');
+    if (hasSum) html += '<div style="font-size:13px;font-weight:800;color:' + vSumColor + ';">' + escHtml(sum) + ' ' + escHtml(currency) + '</div>';
     html += '<div class="vcard-time">' + escHtml(formatDateShort(date)) + '</div>';
     html += '</div></div>';
 

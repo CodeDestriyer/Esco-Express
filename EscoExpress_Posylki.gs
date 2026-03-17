@@ -451,6 +451,17 @@ function apiUpdateField(params) {
     }
   }
 
+  // При зміні Статус оплати вручну — перерахувати борг
+  if (params.col === 'Статус оплати') {
+    var obj2 = rowToObj(found.headers, found.data);
+    var rawDebt = calcDebt(obj2);
+    var newDebt = params.value === 'Оплачено' ? 0 : rawDebt;
+    var debtIdx2 = found.headers.indexOf('Борг');
+    if (debtIdx2 !== -1) {
+      sh.getRange(found.rowNum, debtIdx2 + 1).setValue(newDebt);
+    }
+  }
+
   // При зміні статусу посилки — оновити Kliyentu якщо є ORDER_ID
   if (params.col === 'Статус посилки') {
     var orderId = String(found.data[found.headers.indexOf('ORDER_ID')] || '').trim();
