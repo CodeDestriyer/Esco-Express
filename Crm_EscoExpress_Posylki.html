@@ -1777,8 +1777,6 @@ function detailBlock(pkgId, label, value, options) {
 function detailBlockClickEdit(pkgId, col, el) {
     var block = el.closest('.detail-block');
     if (!block) return;
-    // If dropdown is already open inside this block — do nothing (let delegation handle it)
-    if (block.querySelector('.qe-dropdown-wrap')) return;
     var valueEl = block.querySelector('.detail-block-value');
     var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
     if (!p) return;
@@ -1795,28 +1793,16 @@ function detailBlockClickEdit(pkgId, col, el) {
         if (isAddressField && currentVal && allOpts.indexOf(currentVal) === -1) {
             allOpts.unshift(currentVal);
         }
-        var itemsHtml = allOpts.map(function(o) {
-            return '<div class="qe-dropdown-item' + (o === currentVal ? ' active' : '') + '" data-val="' + escAttr(o) + '">' + escHtml(o) + '</div>';
+        var optsHtml = allOpts.map(function(o) {
+            return '<option value="' + escAttr(o) + '"' + (o === currentVal ? ' selected' : '') + '>' + escHtml(o) + '</option>';
         }).join('');
-        valueEl.innerHTML =
-            '<div class="qe-dropdown-wrap open" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(currentVal) + '">' +
-                '<div class="qe-dropdown-selected">' + escHtml(currentVal || '— Оберіть —') + '</div>' +
-                '<div class="qe-dropdown-list">' + itemsHtml + '</div>' +
-            '</div>';
+        valueEl.innerHTML = '<select class="detail-inline-edit" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(currentVal) + '" onchange="qeSave(this)" onblur="cancelInlineEditBlock(\'' + escAttr(pkgId) + '\',\'' + escAttr(col) + '\')">' + optsHtml + '</select>';
         valueEl.classList.remove('editable');
-        // Remove parent onclick so it doesn't intercept clicks inside the dropdown
         valueEl.removeAttribute('onclick');
         valueEl.removeAttribute('title');
-        // Smooth open — start closed, open on next frame; position fixed dropdown
-        var wrap = valueEl.querySelector('.qe-dropdown-wrap');
-        if (wrap) {
-            wrap.classList.remove('open');
-            requestAnimationFrame(function() {
-                wrap.classList.add('open');
-                _positionDropdownList(wrap);
-            });
-        }
-        return; // Custom dropdown handles its own events via delegation
+        var selEl = valueEl.querySelector('select');
+        if (selEl) { selEl.focus(); selEl.click(); }
+        return;
     } else {
         valueEl.innerHTML = '<input class="detail-inline-edit" autocomplete="off" value="' + escAttr(currentVal) + '" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(currentVal) + '" onblur="qeSave(this)" onkeydown="if(event.key===\'Enter\'){qeSave(this);}if(event.key===\'Escape\'){cancelInlineEditBlock(\'' + escAttr(pkgId) + '\',\'' + escAttr(col) + '\');}">';
         var inp = block.querySelector('input');
@@ -1987,13 +1973,6 @@ var RECENT_SAVE_TTL = 30000; // 30 секунд
 
 // Save any pending inline edit before switching cards/tabs (like main lead CRM)
 function savePendingEdits() {
-    // Закрити кастомний дропдаун без збереження (cancel)
-    var openWrap = document.querySelector('.qe-dropdown-wrap');
-    if (openWrap) {
-        var pkgId = openWrap.dataset.pkg;
-        var col = openWrap.dataset.col;
-        cancelInlineEditBlock(pkgId, col);
-    }
     if (!_isInlineEditing) return;
     var editEl = document.querySelector('.detail-inline-edit');
     if (editEl) {
