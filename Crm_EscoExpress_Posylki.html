@@ -1529,6 +1529,9 @@ function toggleCard(pkgId) {
     const wasOpen = openCardId === pkgId;
     const prevOpen = openCardId;
 
+    // Save pending inline edit before switching (like main lead CRM)
+    savePendingEdits();
+
     if (wasOpen) {
         openCardId = null;
         delete activeDetailTab[pkgId];
@@ -1767,6 +1770,16 @@ function copyToClipboard(text) {
 // Flag: user is currently editing inline — block polling re-renders
 var _isInlineEditing = false;
 
+// Save any pending inline edit before switching cards/tabs (like main lead CRM)
+function savePendingEdits() {
+    if (!_isInlineEditing) return;
+    var editEl = document.querySelector('.detail-inline-edit');
+    if (editEl) {
+        // Trigger save — qeSave checks for actual changes
+        qeSave(editEl);
+    }
+}
+
 // Inline-edit save (used by detail-block click-to-edit)
 var _qeSaving = {};
 async function qeSave(el) {
@@ -1842,6 +1855,9 @@ function qeUpdateCardHeader(pkgId) {
 }
 
 function switchDetailTab(pkgId, tabId) {
+    // Save pending inline edit before switching tabs (like main lead CRM)
+    savePendingEdits();
+
     activeDetailTab[pkgId] = tabId;
     const p = allData.find(x => x['PKG_ID'] === pkgId);
     if (!p) return;
@@ -3092,6 +3108,9 @@ function renderSingleVerifyCard(p) {
 }
 
 function toggleVerifyCard(pkgId) {
+    // Save pending inline edit before switching (like main lead CRM)
+    savePendingEdits();
+
     var wasOpen = openVerifyCardId === pkgId;
     var prevOpen = openVerifyCardId;
 
