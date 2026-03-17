@@ -1741,15 +1741,9 @@ function renderDetailsContent(p) {
         });
         panelHtml += '</div>';
 
-        // Photo link section for parcel tab
+        // Photo as regular column block in parcel tab
         if (section.hasPhoto) {
-            var photoUrl = p['Фото посилки'] || '';
-            panelHtml += '<div class="detail-section-title">Фото (посилання)</div>' +
-                '<div class="photo-link-wrap" style="margin-top:8px;display:flex;gap:8px;align-items:center;">' +
-                '<input type="text" class="detail-inline-edit" id="photo-url-' + escAttr(pkgId) + '" value="' + escAttr(photoUrl) + '" placeholder="Вставте посилання на фото..." ' +
-                'onchange="savePhotoUrl(\'' + escAttr(pkgId) + '\', this.value)" style="flex:1;" />' +
-                (photoUrl ? ' <a href="' + escAttr(photoUrl) + '" target="_blank" rel="noopener" style="flex-shrink:0;font-size:12px;font-weight:700;color:var(--info);text-decoration:none;white-space:nowrap;" title="Відкрити фото">&#128279; Відкрити</a>' : '') +
-                '</div>';
+            panelHtml += photoBlock(pkgId, p['Фото посилки']);
             if (isUE && p['Номер ТТН']) {
                 panelHtml += '<div style="margin-top:12px;"><button class="bs-btn primary" style="padding:8px 16px;font-size:11px;" onclick="trackTTN(\'' + escAttr(pkgId) + '\', \'' + escAttr(p['Номер ТТН']) + '\')">&#128230; Відстежити ТТН</button>';
                 if (hasNpApiKey) panelHtml += ' <button class="bs-btn cancel" style="padding:8px 16px;font-size:11px;" onclick="autoTrackTTN(\'' + escAttr(pkgId) + '\', \'' + escAttr(p['Номер ТТН']) + '\')">&#128260; Оновити статус</button>';
@@ -1787,6 +1781,22 @@ function detailBlock(pkgId, label, value, options) {
         '<div class="detail-block-label">' + escHtml(label) + '</div>' +
         '<div class="detail-block-value editable ' + (isEmpty ? 'empty' : '') + '"' + clickEdit + ' title="Натисніть щоб редагувати">' + escapedVal + '</div>' +
         editBtn + '</div>';
+}
+
+function photoBlock(pkgId, photoUrl) {
+    var url = (photoUrl || '').trim();
+    var hasUrl = !!url;
+    var btnColor = hasUrl ? 'var(--success)' : 'var(--danger)';
+    var btnTitle = hasUrl ? 'Переглянути фото' : 'Немає фото';
+    var truncated = hasUrl ? (url.length > 30 ? url.substring(0, 30) + '...' : url) : '—';
+    var blockId = 'db-' + pkgId + '-Фото_посилки';
+
+    return '<div class="detail-block" id="' + blockId + '" style="border-left-color:' + btnColor + '">' +
+        '<div class="detail-block-label">ФОТО ПОСИЛКИ</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;">' +
+        '<div class="detail-block-value editable ' + (hasUrl ? '' : 'empty') + '" onclick="event.stopPropagation(); detailBlockClickEdit(\'' + escAttr(pkgId) + '\', \'Фото посилки\', this)" title="Натисніть щоб вставити посилання" style="flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(truncated) + '</div>' +
+        '<button onclick="event.stopPropagation(); ' + (hasUrl ? 'window.open(\'' + escAttr(url) + '\', \'_blank\')' : 'void(0)') + '" style="flex-shrink:0;width:24px;height:24px;border:none;border-radius:6px;background:' + btnColor + ';color:white;font-size:12px;cursor:' + (hasUrl ? 'pointer' : 'default') + ';display:flex;align-items:center;justify-content:center;" title="' + btnTitle + '">&#128247;</button>' +
+        '</div></div>';
 }
 
 // Click on a detail-block value to start inline editing
@@ -1841,6 +1851,13 @@ function cancelInlineEditBlock(pkgId, col) {
         // Restore just this one field — no full re-render
         var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
         if (!p) return;
+        // Photo field — re-render the whole photo block (button color changes)
+        if (col === 'Фото посилки') {
+            var blockId = 'db-' + pkgId + '-Фото_посилки';
+            var block = document.getElementById(blockId);
+            if (block) { block.outerHTML = photoBlock(pkgId, p['Фото посилки']); }
+            return;
+        }
         var blockId = 'db-' + pkgId + '-' + col.replace(/\s/g, '_');
         var block = document.getElementById(blockId);
         if (block) {
@@ -2778,23 +2795,6 @@ function viewPhoto(url) {
     document.getElementById('photoViewer').classList.add('show');
 }
 
-async function savePhotoUrl(pkgId, url) {
-    url = (url || '').trim();
-    var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
-    if (!p) return;
-    p['Фото посилки'] = url;
-    try {
-        await apiPost('quickEdit', { pkg_id: pkgId, field: 'Фото посилки', value: url });
-        showToast('Посилання на фото збережено ✓');
-        // Re-render the details to show/hide the "Відкрити" link
-        var el = document.getElementById('details-' + pkgId);
-        if (el) el.innerHTML = renderDetailsContent(p);
-        var vf = document.getElementById('vform-' + pkgId);
-        if (vf) vf.innerHTML = renderVerifyForm(p);
-    } catch(e) {
-        showToast('Помилка: ' + e.message);
-    }
-}
 
 function closePhotoViewer() {
     document.getElementById('photoViewer').classList.remove('show');
