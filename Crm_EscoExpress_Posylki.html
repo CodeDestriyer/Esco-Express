@@ -2933,7 +2933,6 @@ async function openRouteModal(pkgId) {
 
 function closeRouteModal() {
     document.getElementById('routeModalOverlay').classList.remove('show');
-    bulkRouteTargetIds = [];
 }
 
 async function selectRoute(sheetName) {
@@ -2974,27 +2973,27 @@ async function selectRoute(sheetName) {
     // Single mode
     bulkRouteTargetIds = [];
     showLoader('Додаємо в маршрут...');
-    const res = await apiPost('addToRoute', { pkg_id: routeTargetPkgId, sheet_name: sheetName, rte_id: sheetName });
+    var singleRes = await apiPost('addToRoute', { pkg_id: routeTargetPkgId, sheet_name: sheetName, rte_id: sheetName });
     hideLoader();
-    if (res.ok) {
+    if (singleRes.ok) {
         showToast('Посилку додано в ' + sheetName);
-        const p = allData.find(x => x['PKG_ID'] === routeTargetPkgId);
-        if (p) p['RTE_ID'] = sheetName;
+        var sp = allData.find(x => x['PKG_ID'] === routeTargetPkgId);
+        if (sp) sp['RTE_ID'] = sheetName;
         renderCards();
         // Інвалідуємо кеш маршруту щоб побачити нову посилку
-        const routeIdx = routes.findIndex(s => s.sheetName === sheetName);
-        if (routeIdx !== -1) {
-            routes[routeIdx].rows = null;
-            routes[routeIdx].rowCount = (routes[routeIdx].rowCount || 0) + 1;
+        var singleRouteIdx = routes.findIndex(s => s.sheetName === sheetName);
+        if (singleRouteIdx !== -1) {
+            routes[singleRouteIdx].rows = null;
+            routes[singleRouteIdx].rowCount = (routes[singleRouteIdx].rowCount || 0) + 1;
         }
         renderRouteSidebar();
         // Якщо цей маршрут зараз відкритий - перезавантажити
-        if (activeRouteIdx !== null && routeIdx === activeRouteIdx) {
+        if (activeRouteIdx !== null && singleRouteIdx === activeRouteIdx) {
             await loadRouteSheetData(activeRouteIdx);
             renderRoutes();
         }
     } else {
-        showToast('Помилка: ' + (res.error || ''));
+        showToast('Помилка: ' + (singleRes.error || ''));
     }
 }
 
