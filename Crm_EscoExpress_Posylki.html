@@ -941,7 +941,8 @@
         <!-- Tabs: Картка / Вкладка "Основне" -->
         <div style="display:flex;gap:4px;margin-bottom:10px;">
             <button class="bs-btn" id="cfgTabCard" onclick="switchCfgTab('card')" style="flex:1;font-size:11px;">📋 Картка</button>
-            <button class="bs-btn" id="cfgTabOsnovne" onclick="switchCfgTab('osnovne')" style="flex:1;font-size:11px;">📄 Вкладка «Основне»</button>
+            <button class="bs-btn" id="cfgTabOsnovne" onclick="switchCfgTab('osnovne')" style="flex:1;font-size:11px;">📄 «Основне»</button>
+            <button class="bs-btn" id="cfgTabParcel" onclick="switchCfgTab('parcel')" style="flex:1;font-size:11px;">📦 «Посилка»</button>
         </div>
         <div class="col-cfg-subtitle" id="colCfgSubtitle">Оберіть які поля показувати</div>
         <div class="col-cfg-list" id="colCfgList"></div>
@@ -1641,9 +1642,14 @@ const DEFAULT_OSNOVNE_FIELDS = [
     'Статус ліда', 'Тег'
 ];
 
+const DEFAULT_PARCEL_FIELDS = [
+    'Опис', 'Деталі', 'Кількість позицій', 'Кг', 'Оціночна вартість',
+    'Номер ТТН', 'Внутрішній №', 'Статус посилки'
+];
+
 const PKG_DETAIL_SECTIONS = [
+    { key: 'parcel', title: '&#128230; Посилка', fields: null, hasPhoto: true, hasRating: true }, // null = configurable via getParcelFieldsPkg()
     { key: 'basic', title: '&#128196; Основне', fields: null }, // null = configurable via getOsnovneFieldsPkg()
-    { key: 'parcel', title: '&#128230; Посилка', fields: ['Опис','Деталі','Кількість позицій','Кг','Оціночна вартість','Номер ТТН','Внутрішній №','Статус посилки'], hasPhoto: true, hasRating: true },
     { key: 'np', title: '&#128176; НП', fields: ['Сума НП','Валюта НП','Форма НП','Статус НП'], ueOnly: true },
     { key: 'finance', title: '&#128176; Фінанси', fields: ['Сума','Валюта оплати','Завдаток','Валюта завдатку','Форма оплати','Статус оплати','Борг','Примітка оплати'] },
     { key: 'route', title: '&#128666; Рейс', fields: ['Дата відправки','Таймінг','Номер авто','RTE_ID','Дата отримання'], hasRouteActions: true },
@@ -1672,11 +1678,17 @@ function getOsnovneFieldsPkg() {
     return [...DEFAULT_OSNOVNE_FIELDS];
 }
 
+function getParcelFieldsPkg() {
+    try { var s = localStorage.getItem('esco_pkg_parcel'); if (s) return JSON.parse(s); } catch(e) {}
+    return [...DEFAULT_PARCEL_FIELDS];
+}
+
 function getPkgSections(isUE) {
     return PKG_DETAIL_SECTIONS
         .filter(function(s) { return !s.ueOnly || isUE; })
         .map(function(s) {
             if (s.key === 'basic') return Object.assign({}, s, { fields: getOsnovneFieldsPkg() });
+            if (s.key === 'parcel') return Object.assign({}, s, { fields: getParcelFieldsPkg() });
             return s;
         });
 }
@@ -1685,7 +1697,7 @@ function getPkgSections(isUE) {
 function renderDetailsContent(p) {
     const isUE = p._sheet === 'Реєстрація ТТН УК-єв';
     const pkgId = p['PKG_ID'];
-    const activeTab = activeDetailTab[pkgId] || 'basic';
+    const activeTab = activeDetailTab[pkgId] || 'parcel';
     const sections = getPkgSections(isUE);
 
     // Tabs row
@@ -1729,13 +1741,14 @@ function renderDetailsContent(p) {
         });
         panelHtml += '</div>';
 
-        // Photo section for parcel tab
+        // Photo link section for parcel tab
         if (section.hasPhoto) {
             var photoUrl = p['Фото посилки'] || '';
-            panelHtml += '<div class="detail-section-title">Фото</div>' +
-                '<div class="photo-grid">' +
-                (photoUrl ? '<img class="photo-thumb" src="' + escAttr(photoUrl) + '" onclick="viewPhoto(\'' + escAttr(photoUrl) + '\')">' : '') +
-                '<div class="photo-upload-btn" onclick="startPhotoUpload(\'' + escAttr(pkgId) + '\')">+</div>' +
+            panelHtml += '<div class="detail-section-title">Фото (посилання)</div>' +
+                '<div class="photo-link-wrap" style="margin-top:8px;display:flex;gap:8px;align-items:center;">' +
+                '<input type="text" class="detail-inline-edit" id="photo-url-' + escAttr(pkgId) + '" value="' + escAttr(photoUrl) + '" placeholder="Вставте посилання на фото..." ' +
+                'onchange="savePhotoUrl(\'' + escAttr(pkgId) + '\', this.value)" style="flex:1;" />' +
+                (photoUrl ? ' <a href="' + escAttr(photoUrl) + '" target="_blank" rel="noopener" style="flex-shrink:0;font-size:12px;font-weight:700;color:var(--info);text-decoration:none;white-space:nowrap;" title="Відкрити фото">&#128279; Відкрити</a>' : '') +
                 '</div>';
             if (isUE && p['Номер ТТН']) {
                 panelHtml += '<div style="margin-top:12px;"><button class="bs-btn primary" style="padding:8px 16px;font-size:11px;" onclick="trackTTN(\'' + escAttr(pkgId) + '\', \'' + escAttr(p['Номер ТТН']) + '\')">&#128230; Відстежити ТТН</button>';
@@ -2765,6 +2778,24 @@ function viewPhoto(url) {
     document.getElementById('photoViewer').classList.add('show');
 }
 
+async function savePhotoUrl(pkgId, url) {
+    url = (url || '').trim();
+    var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
+    if (!p) return;
+    p['Фото посилки'] = url;
+    try {
+        await apiPost('quickEdit', { pkg_id: pkgId, field: 'Фото посилки', value: url });
+        showToast('Посилання на фото збережено ✓');
+        // Re-render the details to show/hide the "Відкрити" link
+        var el = document.getElementById('details-' + pkgId);
+        if (el) el.innerHTML = renderDetailsContent(p);
+        var vf = document.getElementById('vform-' + pkgId);
+        if (vf) vf.innerHTML = renderVerifyForm(p);
+    } catch(e) {
+        showToast('Помилка: ' + e.message);
+    }
+}
+
 function closePhotoViewer() {
     document.getElementById('photoViewer').classList.remove('show');
 }
@@ -3072,7 +3103,7 @@ const ALL_CARD_COLUMNS = [
 ];
 const DEFAULT_CARD_COLUMNS = ['phone', 'weight', 'sum', 'deposit', 'debt', 'sender', 'receiver', 'address', 'date', 'pkgStatus', 'ttn', 'tag', 'pkgId'];
 let colCfgTemp = [];
-let colCfgMode = 'card'; // 'card' | 'osnovne'
+let colCfgMode = 'card'; // 'card' | 'osnovne' | 'parcel'
 
 function getVisibleCardColumns() {
     try {
@@ -3099,6 +3130,8 @@ function switchCfgTab(mode) {
     colCfgMode = mode;
     if (mode === 'card') {
         colCfgTemp = getVisibleCardColumns();
+    } else if (mode === 'parcel') {
+        colCfgTemp = getParcelFieldsPkg();
     } else {
         colCfgTemp = getOsnovneFieldsPkg();
     }
@@ -3109,14 +3142,18 @@ function switchCfgTab(mode) {
 function updateCfgTabUI() {
     var btnCard = document.getElementById('cfgTabCard');
     var btnOsn = document.getElementById('cfgTabOsnovne');
+    var btnParcel = document.getElementById('cfgTabParcel');
     var subtitle = document.getElementById('colCfgSubtitle');
+    // Reset all
+    [btnCard, btnOsn, btnParcel].forEach(function(b) { b.style.background = ''; b.style.color = ''; });
     if (colCfgMode === 'card') {
         btnCard.style.background = 'var(--primary)'; btnCard.style.color = 'white';
-        btnOsn.style.background = ''; btnOsn.style.color = '';
         subtitle.textContent = 'Оберіть поля для відображення на картці ліда';
+    } else if (colCfgMode === 'parcel') {
+        btnParcel.style.background = 'var(--primary)'; btnParcel.style.color = 'white';
+        subtitle.textContent = 'Оберіть поля для вкладки «Посилка» у розгорнутому ліді';
     } else {
         btnOsn.style.background = 'var(--primary)'; btnOsn.style.color = 'white';
-        btnCard.style.background = ''; btnCard.style.color = '';
         subtitle.textContent = 'Оберіть поля для вкладки «Основне» у розгорнутому ліді';
     }
 }
@@ -3131,11 +3168,12 @@ function renderColCfgList() {
                 '<div class="col-cfg-name">' + col.label + '</div></div>';
         }).join('');
     } else {
-        // Osnovne tab — show all possible fields
-        // Collect fields used in other (non-basic) sections
+        // Osnovne / Parcel tab — show all possible fields
+        // Collect fields used in other sections (excluding current mode's section)
+        var currentKey = colCfgMode === 'parcel' ? 'parcel' : 'basic';
         var otherFields = new Set();
         PKG_DETAIL_SECTIONS.forEach(function(s) {
-            if (s.key !== 'basic' && s.fields) s.fields.forEach(function(f) { otherFields.add(f); });
+            if (s.key !== currentKey && s.key !== 'basic' && s.key !== 'parcel' && s.fields) s.fields.forEach(function(f) { otherFields.add(f); });
         });
         list.innerHTML = ALL_PKG_FIELDS.map(function(field) {
             var checked = colCfgTemp.includes(field);
@@ -3159,6 +3197,16 @@ function saveColCfg() {
     if (colCfgMode === 'card') {
         localStorage.setItem('esco_posylki_card_cols', JSON.stringify(colCfgTemp));
         renderCards();
+    } else if (colCfgMode === 'parcel') {
+        localStorage.setItem('esco_pkg_parcel', JSON.stringify(colCfgTemp));
+        // Re-render open details
+        if (openCardId) {
+            var p = allData.find(function(x) { return x['PKG_ID'] === openCardId; });
+            if (p) {
+                var el = document.getElementById('details-' + openCardId);
+                if (el) el.innerHTML = renderDetailsContent(p);
+            }
+        }
     } else {
         localStorage.setItem('esco_pkg_osnovne', JSON.stringify(colCfgTemp));
         // Re-render open details
@@ -3177,6 +3225,8 @@ function saveColCfg() {
 function resetColCfg() {
     if (colCfgMode === 'card') {
         colCfgTemp = [...DEFAULT_CARD_COLUMNS];
+    } else if (colCfgMode === 'parcel') {
+        colCfgTemp = [...DEFAULT_PARCEL_FIELDS];
     } else {
         colCfgTemp = [...DEFAULT_OSNOVNE_FIELDS];
     }
