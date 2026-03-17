@@ -1003,9 +1003,13 @@ function apiTrackParcel(params) {
       var trackData = result.data[0];
       var status = trackData.Status || '';
 
-      // Оновити статус в таблиці
+      // Оновити статус в таблиці (не перезаписувати "Невідомий" — тільки менеджер може змінити)
       if (pkgId && status) {
-        apiUpdateField({ pkg_id: pkgId, col: 'Статус посилки', value: status });
+        var currentPkg = findRow(getSheet(resolveSheet({ pkg_id: pkgId })), 'PKG_ID', pkgId);
+        var currentPkgStatus = currentPkg ? String(currentPkg.data[currentPkg.headers.indexOf('Статус посилки')] || '').trim() : '';
+        if (currentPkgStatus !== 'Невідомий') {
+          apiUpdateField({ pkg_id: pkgId, col: 'Статус посилки', value: status });
+        }
       }
 
       return {
@@ -1138,6 +1142,7 @@ function apiScanTTN(params) {
     newObj['Контроль перевірки'] = 'В перевірці';
     newObj['Дата перевірки'] = now();
     newObj['Статус ліда'] = 'Новий';
+    newObj['Статус посилки'] = 'Невідомий';
     newObj['Статус CRM'] = 'Активний';
 
     var headers = getHeaders(sh);

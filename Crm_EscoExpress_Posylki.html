@@ -115,6 +115,7 @@
         .lead-card.status-work { border-left-color: var(--info); }
         .lead-card.status-confirmed { border-left-color: var(--success); }
         .lead-card.status-refused { border-left-color: var(--danger); background: #fef2f2; }
+        .lead-card.status-unknown { border-left-color: var(--danger); background: #fef2f2; }
 
         .card-header { display: flex; flex-direction: column; padding: 0; cursor: default; border-radius: 8px 8px 0 0; overflow: visible; }
         .card-header-top { display: flex; align-items: stretch; }
@@ -792,6 +793,7 @@
                 <option value="В дорозі">В дорозі</option>
                 <option value="Доставлено">Доставлено</option>
                 <option value="Видано">Видано</option>
+                <option value="Невідомий">Невідомий</option>
             </select>
             <select class="filter-select" id="filterPayStatus" onchange="applyFilters()">
                 <option value="all">Статус оплати</option>
@@ -1513,7 +1515,8 @@ function renderCards() {
         const sumColor = payStatus === 'Оплачено' ? 'var(--success)' : payStatus === 'Частково' ? 'var(--warning)' : sum > 0 ? 'var(--danger)' : 'var(--success)';
         const debtColor = payStatus === 'Оплачено' ? 'var(--success)' : payStatus === 'Частково' ? '#d97706' : '#ef4444';
 
-        const statusClass = status === 'Новий' ? 'status-new' : status === 'В роботі' ? 'status-work' : status === 'Підтверджено' ? 'status-confirmed' : status === 'Відмова' ? 'status-refused' : '';
+        const isUnknownPkg = pkgStatus === 'Невідомий' || (!receiver && !phoneRec) || !addressTo;
+        const statusClass = isUnknownPkg ? 'status-unknown' : status === 'Новий' ? 'status-new' : status === 'В роботі' ? 'status-work' : status === 'Підтверджено' ? 'status-confirmed' : status === 'Відмова' ? 'status-refused' : '';
         const dirBadge = isUE ? 'dir-badge-ua-eu' : 'dir-badge-eu-ua';
         const dirText = isUE ? 'УК&#8594;ЄВ' : 'ЄВ&#8594;УК';
         const isOpen = openCardId === pkgId;
@@ -1543,7 +1546,8 @@ function renderCards() {
             (v('address') ? '<div class="card-route"><span class="card-route-icon">&#128205;</span> ' + escHtml(addressFrom) + ' &#8594; ' + escHtml(addressTo) + '</div>' : '') +
             '<div class="card-meta-row">' +
             (v('date') && date ? '<span class="card-meta-tag">&#128197; ' + date + '</span>' : '') +
-            (v('pkgStatus') && pkgStatus ? '<span class="card-meta-tag">' + escHtml(pkgStatus) + '</span>' : '') +
+            (v('pkgStatus') && pkgStatus ? '<span class="card-meta-tag"' + (pkgStatus === 'Невідомий' ? ' style="background:#fee2e2;color:#dc2626;border:1px solid #ef4444;font-weight:700;"' : '') + '>' + escHtml(pkgStatus) + '</span>' : '') +
+            (isUnknownPkg ? '<span class="card-meta-tag" style="background:#fee2e2;color:#dc2626;border:1px solid #ef4444;font-weight:700;">&#10067; НЕВІДОМИЙ</span>' : '') +
             (v('phone') && phone ? '<span class="card-meta-tag">&#128222; ' + escHtml(phone) + '</span>' : '') +
             (v('tag') && tag ? '<span class="card-meta-tag" style="background:#f3e8ff;color:#7c3aed;">' + escHtml(tag) + '</span>' : '') +
             '</div></div></div>' +
@@ -1816,7 +1820,8 @@ function detailBlock(pkgId, label, value, options) {
         else if (val === 'Частково') { borderColor = 'var(--warning)'; valueStyle = 'color:#92400e;font-weight:800;'; }
         else { borderColor = 'var(--danger)'; valueStyle = 'color:var(--danger);font-weight:800;'; }
     } else if (label === 'Статус посилки') {
-        if (val === 'Доставлено' || val === 'Видано') { borderColor = 'var(--success)'; valueStyle = 'color:var(--success);font-weight:800;'; }
+        if (val === 'Невідомий') { borderColor = 'var(--danger)'; valueStyle = 'color:var(--danger);font-weight:800;'; }
+        else if (val === 'Доставлено' || val === 'Видано') { borderColor = 'var(--success)'; valueStyle = 'color:var(--success);font-weight:800;'; }
         else if (val === 'В дорозі') { borderColor = 'var(--info)'; valueStyle = 'color:var(--info);font-weight:800;'; }
         else if (val === 'Прийнято' || val === 'На складі') { borderColor = 'var(--warning)'; valueStyle = 'color:#92400e;font-weight:800;'; }
         else { borderColor = 'var(--danger)'; }
@@ -2249,6 +2254,7 @@ function qeUpdateCardHeader(pkgId) {
         if (metaEl) {
             var dups = verifyDuplicatesCache[pkgId] || [];
             var recipient = p['Піб отримувача'] || '';
+            var _addressTo = p['Адреса в Європі'] || '';
             var metaHtml = '';
             metaHtml += '<span class="vcard-tag ' + (hasPhoto ? (_editedFields[pkgId + ':Фото посилки'] ? 'tag-edited' : 'tag-photo-yes') : 'tag-photo-no') + '">&#128247; Фото: ' + (hasPhoto ? '&#9989;' : '&#10060;') + '</span>';
             metaHtml += '<span class="vcard-tag ' + _vt('Кг', hasWeight) + '">&#9878; Вага: ' + (hasWeight ? escHtml(weight) + 'кг' : '&#10060;') + '</span>';
@@ -2258,7 +2264,7 @@ function qeUpdateCardHeader(pkgId) {
             metaHtml += '<span class="vcard-tag ' + _vt('Сума', hasSum) + '">&#128176; ' + (hasSum ? escHtml(sum) + ' ' + escHtml(currency) : '&#10060;') + '</span>';
             metaHtml += '<span class="vcard-tag ' + _vt('Статус оплати', hasPayStatus) + '">&#128178; ' + (hasPayStatus ? escHtml(payStatus) : '&#10060;') + '</span>';
             if (dups.length > 0) metaHtml += '<span class="vcard-tag tag-dup">&#9888; Дублі: ' + dups.length + '</span>';
-            if (!recipient) metaHtml += '<span class="vcard-tag tag-unknown">&#10067; НЕВІДОМИЙ</span>';
+            if (!recipient || !_addressTo) metaHtml += '<span class="vcard-tag tag-unknown">&#10067; НЕВІДОМИЙ</span>';
             metaEl.innerHTML = metaHtml;
         }
         // Оновити внутрішній номер справа
@@ -2336,7 +2342,7 @@ function getFieldOptions(col) {
     const opts = {
         'Статус ліда': ['Новий', 'В роботі', 'Підтверджено', 'Відмова'],
         'Статус оплати': ['Не оплачено', 'Частково', 'Оплачено'],
-        'Статус посилки': ['Прийнято', 'В дорозі', 'На складі', 'Доставлено', 'Видано'],
+        'Статус посилки': ['Прийнято', 'В дорозі', 'На складі', 'Доставлено', 'Видано', 'Невідомий'],
         'Статус CRM': ['Активний', 'Архів'],
         'Валюта оплати': ['UAH', 'EUR', 'CHF', 'USD', 'PLN', 'CZK'],
         'Валюта завдатку': ['UAH', 'EUR', 'CHF', 'USD', 'PLN', 'CZK'],
@@ -2881,7 +2887,8 @@ async function autoTrackTTN(pkgId, ttn) {
     if (res.ok) {
         showToast('Статус: ' + (res.status || 'Невідомий'));
         const p = allData.find(x => x['PKG_ID'] === pkgId);
-        if (p && res.status) p['Статус посилки'] = res.status;
+        // Не перезаписувати "Невідомий" — тільки менеджер може змінити
+        if (p && res.status && p['Статус посилки'] !== 'Невідомий') p['Статус посилки'] = res.status;
         renderCards();
     } else {
         showToast('Помилка: ' + (res.error || 'невідома'));
@@ -3670,7 +3677,7 @@ function renderSingleVerifyCard(p) {
     var dotClass = 'dot-checking';
     if (ctrl === 'Готова до маршруту') { statusClass = 'vcard-ready'; dotClass = 'dot-ready'; }
     else if (ctrl === 'Відмова') { statusClass = 'vcard-rejected'; dotClass = 'dot-checking'; }
-    else if (!recipient && !phone) { statusClass = 'vcard-unknown'; dotClass = 'dot-unknown'; }
+    else if ((!recipient && !phone) || !addressTo) { statusClass = 'vcard-unknown'; dotClass = 'dot-unknown'; }
     else if (ctrl === 'В перевірці' && !photo) { dotClass = 'dot-waiting'; }
 
     // Tag class helper: green=filled, yellow=edited, red=empty
@@ -3712,7 +3719,7 @@ function renderSingleVerifyCard(p) {
     html += '<span class="vcard-tag ' + vtag('Сума', hasSum) + '">&#128176; ' + (hasSum ? escHtml(sum) + ' ' + escHtml(currency) : '&#10060;') + '</span>';
     html += '<span class="vcard-tag ' + vtag('Статус оплати', hasPayStatus) + '">&#128178; ' + (hasPayStatus ? escHtml(payStatus) : '&#10060;') + '</span>';
     if (hasDups) html += '<span class="vcard-tag tag-dup">&#9888; Дублі: ' + dups.length + '</span>';
-    if (!recipient) html += '<span class="vcard-tag tag-unknown">&#10067; НЕВІДОМИЙ</span>';
+    if (!recipient || !addressTo) html += '<span class="vcard-tag tag-unknown">&#10067; НЕВІДОМИЙ</span>';
     html += '</div></div>';
     html += '<div class="vcard-right">';
     if (intNum) html += '<div class="vcard-intnum" style="font-size:18px;font-weight:900;color:var(--primary);background:var(--bg-main);padding:2px 10px;border-radius:6px;">' + escHtml(intNum) + '</div>';
