@@ -1593,7 +1593,7 @@ function apiFreeSeat(params) {
 // getRoutesList — ШВИДКИЙ: тільки імена аркушів + кількість рядків (без даних)
 function apiGetRoutesList(params) {
   var cache = CacheService.getScriptCache();
-  var cacheKey = 'routesList_v1';
+  var cacheKey = 'routesList_v2';
   var cached = cache.get(cacheKey);
   if (cached) {
     return { ok: true, data: JSON.parse(cached), fromCache: true };
@@ -1609,9 +1609,28 @@ function apiGetRoutesList(params) {
     if (/^(Лог|Конфіг|Config|Log|Шаблон|Template)/i.test(sheetName)) continue;
 
     var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
     var rowCount = lastRow >= 2 ? lastRow - 1 : 0;
+    var paxCount = 0;
+    var parcelCount = 0;
 
-    result.push({ sheetName: sheetName, rowCount: rowCount });
+    if (rowCount > 0 && lastCol > 0) {
+      var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      var typeColIdx = -1;
+      for (var h = 0; h < headers.length; h++) {
+        if (String(headers[h]).trim() === 'Тип запису') { typeColIdx = h; break; }
+      }
+      if (typeColIdx >= 0) {
+        var typeData = sheet.getRange(2, typeColIdx + 1, lastRow - 1, 1).getValues();
+        for (var r = 0; r < typeData.length; r++) {
+          var val = String(typeData[r][0] || '');
+          if (val.indexOf('Пасажир') >= 0) paxCount++;
+          else if (val.indexOf('Посилк') >= 0) parcelCount++;
+        }
+      }
+    }
+
+    result.push({ sheetName: sheetName, rowCount: rowCount, paxCount: paxCount, parcelCount: parcelCount });
   }
 
   cache.put(cacheKey, JSON.stringify(result), 300); // кеш 5 хв

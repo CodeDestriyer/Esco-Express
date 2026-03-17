@@ -1745,6 +1745,8 @@ async function loadRoutes() {
             allRouteSheets = res.data.map(s => ({
                 sheetName: s.sheetName,
                 rowCount: s.rowCount,
+                paxCount: s.paxCount || 0,
+                parcelCount: s.parcelCount || 0,
                 headers: [],
                 rows: null // null = ще не завантажено
             }));
@@ -1833,7 +1835,7 @@ function renderRouteSidebar() {
                     const parcels = rows.filter(r => (r['Тип запису'] || '').includes('Посилк')).length;
                     countLabel = '👤' + pax + ' 📦' + parcels;
                 } else {
-                    countLabel = '📋' + (sheet.rowCount || 0);
+                    countLabel = '👤' + (sheet.paxCount || 0) + ' 📦' + (sheet.parcelCount || 0);
                 }
                 return `<div class="pc-sidebar-item route-sidebar-item${isActive ? ' active' : ''}" onclick="openRoute(${idx})" style="position:relative;">
                     <span>
@@ -1864,7 +1866,7 @@ function renderRouteSidebar() {
                     const parcels = rows.filter(r => (r['Тип запису'] || '').includes('Посилк')).length;
                     countLabel = '👤' + pax + ' 📦' + parcels;
                 } else {
-                    countLabel = '📋' + (sheet.rowCount || 0);
+                    countLabel = '👤' + (sheet.paxCount || 0) + ' 📦' + (sheet.parcelCount || 0);
                 }
                 return `<div class="side-menu-item" onclick="openRoute(${idx}); closeSideMenu();" style="padding:8px 14px;font-size:12px;">
                     <span class="side-menu-item-left">🗺️ ${name}</span>
