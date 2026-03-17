@@ -236,6 +236,7 @@
         /* Smooth card expand animation */
         .card-details { display: none; padding: 0; background: #f8fafc; border-top: 1px solid var(--border); overflow: hidden; max-height: 0; transition: max-height 0.3s ease-out, opacity 0.2s ease-out; opacity: 0; }
         .card-details.show { display: block; max-height: 2000px; opacity: 1; transition: max-height 0.4s ease-in, opacity 0.2s ease-in; }
+        .card-details.editing-active { overflow: visible; }
 
         /* PAYMENTS TAB */
         .payments-loading { text-align: center; padding: 24px; color: var(--text-secondary); font-size: 12px; }
@@ -477,6 +478,7 @@
 
         /* VERIFICATION CARD */
         .vcard { background: white; border-radius: 10px; box-shadow: var(--shadow); margin-bottom: 8px; overflow: hidden; border-left: 4px solid var(--warning); }
+        .vcard.editing-active { overflow: visible; }
         .vcard.vcard-ready { border-left-color: var(--success); }
         .vcard.vcard-unknown { border-left-color: var(--danger); }
         .vcard.vcard-rejected { border-left-color: #6b7280; background: #f9fafb; }
@@ -1800,6 +1802,11 @@ function detailBlockClickEdit(pkgId, col, el) {
         valueEl.classList.remove('editable');
         valueEl.removeAttribute('onclick');
         valueEl.removeAttribute('title');
+        // Temporarily allow overflow on parent containers so select dropdown is not clipped
+        var _vcard = valueEl.closest('.vcard');
+        if (_vcard) _vcard.classList.add('editing-active');
+        var _cardDet = valueEl.closest('.card-details');
+        if (_cardDet) _cardDet.classList.add('editing-active');
         var selEl = valueEl.querySelector('select');
         if (selEl) { selEl.focus(); selEl.click(); }
         return;
@@ -1814,6 +1821,8 @@ function detailBlockClickEdit(pkgId, col, el) {
 // Cancel inline edit — restore just the value text, NO full re-render (like passenger CRM)
 function cancelInlineEditBlock(pkgId, col) {
     _isInlineEditing = false;
+    // Restore overflow on parent containers
+    document.querySelectorAll('.editing-active').forEach(function(el) { el.classList.remove('editing-active'); });
     if (col) {
         // Restore just this one field — no full re-render
         var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
