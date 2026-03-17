@@ -2959,9 +2959,6 @@ function smartToggleDetails(e, id) {
 }
 
 function toggleDetails(id) {
-    // Зберегти незавершене інлайн-редагування перед згортанням/розгортанням
-    savePendingInlineEdit();
-
     if (openDetailsId === id) {
         openDetailsId = null;
         delete activeDetailTab[id];
@@ -3097,26 +3094,6 @@ function openEditPax(id) {
 // ================================================================
 // INLINE EDIT
 // ================================================================
-
-// Зберегти незавершене інлайн-редагування (якщо є відкритий input/select)
-function savePendingInlineEdit() {
-    var editEl = document.querySelector('.detail-inline-edit');
-    if (!editEl) return;
-    // Trigger blur → saveInline виконається через onblur
-    editEl.blur();
-}
-
-// ── AUTO-SAVE: зберігає незавершене редагування при закритті/перемиканні вкладки ──
-window.addEventListener('beforeunload', function() {
-    savePendingInlineEdit();
-});
-document.addEventListener('visibilitychange', function() {
-    if (document.hidden) savePendingInlineEdit();
-});
-window.addEventListener('blur', function() {
-    savePendingInlineEdit();
-});
-
 function startInlineEdit(paxId, key, sheet) {
     const p = passengers.find(x => x['PAX_ID'] === paxId);
     if (!p) return;

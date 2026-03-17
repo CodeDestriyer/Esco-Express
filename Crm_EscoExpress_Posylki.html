@@ -1815,6 +1815,9 @@ function copyToClipboard(text) {
 var _isInlineEditing = false;
 // Track which cards had edits (for collapse save notification)
 var _cardHadEdits = {};
+// Track recently saved fields — polling won't overwrite for 30 sec after local save
+var _recentlySaved = {};
+var RECENT_SAVE_TTL = 30000; // 30 секунд
 
 // Save any pending inline edit before switching cards/tabs (like main lead CRM)
 function savePendingEdits() {
@@ -1866,6 +1869,8 @@ async function qeSave(el) {
 
     // Track that this card had saves (for collapse notification)
     _cardHadEdits[pkgId] = true;
+    // Track recently saved field — protect from polling overwrite
+    _recentlySaved[pkgId + ':' + col] = Date.now();
 
     // Recalc debt locally
     if (p && (col === 'Сума' || col === 'Завдаток')) {
@@ -1893,15 +1898,56 @@ async function qeSave(el) {
 
 // Update card header without re-rendering (to keep focus in quick edit)
 function qeUpdateCardHeader(pkgId) {
-    var cardEl = document.getElementById('card-' + pkgId);
-    if (!cardEl) return;
     var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
     if (!p) return;
-    var nameEl = cardEl.querySelector('.card-name');
-    if (nameEl) {
-        var sender = p['Піб відправника'] || '';
-        var receiver = p['Піб отримувача'] || '';
-        nameEl.innerHTML = '&#128100; ' + escHtml(sender) + (sender && receiver ? ' &#8594; ' : '') + escHtml(receiver);
+
+    // ── Основний вигляд (card-{pkgId}) ──
+    var cardEl = document.getElementById('card-' + pkgId);
+    if (cardEl) {
+        var nameEl = cardEl.querySelector('.card-name');
+        if (nameEl) {
+            var sender = p['Піб відправника'] || '';
+            var receiver = p['Піб отримувача'] || '';
+            nameEl.innerHTML = '&#128100; ' + escHtml(sender) + (sender && receiver ? ' &#8594; ' : '') + escHtml(receiver);
+        }
+    }
+
+    // ── Вигляд перевірки (vcard-{pkgId}) — оновити хедер з актуальними даними ──
+    var vcardEl = document.getElementById('vcard-' + pkgId);
+    if (vcardEl) {
+        var intNum = p['Внутрішній №'] || '';
+        var weight = p['Кг'] || '';
+        var price = p['Оціночна вартість'] || '';
+        var photo = p['Фото посилки'] || '';
+        var hasData = !!(weight && price);
+        var hasPhoto = !!photo;
+
+        // Оновити бейджі в хедері
+        var metaEl = vcardEl.querySelector('.vcard-meta');
+        if (metaEl) {
+            var dups = verifyDuplicatesCache[pkgId] || [];
+            var recipient = p['Піб отримувача'] || '';
+            var metaHtml = '';
+            metaHtml += '<span class="vcard-tag ' + (hasPhoto ? 'tag-photo-yes' : 'tag-photo-no') + '">Фото: ' + (hasPhoto ? '&#9989;' : '&#10060;') + '</span>';
+            metaHtml += '<span class="vcard-tag ' + (hasData ? 'tag-data-yes' : 'tag-data-no') + '">Дані: ' + (hasData ? '&#9989;' : '&#10060;') + '</span>';
+            if (dups.length > 0) metaHtml += '<span class="vcard-tag tag-dup">&#9888; Дублі: ' + dups.length + '</span>';
+            if (!recipient) metaHtml += '<span class="vcard-tag tag-unknown">&#10067; НЕВІДОМИЙ</span>';
+            if (intNum) metaHtml += '<span class="vcard-tag tag-route">&#128666; ' + escHtml(intNum) + '</span>';
+            metaEl.innerHTML = metaHtml;
+        }
+        // Оновити внутрішній номер справа
+        var intNumEl = vcardEl.querySelector('.vcard-intnum');
+        if (intNumEl) {
+            intNumEl.textContent = intNum;
+        } else if (intNum) {
+            var rightEl = vcardEl.querySelector('.vcard-right');
+            if (rightEl) {
+                var newEl = document.createElement('div');
+                newEl.className = 'vcard-intnum';
+                newEl.textContent = intNum;
+                rightEl.insertBefore(newEl, rightEl.firstChild);
+            }
+        }
     }
 }
 
@@ -3574,17 +3620,24 @@ function startPolling() {
             if (res.ok && res.data) {
                 // Double-check editing state after async call
                 if (_isInlineEditing || document.querySelector('.detail-inline-edit')) return;
+                // Очистити прострочені записи _recentlySaved
+                var now = Date.now();
+                Object.keys(_recentlySaved).forEach(function(k) {
+                    if (now - _recentlySaved[k] > RECENT_SAVE_TTL) delete _recentlySaved[k];
+                });
+
                 // Merge updated data
                 res.data.forEach(function(serverPkg) {
                     var idx = allData.findIndex(x => x['PKG_ID'] === serverPkg['PKG_ID']);
                     if (idx !== -1) {
-                        // Update fields that may have changed
-                        allData[idx]['Контроль перевірки'] = serverPkg['Контроль перевірки'];
-                        allData[idx]['Дата перевірки'] = serverPkg['Дата перевірки'];
-                        allData[idx]['Фото посилки'] = serverPkg['Фото посилки'];
-                        allData[idx]['Внутрішній №'] = serverPkg['Внутрішній №'];
-                        allData[idx]['Кг'] = serverPkg['Кг'];
-                        allData[idx]['Оціночна вартість'] = serverPkg['Оціночна вартість'];
+                        var pid = serverPkg['PKG_ID'];
+                        // Update fields that may have changed — але не перезаписувати нещодавно збережені локально
+                        var pollingFields = ['Контроль перевірки', 'Дата перевірки', 'Фото посилки', 'Внутрішній №', 'Кг', 'Оціночна вартість'];
+                        pollingFields.forEach(function(field) {
+                            if (!_recentlySaved[pid + ':' + field]) {
+                                allData[idx][field] = serverPkg[field];
+                            }
+                        });
                     } else {
                         serverPkg['Борг'] = Math.max(0, (parseFloat(serverPkg['Сума']) || 0) - (parseFloat(serverPkg['Завдаток']) || 0));
                         allData.push(serverPkg);
