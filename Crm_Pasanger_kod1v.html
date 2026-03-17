@@ -233,6 +233,27 @@
         .detail-inline-edit { width: 100%; border: 1px solid var(--primary); border-radius: 4px; padding: 2px 4px; font-size: 12px; font-weight: 600; font-family: inherit; outline: none; background: white; }
         select.detail-inline-edit { padding: 3px 4px; cursor: pointer; appearance: auto; }
 
+        /* ============ QUICK EDIT — table-like fast editing ============ */
+        .quick-edit-panel { padding: 10px 12px; background: #f8fafc; border-bottom: 1px solid var(--border); }
+        .quick-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+        .quick-edit-row { display: flex; align-items: center; gap: 6px; min-height: 32px; }
+        .quick-edit-label { font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; min-width: 60px; flex-shrink: 0; white-space: nowrap; }
+        .quick-edit-input { flex: 1; border: 1px solid var(--border); border-radius: 5px; padding: 5px 8px; font-size: 13px; font-weight: 600; font-family: inherit; outline: none; background: white; transition: border-color 0.15s, box-shadow 0.15s; min-width: 0; }
+        .quick-edit-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79,70,229,0.15); }
+        .quick-edit-input.qe-saving { border-color: #f59e0b; background: #fffbeb; }
+        .quick-edit-input.qe-saved { border-color: var(--success); background: #f0fdf4; }
+        .quick-edit-input.qe-error { border-color: var(--danger); background: #fef2f2; }
+        select.quick-edit-input { padding: 4px 6px; cursor: pointer; appearance: auto; }
+        .quick-edit-row-full { grid-column: 1 / -1; }
+        .quick-edit-divider { grid-column: 1 / -1; height: 1px; background: var(--border); margin: 2px 0; }
+        .quick-edit-section-label { grid-column: 1 / -1; font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; padding: 2px 0; }
+        @media (max-width: 600px) {
+            .quick-edit-grid { grid-template-columns: 1fr; }
+            .quick-edit-row-full { grid-column: 1; }
+            .quick-edit-divider { grid-column: 1; }
+            .quick-edit-section-label { grid-column: 1; }
+        }
+
         /* PAYMENTS TAB */
         .payments-loading { text-align: center; padding: 24px; color: var(--text-secondary); font-size: 12px; }
         .payments-loading .pay-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
@@ -2773,11 +2794,11 @@ function renderDetailFields(p, fields, isReadonly) {
         const mapBtn = (ADDRESS_FIELDS.includes(key) && val)
             ? `<button class="detail-micro-btn" onclick="event.stopPropagation(); openMap('${safeVal}')" title="Карта">🗺️</button>`
             : '';
+        const clickEdit = !isRO ? `onclick="event.stopPropagation(); startInlineEdit('${p['PAX_ID']}','${key}','${p._sheet||''}')" style="cursor:pointer;" title="Натисніть щоб редагувати"` : '';
         html += `<div class="detail-block">
             <div class="detail-block-label">${colName}</div>
-            <div class="detail-block-value ${val?'':'empty'}" id="dv-${p['PAX_ID']}-${key}">${displayVal}</div>
+            <div class="detail-block-value ${val?'':'empty'}" id="dv-${p['PAX_ID']}-${key}" ${clickEdit}>${displayVal}</div>
             ${!isRO ? `<div class="detail-block-actions">
-                <button class="detail-micro-btn" onclick="event.stopPropagation(); startInlineEdit('${p['PAX_ID']}','${key}','${p._sheet||''}')">✏️</button>
                 ${mapBtn}
                 <button class="detail-micro-btn" onclick="event.stopPropagation(); copyToClipboard('${safeVal}')">📋</button>
             </div>` : `<div class="detail-block-actions">${mapBtn}<button class="detail-micro-btn" onclick="event.stopPropagation(); copyToClipboard('${safeVal}')">📋</button></div>`}
@@ -2787,15 +2808,202 @@ function renderDetailFields(p, fields, isReadonly) {
     return html;
 }
 
+// ================================================================
+// QUICK EDIT — table-like fast editing panel
+// ================================================================
+const QUICK_EDIT_FIELDS = [
+    // Row 1: core info
+    { key: 'name', label: 'ПІБ', type: 'text', full: true },
+    // Row 2: contact
+    { key: 'phone', label: 'Телефон', type: 'tel' },
+    { key: 'phoneReg', label: 'Тел. реєстр.', type: 'tel' },
+    // Divider
+    { divider: true, label: '🗺️ Маршрут' },
+    { key: 'date', label: 'Дата', type: 'date' },
+    { key: 'seats', label: 'Місць', type: 'number' },
+    { key: 'from', label: 'Звідки', type: 'text' },
+    { key: 'to', label: 'Куди', type: 'text' },
+    { key: 'timing', label: 'Таймінг', type: 'text' },
+    { key: 'direction', label: 'Напрям', type: 'select' },
+    // Divider
+    { divider: true, label: '💰 Фінанси' },
+    { key: 'price', label: 'Ціна', type: 'number' },
+    { key: 'currency', label: 'Валюта', type: 'select' },
+    { key: 'deposit', label: 'Завдаток', type: 'number' },
+    { key: 'currencyDeposit', label: 'Вал. завд.', type: 'select' },
+    { key: 'weight', label: 'Вага баг.', type: 'text' },
+    { key: 'weightPrice', label: 'Ціна баг.', type: 'number' },
+    // Divider
+    { divider: true, label: '📊 Статуси' },
+    { key: 'leadStatus', label: 'Статус', type: 'select' },
+    { key: 'payStatus', label: 'Оплата', type: 'select' },
+    { key: 'tag', label: 'Тег', type: 'text' },
+    { key: 'crmStatus', label: 'CRM', type: 'select' },
+    // Divider
+    { divider: true, label: '📝 Примітки' },
+    { key: 'note', label: 'Примітка', type: 'text', full: true },
+    { key: 'noteSms', label: 'SMS', type: 'text', full: true },
+];
+
+function renderQuickEdit(p) {
+    const paxId = p['PAX_ID'];
+    const sheet = p._sheet || '';
+    let html = '<div class="quick-edit-panel" onclick="event.stopPropagation()">';
+    html += '<div class="quick-edit-grid">';
+    QUICK_EDIT_FIELDS.forEach((f, idx) => {
+        if (f.divider) {
+            html += `<div class="quick-edit-section-label">${f.label}</div>`;
+            return;
+        }
+        const colName = COL_MAP[f.key] || f.key;
+        const val = p[colName] || '';
+        const fullClass = f.full ? ' quick-edit-row-full' : '';
+        const inputId = `qe-${paxId}-${f.key}`;
+        html += `<div class="quick-edit-row${fullClass}">`;
+        html += `<label class="quick-edit-label" for="${inputId}">${f.label}</label>`;
+        if (f.type === 'select' && SELECT_OPTIONS[f.key]) {
+            const opts = SELECT_OPTIONS[f.key].map(o => `<option value="${o}" ${o===val?'selected':''}>${o}</option>`).join('');
+            html += `<select class="quick-edit-input" id="${inputId}" data-pax="${paxId}" data-key="${f.key}" data-sheet="${sheet}" data-old="${String(val).replace(/"/g,'&quot;')}" onchange="qeSave(this)">${opts}</select>`;
+        } else if (f.type === 'date') {
+            html += `<input class="quick-edit-input" id="${inputId}" type="date" value="${val}" data-pax="${paxId}" data-key="${f.key}" data-sheet="${sheet}" data-old="${String(val).replace(/"/g,'&quot;')}" onchange="qeSave(this)" onkeydown="qeKeyNav(event, this)">`;
+        } else {
+            const inputType = f.type === 'number' ? 'number' : (f.type === 'tel' ? 'tel' : 'text');
+            html += `<input class="quick-edit-input" id="${inputId}" type="${inputType}" value="${String(val).replace(/"/g,'&quot;')}" placeholder="${f.label}" data-pax="${paxId}" data-key="${f.key}" data-sheet="${sheet}" data-old="${String(val).replace(/"/g,'&quot;')}" onblur="qeSave(this)" onkeydown="qeKeyNav(event, this)"${inputType==='number'?' step="any"':''}>`;
+        }
+        html += '</div>';
+    });
+    html += '</div></div>';
+    return html;
+}
+
+// Tab / Enter navigation between quick-edit fields
+function qeKeyNav(event, el) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        // Save current and move to next
+        qeSave(el);
+        const inputs = Array.from(el.closest('.quick-edit-grid').querySelectorAll('.quick-edit-input'));
+        const idx = inputs.indexOf(el);
+        if (idx < inputs.length - 1) {
+            inputs[idx + 1].focus();
+            if (inputs[idx + 1].select) inputs[idx + 1].select();
+        }
+    } else if (event.key === 'Escape') {
+        // Revert to old value
+        el.value = el.dataset.old || '';
+        el.blur();
+    }
+}
+
+// Quick-edit auto-save on blur/change
+let _qeSaveTimers = {};
+async function qeSave(el) {
+    const paxId = el.dataset.pax;
+    const key = el.dataset.key;
+    const sheet = el.dataset.sheet;
+    const newVal = el.value;
+    const oldVal = el.dataset.old || '';
+    if (String(newVal) === String(oldVal)) return; // no change
+    // Debounce rapid saves for same field
+    const timerKey = paxId + '-' + key;
+    if (_qeSaveTimers[timerKey]) clearTimeout(_qeSaveTimers[timerKey]);
+    _qeSaveTimers[timerKey] = setTimeout(async () => {
+        delete _qeSaveTimers[timerKey];
+        el.classList.add('qe-saving');
+        el.classList.remove('qe-saved', 'qe-error');
+        const colName = COL_MAP[key] || key;
+        const p = passengers.find(x => x['PAX_ID'] === paxId);
+
+        // Direction change — special handling
+        if (key === 'direction') {
+            const targetDir = String(newVal).includes('Європа') ? 'eu-ua' : 'ua-eu';
+            const res = await apiPost('moveDirection', { pax_id: paxId, target_dir: targetDir });
+            el.classList.remove('qe-saving');
+            if (res.ok) {
+                el.classList.add('qe-saved');
+                el.dataset.old = newVal;
+                showToast('✅ Напрям змінено');
+                setTimeout(() => el.classList.remove('qe-saved'), 1500);
+                silentSync();
+            } else {
+                el.classList.add('qe-error');
+                el.value = oldVal;
+                showToast('❌ ' + (res.error || 'Помилка'));
+                setTimeout(() => el.classList.remove('qe-error'), 2000);
+            }
+            return;
+        }
+
+        // Update local state immediately
+        if (p) p[colName] = newVal;
+        const payload = { sheet, pax_id: paxId, col: colName, value: newVal };
+        if (key === 'deposit') payload.manager = getManagerName();
+        const res = await apiPost('updateField', payload);
+        el.classList.remove('qe-saving');
+        if (res.ok) {
+            el.classList.add('qe-saved');
+            el.dataset.old = newVal;
+            showToast('✅ Збережено');
+            setTimeout(() => el.classList.remove('qe-saved'), 1500);
+            // Update debt & payment status locally
+            if (p && ['deposit','price','weightPrice'].includes(key)) {
+                delete paymentsCache[paxId];
+                const debt = calcDebtFrontend(p);
+                p['Борг'] = debt;
+                const dep = parseFloat(p['Завдаток']) || 0;
+                if (dep === 0) p['Статус оплати'] = 'Не оплачено';
+                else if (debt > 0) p['Статус оплати'] = 'Частково';
+                else p['Статус оплати'] = 'Оплачено';
+                // Update payStatus select if visible
+                const payEl = document.getElementById('qe-' + paxId + '-payStatus');
+                if (payEl) payEl.value = p['Статус оплати'];
+            }
+            // Re-render the card header (to reflect changes like name, phone, status)
+            renderCardHeader(paxId);
+        } else {
+            el.classList.add('qe-error');
+            if (p) p[colName] = oldVal;
+            el.value = oldVal;
+            showToast('❌ Помилка: ' + (res.error || ''));
+            setTimeout(() => el.classList.remove('qe-error'), 2000);
+        }
+    }, 150);
+}
+
+// Re-render only the card header without full re-render (to keep quick-edit focused)
+function renderCardHeader(paxId) {
+    // Find the card container by looking for the details panel id and going up
+    const detailsEl = document.getElementById('details-' + paxId);
+    if (!detailsEl) return;
+    const cardEl = detailsEl.closest('.lead-card');
+    if (!cardEl) return;
+    const p = passengers.find(x => x['PAX_ID'] === paxId);
+    if (!p) return;
+    // Update visible card info
+    const nameEl = cardEl.querySelector('.card-name');
+    if (nameEl) nameEl.textContent = p['Піб'] || '—';
+    const phoneEl = cardEl.querySelector('.card-phone');
+    if (phoneEl) phoneEl.textContent = p['Телефон пасажира'] || '';
+    const seatsEl = cardEl.querySelector('.card-seats');
+    if (seatsEl) {
+        const seats = p['Кількість місць'] || '1';
+        seatsEl.textContent = seats + 'м';
+    }
+}
+
 function renderDetails(p) {
     const sections = getDetailSections();
     const paxId = p['PAX_ID'];
-    const savedTab = activeDetailTab[paxId] || sections[0].key;
-    const savedIdx = sections.findIndex(s => s.key === savedTab);
-    const activeIdx = savedIdx >= 0 ? savedIdx : 0;
+    const savedTab = activeDetailTab[paxId] || 'quickedit';
+    const isQuickEdit = savedTab === 'quickedit';
+    const savedIdx = isQuickEdit ? -1 : sections.findIndex(s => s.key === savedTab);
+    const activeIdx = savedIdx >= 0 ? savedIdx : -1;
 
-    // Tabs row (horizontal)
+    // Tabs row (horizontal) — Quick Edit is the first tab
     let tabsHtml = '<div class="detail-accordion-tabs">';
+    tabsHtml += `<div class="detail-tab ${isQuickEdit?'active':''}" onclick="event.stopPropagation(); switchDetailTab('${paxId}','quickedit',this)" data-section="quickedit" style="${isQuickEdit?'':''}">
+        ⚡ Швидке редагування
+    </div>`;
     sections.forEach((section, i) => {
         const countLabel = section.async ? '' : `<span class="tab-count">${section.fields.length}</span>`;
         tabsHtml += `<div class="detail-tab ${i===activeIdx?'active':''}" onclick="event.stopPropagation(); switchDetailTab('${paxId}','${section.key}',this)" data-section="${section.key}">
@@ -2804,8 +3012,12 @@ function renderDetails(p) {
     });
     tabsHtml += '</div>';
 
-    // Panels (render active tab immediately)
-    let panelsHtml = '';
+    // Quick Edit panel (always first)
+    let panelsHtml = `<div class="detail-tab-panel ${isQuickEdit?'active':''}" id="panel-${paxId}-quickedit" data-section-key="quickedit" data-pax-id="${paxId}">
+        ${isQuickEdit ? renderQuickEdit(p) : ''}
+    </div>`;
+
+    // Other panels
     sections.forEach((section, i) => {
         const panelId = `panel-${paxId}-${section.key}`;
         const isActive = i === activeIdx;
@@ -2815,7 +3027,7 @@ function renderDetails(p) {
     });
 
     // Lazy-load payments if it's the active tab
-    if (sections[activeIdx] && sections[activeIdx].async && sections[activeIdx].key === 'payments') {
+    if (activeIdx >= 0 && sections[activeIdx] && sections[activeIdx].async && sections[activeIdx].key === 'payments') {
         setTimeout(() => {
             const panel = document.getElementById(`panel-${paxId}-payments`);
             if (panel) loadPaymentsTab(paxId, panel);
@@ -2847,14 +3059,19 @@ function switchDetailTab(paxId, sectionKey, tabEl) {
 
     // Lazy-load: render content on first open
     if (!panel.innerHTML.trim()) {
-        const sections = getDetailSections();
-        const section = sections.find(s => s.key === sectionKey);
-        const p = passengers.find(x => x['PAX_ID'] === paxId);
-        if (section && p) {
-            if (section.async && sectionKey === 'payments') {
-                loadPaymentsTab(paxId, panel);
-            } else {
-                panel.innerHTML = renderDetailFields(p, section.fields, section.readonly);
+        if (sectionKey === 'quickedit') {
+            const p = passengers.find(x => x['PAX_ID'] === paxId);
+            if (p) panel.innerHTML = renderQuickEdit(p);
+        } else {
+            const sections = getDetailSections();
+            const section = sections.find(s => s.key === sectionKey);
+            const p = passengers.find(x => x['PAX_ID'] === paxId);
+            if (section && p) {
+                if (section.async && sectionKey === 'payments') {
+                    loadPaymentsTab(paxId, panel);
+                } else {
+                    panel.innerHTML = renderDetailFields(p, section.fields, section.readonly);
+                }
             }
         }
     }
