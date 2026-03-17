@@ -183,6 +183,47 @@
         .detail-inline-edit:focus { border-color: #94a3b8; }
         select.detail-inline-edit { padding: 4px 6px; cursor: pointer; appearance: auto; }
         .detail-inline-edit.qe-saving { border-color: #94a3b8; }
+
+        /* ============ CUSTOM DROPDOWN ============ */
+        .qe-dropdown-wrap { position: relative; width: 100%; }
+        .qe-dropdown-selected {
+            width: 100%; border: 1.5px solid var(--primary); border-radius: 6px;
+            padding: 6px 28px 6px 10px; font-size: 12px; font-weight: 600;
+            font-family: inherit; background: white; cursor: pointer;
+            color: var(--text-primary); outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .qe-dropdown-selected:hover { border-color: var(--info); }
+        .qe-dropdown-selected::after {
+            content: ''; position: absolute; right: 10px; top: 50%; transform: translateY(-50%) rotate(0deg);
+            border-left: 4px solid transparent; border-right: 4px solid transparent;
+            border-top: 5px solid var(--text-secondary); transition: transform 0.25s ease;
+        }
+        .qe-dropdown-wrap.open .qe-dropdown-selected { border-color: var(--info); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); border-radius: 6px 6px 0 0; }
+        .qe-dropdown-wrap.open .qe-dropdown-selected::after { transform: translateY(-50%) rotate(180deg); }
+        .qe-dropdown-list {
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 200;
+            background: white; border: 1.5px solid var(--info); border-top: none;
+            border-radius: 0 0 8px 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            max-height: 0; overflow: hidden; opacity: 0;
+            transition: max-height 0.25s ease, opacity 0.2s ease;
+        }
+        .qe-dropdown-wrap.open .qe-dropdown-list { max-height: 220px; overflow-y: auto; opacity: 1; }
+        .qe-dropdown-item {
+            padding: 8px 12px; font-size: 12px; font-weight: 500; color: var(--text-primary);
+            cursor: pointer; transition: background 0.12s, color 0.12s;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .qe-dropdown-item:last-child { border-bottom: none; }
+        .qe-dropdown-item:hover { background: #eff6ff; color: var(--info); }
+        .qe-dropdown-item.active { background: var(--primary); color: white; font-weight: 700; }
+        .qe-dropdown-item.active:hover { background: var(--info); }
+        /* Scrollbar */
+        .qe-dropdown-list::-webkit-scrollbar { width: 4px; }
+        .qe-dropdown-list::-webkit-scrollbar-track { background: transparent; }
+        .qe-dropdown-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .qe-dropdown-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         /* Subtle save indicator — no flashy colors */
         .detail-block.qe-saved { }
         .detail-block-value.qe-just-saved::after { content: '✓'; font-size: 10px; color: #64748b; margin-left: 4px; opacity: 1; transition: opacity 0.8s; }
@@ -1523,7 +1564,7 @@ function smartToggleCard(e, pkgId) {
     // Якщо клік був на інтерактивному елементі — не розгортати
     var tag = e.target.tagName;
     if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'A' || tag === 'SELECT') return;
-    if (e.target.closest && (e.target.closest('button') || e.target.closest('a') || e.target.closest('.card-checkbox-wrap') || e.target.closest('.card-actions-toggle'))) return;
+    if (e.target.closest && (e.target.closest('button') || e.target.closest('a') || e.target.closest('.card-checkbox-wrap') || e.target.closest('.card-actions-toggle') || e.target.closest('.qe-dropdown-wrap'))) return;
 
     // Якщо юзер протягнув мишку (drag > 5px) — це виділення тексту
     var dx = Math.abs(e.clientX - _cardMouseDownX);
@@ -1748,14 +1789,26 @@ function detailBlockClickEdit(pkgId, col, el) {
     var isAddressField = (col === 'Адреса відправки' || col === 'Адреса в Європі');
 
     if (selectOptions) {
-        var optsHtml = '';
-        if (isAddressField && currentVal && selectOptions.indexOf(currentVal) === -1) {
-            optsHtml += '<option value="' + escAttr(currentVal) + '" selected>' + escHtml(currentVal) + '</option>';
+        var allOpts = selectOptions.slice();
+        if (isAddressField && currentVal && allOpts.indexOf(currentVal) === -1) {
+            allOpts.unshift(currentVal);
         }
-        optsHtml += selectOptions.map(function(o) { return '<option value="' + escAttr(o) + '"' + (o === currentVal ? ' selected' : '') + '>' + escHtml(o) + '</option>'; }).join('');
-        valueEl.innerHTML = '<select class="detail-inline-edit" autocomplete="off" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(currentVal) + '" onchange="qeSave(this)" onblur="qeSave(this)">' + optsHtml + '</select>';
-        var sel = block.querySelector('select');
-        if (sel) sel.focus();
+        var itemsHtml = allOpts.map(function(o) {
+            return '<div class="qe-dropdown-item' + (o === currentVal ? ' active' : '') + '" data-val="' + escAttr(o) + '">' + escHtml(o) + '</div>';
+        }).join('');
+        valueEl.innerHTML =
+            '<div class="qe-dropdown-wrap open" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(currentVal) + '">' +
+                '<div class="qe-dropdown-selected">' + escHtml(currentVal || '— Оберіть —') + '</div>' +
+                '<div class="qe-dropdown-list">' + itemsHtml + '</div>' +
+            '</div>';
+        valueEl.classList.remove('editable');
+        // Smooth open — start closed, open on next frame
+        var wrap = valueEl.querySelector('.qe-dropdown-wrap');
+        if (wrap) {
+            wrap.classList.remove('open');
+            requestAnimationFrame(function() { wrap.classList.add('open'); });
+        }
+        return; // Custom dropdown handles its own events via delegation
     } else {
         valueEl.innerHTML = '<input class="detail-inline-edit" autocomplete="off" value="' + escAttr(currentVal) + '" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(currentVal) + '" onblur="qeSave(this)" onkeydown="if(event.key===\'Enter\'){qeSave(this);}if(event.key===\'Escape\'){cancelInlineEditBlock(\'' + escAttr(pkgId) + '\',\'' + escAttr(col) + '\');}">';
         var inp = block.querySelector('input');
@@ -1796,6 +1849,96 @@ function cancelInlineEditBlock(pkgId, col) {
     if (detailEl) detailEl.innerHTML = renderDetailsContent(p);
 }
 
+// ── CUSTOM DROPDOWN — делеговані обробники подій ──
+
+// Клік на елемент списку — вибір опції
+document.addEventListener('click', function(e) {
+    var item = e.target.closest('.qe-dropdown-item');
+    if (item) {
+        e.stopPropagation();
+        var wrap = item.closest('.qe-dropdown-wrap');
+        if (!wrap) return;
+        var pkgId = wrap.dataset.pkg;
+        var col = wrap.dataset.col;
+        var oldVal = wrap.dataset.old || '';
+        var newVal = item.dataset.val;
+        // Закрити дропдаун з анімацією
+        wrap.classList.remove('open');
+        // Зберегти вибране значення через qeSave-подібну логіку
+        setTimeout(function() { qeDropdownSave(pkgId, col, oldVal, newVal); }, 150);
+        return;
+    }
+
+    // Клік на selected — toggle open/close
+    var selected = e.target.closest('.qe-dropdown-selected');
+    if (selected) {
+        e.stopPropagation();
+        var wrap = selected.closest('.qe-dropdown-wrap');
+        if (wrap) wrap.classList.toggle('open');
+        return;
+    }
+
+    // Клік поза дропдауном — закрити без збереження
+    var openWrap = document.querySelector('.qe-dropdown-wrap.open');
+    if (openWrap && !openWrap.contains(e.target)) {
+        var pkgId = openWrap.dataset.pkg;
+        var col = openWrap.dataset.col;
+        openWrap.classList.remove('open');
+        setTimeout(function() { cancelInlineEditBlock(pkgId, col); }, 150);
+    }
+});
+
+// Escape — закрити дропдаун
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var openWrap = document.querySelector('.qe-dropdown-wrap.open');
+        if (openWrap) {
+            var pkgId = openWrap.dataset.pkg;
+            var col = openWrap.dataset.col;
+            openWrap.classList.remove('open');
+            setTimeout(function() { cancelInlineEditBlock(pkgId, col); }, 150);
+        }
+    }
+});
+
+// Save з кастомного дропдауна (аналог qeSave, але без елемента)
+async function qeDropdownSave(pkgId, col, oldVal, newVal) {
+    if (String(newVal) === String(oldVal)) {
+        cancelInlineEditBlock(pkgId, col);
+        return;
+    }
+    var saveKey = pkgId + '-' + col;
+    if (_qeSaving[saveKey]) return;
+    _qeSaving[saveKey] = true;
+
+    var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
+    if (p) p[col] = newVal;
+    delete _qeSaving[saveKey];
+    _isInlineEditing = false;
+    cancelInlineEditBlock(pkgId, col);
+
+    _cardHadEdits[pkgId] = true;
+    _recentlySaved[pkgId + ':' + col] = Date.now();
+
+    if (p && (col === 'Сума' || col === 'Завдаток')) {
+        p['Борг'] = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
+        var dep = parseFloat(p['Завдаток']) || 0;
+        if (dep > 0 && p['Борг'] > 0) p['Статус оплати'] = 'Частково';
+        else if (dep > 0 && p['Борг'] === 0) p['Статус оплати'] = 'Оплачено';
+        else p['Статус оплати'] = 'Не оплачено';
+    }
+    qeUpdateCardHeader(pkgId);
+
+    var res = await apiPost('updateField', { pkg_id: pkgId, col: col, value: newVal });
+    if (res.ok) {
+        showToast('&#10003; Збережено');
+    } else {
+        if (p) p[col] = oldVal;
+        cancelInlineEditBlock(pkgId, col);
+        showToast('Помилка: ' + (res.error || 'невідома'));
+    }
+}
+
 function copyToClipboard(text) {
     if (!text || text === '—') return;
     navigator.clipboard.writeText(text).then(function() {
@@ -1821,6 +1964,13 @@ var RECENT_SAVE_TTL = 30000; // 30 секунд
 
 // Save any pending inline edit before switching cards/tabs (like main lead CRM)
 function savePendingEdits() {
+    // Закрити кастомний дропдаун без збереження (cancel)
+    var openWrap = document.querySelector('.qe-dropdown-wrap');
+    if (openWrap) {
+        var pkgId = openWrap.dataset.pkg;
+        var col = openWrap.dataset.col;
+        cancelInlineEditBlock(pkgId, col);
+    }
     if (!_isInlineEditing) return;
     var editEl = document.querySelector('.detail-inline-edit');
     if (editEl) {
@@ -2779,7 +2929,7 @@ document.addEventListener('DOMContentLoaded', function() { updateAvatarUI(); });
 // ── SILENT SYNC ──
 async function silentSync() {
     // Не синхронізувати під час інлайн-редагування
-    if (_isInlineEditing || document.querySelector('.detail-inline-edit') || document.querySelector('.qe-input')) return;
+    if (_isInlineEditing || document.querySelector('.detail-inline-edit') || document.querySelector('.qe-dropdown-wrap') || document.querySelector('.qe-input')) return;
     showLoader('Синхронізація...');
     await reloadData();
     showToast('Дані оновлено');
@@ -3133,7 +3283,7 @@ function updateVerifyCounts() {
 function renderVerifyCards(opts) {
     // Skip re-render from polling if user is actively editing or has open card
     if (opts && opts.fromPolling) {
-        if (_isInlineEditing || document.querySelector('.detail-inline-edit')) return;
+        if (_isInlineEditing || document.querySelector('.detail-inline-edit') || document.querySelector('.qe-dropdown-wrap')) return;
         // Якщо відкрита картка — лише оновити лічильники, не перебудовувати DOM
         if (openVerifyCardId) return;
     }
@@ -3613,13 +3763,13 @@ function startPolling() {
         if (currentView !== 'verification') { stopPolling(); return; }
         // Skip polling re-render if user is actively editing a field
         if (_isInlineEditing) return;
-        // Also check if there's an active inline edit input/select in the DOM
-        if (document.querySelector('.detail-inline-edit')) return;
+        // Also check if there's an active inline edit input/select/dropdown in the DOM
+        if (document.querySelector('.detail-inline-edit') || document.querySelector('.qe-dropdown-wrap')) return;
         try {
             var res = await apiPost('getAll', { sheet: 'ue', filter: {} });
             if (res.ok && res.data) {
                 // Double-check editing state after async call
-                if (_isInlineEditing || document.querySelector('.detail-inline-edit')) return;
+                if (_isInlineEditing || document.querySelector('.detail-inline-edit') || document.querySelector('.qe-dropdown-wrap')) return;
                 // Очистити прострочені записи _recentlySaved
                 var now = Date.now();
                 Object.keys(_recentlySaved).forEach(function(k) {
