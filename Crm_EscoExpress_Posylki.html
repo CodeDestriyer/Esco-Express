@@ -1826,6 +1826,17 @@ function savePendingEdits() {
     }
 }
 
+// ── AUTO-SAVE: зберігає незавершене редагування при закритті/перемиканні вкладки ──
+window.addEventListener('beforeunload', function() {
+    savePendingEdits();
+});
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) savePendingEdits();
+});
+window.addEventListener('blur', function() {
+    savePendingEdits();
+});
+
 // Inline-edit save (used by detail-block click-to-edit)
 var _qeSaving = {};
 async function qeSave(el) {
@@ -2789,6 +2800,9 @@ document.addEventListener('change', function(e) {
 
 // ── SHOW ALL PARCELS (reset filters) ──
 function showAllParcels() {
+    // Зберегти незавершене редагування перед перемиканням в'юхи
+    savePendingEdits();
+
     currentView = 'parcels';
     document.getElementById('defaultView').style.display = 'block';
     document.getElementById('verificationView').style.display = 'none';
@@ -2952,6 +2966,9 @@ const POLLING_INTERVAL = 15000; // 15 секунд
 
 // ── Перемикання між видами ──
 function switchToVerification(tab) {
+    // Зберегти незавершене редагування перед перемиканням в'юхи
+    savePendingEdits();
+
     currentView = 'verification';
     currentVerifyTab = tab || 'checking';
 
@@ -2974,6 +2991,9 @@ function switchToVerification(tab) {
 }
 
 function switchToParcels() {
+    // Зберегти незавершене редагування перед перемиканням в'юхи
+    savePendingEdits();
+
     currentView = 'parcels';
     document.getElementById('defaultView').style.display = 'block';
     document.getElementById('verificationView').style.display = 'none';
@@ -3609,6 +3629,9 @@ let routeOpenDetailsId = null;
 
 // ── View switching ──
 function showRoutesView() {
+    // Зберегти незавершене редагування перед перемиканням в'юхи
+    savePendingEdits();
+
     currentView = 'routes';
     document.getElementById('defaultView').style.display = 'none';
     document.getElementById('verificationView').style.display = 'none';
