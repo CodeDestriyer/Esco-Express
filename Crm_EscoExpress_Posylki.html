@@ -5326,41 +5326,87 @@ async function startOptimization() {
             endCoords = await geocodeClient(endAddress);
         }
 
-        // Optimize route
+        // Optimize route — split into chunks of OPTIMIZE_MAX_WAYPOINTS if needed
         updateOptStatus('🗺️ Оптимізація маршруту...', geocoded.length + ' точок');
-        let optimizedOrder = null;
-        let legs = null;
+        let orderedItems = [];
+        let allLegs = [];
         let method = '';
+        let totalChunks = Math.ceil(geocoded.length / OPTIMIZE_MAX_WAYPOINTS);
 
         if (geocoded.length <= OPTIMIZE_MAX_WAYPOINTS) {
+            // Single chunk — fits in one API call
             try {
                 const result = await optimizeDirectionsClient(geocoded, startCoords, endCoords);
-                optimizedOrder = result.order;
-                legs = result.legs;
+                orderedItems = result.order.map(idx => geocoded[idx]);
+                allLegs = result.legs || [];
                 method = 'Google Directions API (реальні дороги)';
             } catch(e) {
                 console.warn('Directions fallback:', e.message);
+                const nnOrder = nearestNeighborClient(geocoded, startCoords);
+                orderedItems = nnOrder.map(idx => geocoded[idx]);
+                method = 'Nearest Neighbor (по прямій)';
+            }
+        } else {
+            // Multiple chunks — split, optimize each sequentially
+            // First: use Nearest Neighbor to get initial rough order relative to start
+            updateOptStatus('🗺️ Попереднє сортування...', geocoded.length + ' точок');
+            const nnOrder = nearestNeighborClient(geocoded, startCoords);
+            const roughOrdered = nnOrder.map(idx => geocoded[idx]);
+
+            // Split rough-ordered into chunks of OPTIMIZE_MAX_WAYPOINTS
+            let chunkStartCoords = startCoords;
+            let chunkIdx = 0;
+            method = 'Google Directions API (маршрут ' + totalChunks + ' частин)';
+
+            for (let offset = 0; offset < roughOrdered.length; offset += OPTIMIZE_MAX_WAYPOINTS) {
+                chunkIdx++;
+                const chunkEnd = Math.min(offset + OPTIMIZE_MAX_WAYPOINTS, roughOrdered.length);
+                const chunk = roughOrdered.slice(offset, chunkEnd);
+
+                // Last chunk uses endCoords as destination, others — open-ended
+                const isLastChunk = chunkEnd >= roughOrdered.length;
+                const chunkEndCoords = isLastChunk ? endCoords : null;
+
+                updateOptStatus('🗺️ Оптимізація частини ' + chunkIdx + '/' + totalChunks + '...', chunk.length + ' точок');
+
+                try {
+                    const result = await optimizeDirectionsClient(chunk, chunkStartCoords, chunkEndCoords);
+                    const chunkOrdered = result.order.map(idx => chunk[idx]);
+                    orderedItems.push(...chunkOrdered);
+                    if (result.legs) allLegs.push(...result.legs);
+
+                    // Next chunk starts from the last point of this chunk
+                    const lastItem = chunkOrdered[chunkOrdered.length - 1];
+                    if (lastItem && lastItem.coords) {
+                        chunkStartCoords = lastItem.coords;
+                    }
+                } catch(e) {
+                    console.warn('Chunk ' + chunkIdx + ' directions fallback:', e.message);
+                    // Fallback: keep rough order for this chunk
+                    orderedItems.push(...chunk);
+                    const lastItem = chunk[chunk.length - 1];
+                    if (lastItem && lastItem.coords) {
+                        chunkStartCoords = lastItem.coords;
+                    }
+                }
+
+                // Pause between API calls to avoid rate limiting
+                if (!isLastChunk) await _optSleep(500);
             }
         }
 
-        if (!optimizedOrder || optimizedOrder.length === 0) {
-            optimizedOrder = nearestNeighborClient(geocoded, startCoords);
-            method = 'Nearest Neighbor (по прямій)';
-        }
-
-        const orderedItems = optimizedOrder.map(idx => geocoded[idx]);
         const mapLinks = generateOptimizeMapLinks(orderedItems, startAddress, endAddress);
 
-        // Build leg info
+        // Build leg info (cumulative distance/time)
         const legInfo = [];
         let cumulativeTime = 0;
         let cumulativeDist = 0;
-        if (legs && legs.length > 0) {
+        if (allLegs && allLegs.length > 0) {
             for (let i = 0; i < orderedItems.length; i++) {
                 const legIdx = i;
-                if (legIdx < legs.length) {
-                    const dist = legs[legIdx].distance ? legs[legIdx].distance.value : 0;
-                    const dur = legs[legIdx].duration ? legs[legIdx].duration.value : 0;
+                if (legIdx < allLegs.length) {
+                    const dist = allLegs[legIdx].distance ? allLegs[legIdx].distance.value : 0;
+                    const dur = allLegs[legIdx].duration ? allLegs[legIdx].duration.value : 0;
                     cumulativeDist += dist;
                     cumulativeTime += dur;
                     legInfo.push({
@@ -5368,8 +5414,8 @@ async function startOptimization() {
                         segmentTime: dur,
                         totalDist: cumulativeDist,
                         totalTime: cumulativeTime,
-                        segmentDistText: legs[legIdx].distance ? legs[legIdx].distance.text : '',
-                        segmentTimeText: legs[legIdx].duration ? legs[legIdx].duration.text : ''
+                        segmentDistText: allLegs[legIdx].distance ? allLegs[legIdx].distance.text : '',
+                        segmentTimeText: allLegs[legIdx].duration ? allLegs[legIdx].duration.text : ''
                     });
                 } else {
                     legInfo.push({ segmentDist: 0, segmentTime: 0, totalDist: cumulativeDist, totalTime: cumulativeTime, segmentDistText: '', segmentTimeText: '' });
