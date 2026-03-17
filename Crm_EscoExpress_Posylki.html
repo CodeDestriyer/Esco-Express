@@ -727,10 +727,6 @@
                     <span><span class="item-icon">&#128230;</span><span class="item-text">Всі (УК-ЄВ)</span></span>
                     <span class="item-count" id="pcCountVerAll">0</span>
                 </div>
-                <div class="pc-sidebar-item" id="sideVerNew" onclick="switchToVerification('new')">
-                    <span><span class="item-icon">&#128313;</span><span class="item-text">Нові</span></span>
-                    <span class="item-count" id="pcCountVerNew">0</span>
-                </div>
                 <div class="pc-sidebar-item" id="sideVerCheck" onclick="switchToVerification('checking')">
                     <span><span class="item-icon">&#128269;</span><span class="item-text">Перевірка</span></span>
                     <span class="item-count" id="pcCountVerCheck">0</span>
@@ -738,6 +734,10 @@
                 <div class="pc-sidebar-item" id="sideVerReady" onclick="switchToVerification('ready')">
                     <span><span class="item-icon">&#9989;</span><span class="item-text">Готові</span></span>
                     <span class="item-count" id="pcCountVerReady">0</span>
+                </div>
+                <div class="pc-sidebar-item" id="sideVerNew" onclick="switchToVerification('new')">
+                    <span><span class="item-icon">&#10067;</span><span class="item-text">Невідомі</span></span>
+                    <span class="item-count" id="pcCountVerNew">0</span>
                 </div>
                 <div class="pc-sidebar-item" id="sideVerTransferred" onclick="switchToVerification('transferred')">
                     <span><span class="item-icon">&#128197;</span><span class="item-text">Перенесені</span></span>
@@ -811,10 +811,6 @@
                     <span class="vtab-count" id="vtabCountAll">0</span>
                     <span class="vtab-label">Всі</span>
                 </button>
-                <button class="verify-tab" id="vtabNew" onclick="setVerifyTab('new')">
-                    <span class="vtab-count" id="vtabCountNew">0</span>
-                    <span class="vtab-label">Нові</span>
-                </button>
                 <button class="verify-tab" id="vtabChecking" onclick="setVerifyTab('checking')">
                     <span class="vtab-count" id="vtabCountCheck">0</span>
                     <span class="vtab-label">Перевірка</span>
@@ -823,6 +819,10 @@
                 <button class="verify-tab" id="vtabReady" onclick="setVerifyTab('ready')">
                     <span class="vtab-count" id="vtabCountReady">0</span>
                     <span class="vtab-label">Готові</span>
+                </button>
+                <button class="verify-tab" id="vtabNew" onclick="setVerifyTab('new')">
+                    <span class="vtab-count" id="vtabCountNew">0</span>
+                    <span class="vtab-label">Невідомі</span>
                 </button>
                 <button class="verify-tab" id="vtabTransferred" onclick="setVerifyTab('transferred')">
                     <span class="vtab-count" id="vtabCountTransferred">0</span>
