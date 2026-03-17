@@ -497,7 +497,8 @@
         .vcard-tag.tag-photo-yes { background: #d1fae5; color: #059669; }
         .vcard-tag.tag-photo-no { background: #fee2e2; color: #dc2626; }
         .vcard-tag.tag-data-yes { background: #d1fae5; color: #059669; }
-        .vcard-tag.tag-data-no { background: #fef3c7; color: #92400e; }
+        .vcard-tag.tag-data-no { background: #fee2e2; color: #dc2626; }
+        .vcard-tag.tag-edited { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
         .vcard-tag.tag-dup { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
         .vcard-tag.tag-route { background: #dbeafe; color: #1d4ed8; }
         .vcard-tag.tag-unknown { background: #fee2e2; color: #dc2626; border: 1px solid #ef4444; }
@@ -1937,6 +1938,7 @@ async function qeDropdownSave(pkgId, col, oldVal, newVal) {
 
     _cardHadEdits[pkgId] = true;
     _recentlySaved[pkgId + ':' + col] = Date.now();
+    _editedFields[pkgId + ':' + col] = true;
 
     if (p && (col === 'Сума' || col === 'Завдаток')) {
         p['Борг'] = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
@@ -1979,6 +1981,8 @@ var _cardHadEdits = {};
 // Track recently saved fields — polling won't overwrite for 30 sec after local save
 var _recentlySaved = {};
 var RECENT_SAVE_TTL = 30000; // 30 секунд
+// Track edited fields for yellow tag in verification cards (persists for session)
+var _editedFields = {}; // key: "pkgId:col"
 
 // Save any pending inline edit before switching cards/tabs (like main lead CRM)
 function savePendingEdits() {
@@ -2032,6 +2036,8 @@ async function qeSave(el) {
     _cardHadEdits[pkgId] = true;
     // Track recently saved field — protect from polling overwrite
     _recentlySaved[pkgId + ':' + col] = Date.now();
+    // Track edited field for yellow tag in verification
+    _editedFields[pkgId + ':' + col] = true;
 
     // Recalc debt locally
     if (p && (col === 'Сума' || col === 'Завдаток')) {
@@ -2078,10 +2084,24 @@ function qeUpdateCardHeader(pkgId) {
     if (vcardEl) {
         var intNum = p['Внутрішній №'] || '';
         var weight = p['Кг'] || '';
-        var price = p['Оціночна вартість'] || '';
+        var qty = p['Кількість позицій'] || '';
+        var desc = p['Опис'] || '';
         var photo = p['Фото посилки'] || '';
-        var hasData = !!(weight && price);
+        var sum = p['Сума'] || '';
+        var currency = p['Валюта оплати'] || 'UAH';
+        var payStatus = p['Статус оплати'] || '';
         var hasPhoto = !!photo;
+        var hasWeight = !!weight;
+        var hasQty = !!qty;
+        var hasDesc = !!desc;
+        var hasIntNum = !!intNum;
+        var hasSum = !!(sum && parseFloat(sum));
+        var hasPayStatus = !!payStatus;
+
+        function _vt(col, has) {
+            if (has && _editedFields[pkgId + ':' + col]) return 'tag-edited';
+            return has ? 'tag-data-yes' : 'tag-data-no';
+        }
 
         // Оновити бейджі в хедері
         var metaEl = vcardEl.querySelector('.vcard-meta');
@@ -2089,11 +2109,15 @@ function qeUpdateCardHeader(pkgId) {
             var dups = verifyDuplicatesCache[pkgId] || [];
             var recipient = p['Піб отримувача'] || '';
             var metaHtml = '';
-            metaHtml += '<span class="vcard-tag ' + (hasPhoto ? 'tag-photo-yes' : 'tag-photo-no') + '">Фото: ' + (hasPhoto ? '&#9989;' : '&#10060;') + '</span>';
-            metaHtml += '<span class="vcard-tag ' + (hasData ? 'tag-data-yes' : 'tag-data-no') + '">Дані: ' + (hasData ? '&#9989;' : '&#10060;') + '</span>';
+            metaHtml += '<span class="vcard-tag ' + (hasPhoto ? (_editedFields[pkgId + ':Фото посилки'] ? 'tag-edited' : 'tag-photo-yes') : 'tag-photo-no') + '">&#128247; Фото: ' + (hasPhoto ? '&#9989;' : '&#10060;') + '</span>';
+            metaHtml += '<span class="vcard-tag ' + _vt('Кг', hasWeight) + '">&#9878; Вага: ' + (hasWeight ? escHtml(weight) + 'кг' : '&#10060;') + '</span>';
+            metaHtml += '<span class="vcard-tag ' + _vt('Кількість позицій', hasQty) + '">&#128230; К-сть: ' + (hasQty ? escHtml(qty) : '&#10060;') + '</span>';
+            metaHtml += '<span class="vcard-tag ' + _vt('Опис', hasDesc) + '">&#128196; Опис: ' + (hasDesc ? '&#9989;' : '&#10060;') + '</span>';
+            metaHtml += '<span class="vcard-tag ' + _vt('Внутрішній №', hasIntNum) + '">&#128666; №: ' + (hasIntNum ? escHtml(intNum) : '&#10060;') + '</span>';
+            metaHtml += '<span class="vcard-tag ' + _vt('Сума', hasSum) + '">&#128176; ' + (hasSum ? escHtml(sum) + ' ' + escHtml(currency) : '&#10060;') + '</span>';
+            metaHtml += '<span class="vcard-tag ' + _vt('Статус оплати', hasPayStatus) + '">&#128178; ' + (hasPayStatus ? escHtml(payStatus) : '&#10060;') + '</span>';
             if (dups.length > 0) metaHtml += '<span class="vcard-tag tag-dup">&#9888; Дублі: ' + dups.length + '</span>';
             if (!recipient) metaHtml += '<span class="vcard-tag tag-unknown">&#10067; НЕВІДОМИЙ</span>';
-            if (intNum) metaHtml += '<span class="vcard-tag tag-route">&#128666; ' + escHtml(intNum) + '</span>';
             metaEl.innerHTML = metaHtml;
         }
         // Оновити внутрішній номер справа
@@ -3355,6 +3379,12 @@ function renderSingleVerifyCard(p) {
     else if (!recipient && !phone) { statusClass = 'vcard-unknown'; dotClass = 'dot-unknown'; }
     else if (ctrl === 'В перевірці' && !photo) { dotClass = 'dot-waiting'; }
 
+    // Tag class helper: green=filled, yellow=edited, red=empty
+    function vtag(col, hasVal) {
+        if (hasVal && _editedFields[pkgId + ':' + col]) return 'tag-edited';
+        return hasVal ? 'tag-data-yes' : 'tag-data-no';
+    }
+
     var hasPhoto = !!photo;
     var hasWeight = !!weight;
     var hasQty = !!qty;
@@ -3378,13 +3408,13 @@ function renderSingleVerifyCard(p) {
     if (addressTo) html += '<div class="vcard-recipient" style="margin-top:2px;">&#128205; ' + escHtml(addressTo) + '</div>';
     if (smartId) html += '<div class="vcard-recipient" style="margin-top:1px;font-size:10px;opacity:0.7;">ID: ' + escHtml(smartId) + '</div>';
     html += '<div class="vcard-meta">';
-    html += '<span class="vcard-tag ' + (hasPhoto ? 'tag-photo-yes' : 'tag-photo-no') + '">&#128247; Фото: ' + (hasPhoto ? '&#9989;' : '&#10060;') + '</span>';
-    html += '<span class="vcard-tag ' + (hasWeight ? 'tag-data-yes' : 'tag-data-no') + '">&#9878; Вага: ' + (hasWeight ? escHtml(weight) + 'кг' : '&#10060;') + '</span>';
-    html += '<span class="vcard-tag ' + (hasQty ? 'tag-data-yes' : 'tag-data-no') + '">&#128230; К-сть: ' + (hasQty ? escHtml(qty) : '&#10060;') + '</span>';
-    html += '<span class="vcard-tag ' + (hasDesc ? 'tag-data-yes' : 'tag-data-no') + '">&#128196; Опис: ' + (hasDesc ? '&#9989;' : '&#10060;') + '</span>';
-    html += '<span class="vcard-tag ' + (hasIntNum ? 'tag-data-yes' : 'tag-data-no') + '">&#128666; №: ' + (hasIntNum ? escHtml(intNum) : '&#10060;') + '</span>';
-    html += '<span class="vcard-tag ' + (hasSum ? 'tag-data-yes' : 'tag-data-no') + '">&#128176; ' + (hasSum ? escHtml(sum) + ' ' + escHtml(currency) : '&#10060;') + '</span>';
-    html += '<span class="vcard-tag ' + (hasPayStatus ? 'tag-data-yes' : 'tag-data-no') + '">&#128178; ' + (hasPayStatus ? escHtml(payStatus) : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + (hasPhoto ? (_editedFields[pkgId + ':Фото посилки'] ? 'tag-edited' : 'tag-photo-yes') : 'tag-photo-no') + '">&#128247; Фото: ' + (hasPhoto ? '&#9989;' : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + vtag('Кг', hasWeight) + '">&#9878; Вага: ' + (hasWeight ? escHtml(weight) + 'кг' : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + vtag('Кількість позицій', hasQty) + '">&#128230; К-сть: ' + (hasQty ? escHtml(qty) : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + vtag('Опис', hasDesc) + '">&#128196; Опис: ' + (hasDesc ? '&#9989;' : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + vtag('Внутрішній №', hasIntNum) + '">&#128666; №: ' + (hasIntNum ? escHtml(intNum) : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + vtag('Сума', hasSum) + '">&#128176; ' + (hasSum ? escHtml(sum) + ' ' + escHtml(currency) : '&#10060;') + '</span>';
+    html += '<span class="vcard-tag ' + vtag('Статус оплати', hasPayStatus) + '">&#128178; ' + (hasPayStatus ? escHtml(payStatus) : '&#10060;') + '</span>';
     if (hasDups) html += '<span class="vcard-tag tag-dup">&#9888; Дублі: ' + dups.length + '</span>';
     if (!recipient) html += '<span class="vcard-tag tag-unknown">&#10067; НЕВІДОМИЙ</span>';
     html += '</div></div>';
