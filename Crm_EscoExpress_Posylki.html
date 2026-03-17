@@ -1700,7 +1700,7 @@ function renderDetailsContent(p) {
         panelHtml = '<div class="detail-tab-panel active"><div class="payments-loading" id="pay-' + pkgId + '"><span class="pay-spinner"></span> Завантаження платежів...</div></div>';
         loadPayments(pkgId);
     } else if (section.fields) {
-        panelHtml = '<div class="detail-tab-panel active" onclick="event.stopPropagation()"><div class="details-grid">';
+        panelHtml = '<div class="detail-tab-panel active"><div class="details-grid">';
         section.fields.forEach(function(col) {
             // Адаптація адреси для ЄВ→УК
             var realCol = col;
@@ -1777,6 +1777,8 @@ function detailBlock(pkgId, label, value, options) {
 function detailBlockClickEdit(pkgId, col, el) {
     var block = el.closest('.detail-block');
     if (!block) return;
+    // If dropdown is already open inside this block — do nothing (let delegation handle it)
+    if (block.querySelector('.qe-dropdown-wrap')) return;
     var valueEl = block.querySelector('.detail-block-value');
     var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
     if (!p) return;
@@ -1802,6 +1804,9 @@ function detailBlockClickEdit(pkgId, col, el) {
                 '<div class="qe-dropdown-list">' + itemsHtml + '</div>' +
             '</div>';
         valueEl.classList.remove('editable');
+        // Remove parent onclick so it doesn't intercept clicks inside the dropdown
+        valueEl.removeAttribute('onclick');
+        valueEl.removeAttribute('title');
         // Smooth open — start closed, open on next frame
         var wrap = valueEl.querySelector('.qe-dropdown-wrap');
         if (wrap) {
