@@ -1757,19 +1757,37 @@ function detailBlockClickEdit(pkgId, col, el) {
         var sel = block.querySelector('select');
         if (sel) sel.focus();
     } else {
-        valueEl.innerHTML = '<input class="detail-inline-edit" autocomplete="off" value="' + escAttr(currentVal) + '" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(currentVal) + '" onblur="qeSave(this)" onkeydown="if(event.key===\'Enter\'){qeSave(this);}if(event.key===\'Escape\'){cancelInlineEditBlock(\'' + escAttr(pkgId) + '\');}">';
+        valueEl.innerHTML = '<input class="detail-inline-edit" autocomplete="off" value="' + escAttr(currentVal) + '" data-pkg="' + escAttr(pkgId) + '" data-col="' + escAttr(col) + '" data-old="' + escAttr(currentVal) + '" onblur="qeSave(this)" onkeydown="if(event.key===\'Enter\'){qeSave(this);}if(event.key===\'Escape\'){cancelInlineEditBlock(\'' + escAttr(pkgId) + '\',\'' + escAttr(col) + '\');}">';
         var inp = block.querySelector('input');
         if (inp) { inp.focus(); inp.select(); }
     }
     valueEl.classList.remove('editable');
 }
 
-// Cancel inline edit — re-render the detail panel
-function cancelInlineEditBlock(pkgId) {
+// Cancel inline edit — restore just the value text, NO full re-render (like passenger CRM)
+function cancelInlineEditBlock(pkgId, col) {
     _isInlineEditing = false;
+    if (col) {
+        // Restore just this one field — no full re-render
+        var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
+        if (!p) return;
+        var blockId = 'db-' + pkgId + '-' + col.replace(/\s/g, '_');
+        var block = document.getElementById(blockId);
+        if (block) {
+            var valueEl = block.querySelector('.detail-block-value');
+            if (valueEl) {
+                var val = p[col] !== undefined && p[col] !== null && p[col] !== '' ? String(p[col]) : '';
+                valueEl.textContent = val || '—';
+                valueEl.className = 'detail-block-value editable' + (!val ? ' empty' : '');
+                valueEl.setAttribute('onclick', "event.stopPropagation(); detailBlockClickEdit('" + escAttr(pkgId) + "', '" + escAttr(col) + "', this)");
+                valueEl.setAttribute('title', 'Натисніть щоб редагувати');
+            }
+            return;
+        }
+    }
+    // Fallback: full re-render only if no col specified
     var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
     if (!p) return;
-    // У перевірці пріоритет — vform, бо details- може існувати в прихованому defaultView
     if (currentView === 'verification') {
         var vformEl = document.getElementById('vform-' + pkgId);
         if (vformEl) { vformEl.innerHTML = renderVerifyForm(p); return; }
@@ -1819,55 +1837,46 @@ async function qeSave(el) {
     var newVal = el.value;
     var oldVal = el.dataset.old || '';
     if (String(newVal) === String(oldVal)) {
-        // No change — just re-render to restore block view
+        // No change — restore field text only (no full re-render)
         _isInlineEditing = false;
-        cancelInlineEditBlock(pkgId);
+        cancelInlineEditBlock(pkgId, col);
         return;
     }
 
     _qeSaving[saveKey] = true;
-    el.classList.add('qe-saving');
 
+    // Immediately update local data & show new value (optimistic, like passenger CRM)
     var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
-    var blockId = 'db-' + pkgId + '-' + col.replace(/\s/g, '_');
+    if (p) p[col] = newVal;
+    delete _qeSaving[saveKey];
+    _isInlineEditing = false;
+    // Restore the block to text view with the new value immediately
+    cancelInlineEditBlock(pkgId, col);
+
+    // Track that this card had saves (for collapse notification)
+    _cardHadEdits[pkgId] = true;
+
+    // Recalc debt locally
+    if (p && (col === 'Сума' || col === 'Завдаток')) {
+        p['Борг'] = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
+        var dep = parseFloat(p['Завдаток']) || 0;
+        if (dep > 0 && p['Борг'] > 0) p['Статус оплати'] = 'Частково';
+        else if (dep > 0 && p['Борг'] === 0) p['Статус оплати'] = 'Оплачено';
+        else p['Статус оплати'] = 'Не оплачено';
+    }
+    // Update card header info without full re-render
+    qeUpdateCardHeader(pkgId);
+
+    // Save to server in background (optimistic save)
     var res = await apiPost('updateField', { pkg_id: pkgId, col: col, value: newVal });
 
     if (res.ok) {
-        if (p) p[col] = newVal;
-        // Track that this card had saves (for collapse notification)
-        _cardHadEdits[pkgId] = true;
-
-        // Recalc debt locally
-        if (p && (col === 'Сума' || col === 'Завдаток')) {
-            p['Борг'] = Math.max(0, (parseFloat(p['Сума']) || 0) - (parseFloat(p['Завдаток']) || 0));
-            var dep = parseFloat(p['Завдаток']) || 0;
-            if (dep > 0 && p['Борг'] > 0) p['Статус оплати'] = 'Частково';
-            else if (dep > 0 && p['Борг'] === 0) p['Статус оплати'] = 'Оплачено';
-            else p['Статус оплати'] = 'Не оплачено';
-        }
-        // Update card header info without full re-render
-        qeUpdateCardHeader(pkgId);
-        // Re-render detail panel to show updated block view
-        delete _qeSaving[saveKey];
-        _isInlineEditing = false;
-        cancelInlineEditBlock(pkgId);
-
-        // Subtle checkmark on the saved value (no flash)
-        var savedBlock = document.getElementById(blockId);
-        if (savedBlock) {
-            var valEl = savedBlock.querySelector('.detail-block-value');
-            if (valEl) {
-                valEl.classList.add('qe-just-saved');
-                setTimeout(function() { valEl.classList.add('fade-check'); }, 800);
-                setTimeout(function() { valEl.classList.remove('qe-just-saved', 'fade-check'); }, 1600);
-            }
-        }
+        showToast('&#10003; Збережено');
     } else {
+        // Revert on error
         if (p) p[col] = oldVal;
+        cancelInlineEditBlock(pkgId, col);
         showToast('Помилка: ' + (res.error || 'невідома'));
-        delete _qeSaving[saveKey];
-        _isInlineEditing = false;
-        cancelInlineEditBlock(pkgId);
     }
 }
 
