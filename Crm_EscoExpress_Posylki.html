@@ -203,9 +203,9 @@
         .qe-dropdown-wrap.open .qe-dropdown-selected { border-color: var(--info); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); border-radius: 6px 6px 0 0; }
         .qe-dropdown-wrap.open .qe-dropdown-selected::after { transform: translateY(-50%) rotate(180deg); }
         .qe-dropdown-list {
-            position: absolute; top: 100%; left: 0; right: 0; z-index: 200;
+            position: fixed; z-index: 9999;
             background: white; border: 1.5px solid var(--info); border-top: none;
-            border-radius: 0 0 8px 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            border-radius: 0 0 8px 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.18);
             max-height: 0; overflow: hidden; opacity: 0;
             transition: max-height 0.25s ease, opacity 0.2s ease;
         }
@@ -1807,14 +1807,14 @@ function detailBlockClickEdit(pkgId, col, el) {
         // Remove parent onclick so it doesn't intercept clicks inside the dropdown
         valueEl.removeAttribute('onclick');
         valueEl.removeAttribute('title');
-        // Temporarily allow overflow on card-details so dropdown is not clipped
-        var cardDetails = valueEl.closest('.card-details');
-        if (cardDetails) cardDetails.style.overflow = 'visible';
-        // Smooth open — start closed, open on next frame
+        // Smooth open — start closed, open on next frame; position fixed dropdown
         var wrap = valueEl.querySelector('.qe-dropdown-wrap');
         if (wrap) {
             wrap.classList.remove('open');
-            requestAnimationFrame(function() { wrap.classList.add('open'); });
+            requestAnimationFrame(function() {
+                wrap.classList.add('open');
+                _positionDropdownList(wrap);
+            });
         }
         return; // Custom dropdown handles its own events via delegation
     } else {
@@ -1828,9 +1828,6 @@ function detailBlockClickEdit(pkgId, col, el) {
 // Cancel inline edit — restore just the value text, NO full re-render (like passenger CRM)
 function cancelInlineEditBlock(pkgId, col) {
     _isInlineEditing = false;
-    // Restore overflow on card-details (was set to visible for dropdown)
-    var cardDetailsEl = document.querySelector('.card-details[style*="overflow"]');
-    if (cardDetailsEl) cardDetailsEl.style.overflow = '';
     if (col) {
         // Restore just this one field — no full re-render
         var p = allData.find(function(x) { return x['PKG_ID'] === pkgId; });
@@ -1862,6 +1859,18 @@ function cancelInlineEditBlock(pkgId, col) {
 
 // ── CUSTOM DROPDOWN — делеговані обробники подій ──
 
+// Position the fixed dropdown list below the selected element
+function _positionDropdownList(wrap) {
+    if (!wrap) return;
+    var sel = wrap.querySelector('.qe-dropdown-selected');
+    var list = wrap.querySelector('.qe-dropdown-list');
+    if (!sel || !list) return;
+    var rect = sel.getBoundingClientRect();
+    list.style.left = rect.left + 'px';
+    list.style.top = rect.bottom + 'px';
+    list.style.width = rect.width + 'px';
+}
+
 // Клік на елемент списку — вибір опції
 document.addEventListener('click', function(e) {
     var item = e.target.closest('.qe-dropdown-item');
@@ -1885,7 +1894,10 @@ document.addEventListener('click', function(e) {
     if (selected) {
         e.stopPropagation();
         var wrap = selected.closest('.qe-dropdown-wrap');
-        if (wrap) wrap.classList.toggle('open');
+        if (wrap) {
+            wrap.classList.toggle('open');
+            if (wrap.classList.contains('open')) _positionDropdownList(wrap);
+        }
         return;
     }
 
