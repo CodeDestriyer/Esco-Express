@@ -442,7 +442,40 @@
         .col-cfg-name { font-size: 12px; font-weight: 600; }
         .col-cfg-footer { display: flex; gap: 8px; margin-top: 14px; }
 
-        /* BULK TOOLBAR */
+        /* BULK ACTION MENU */
+        .bulk-action-menu { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; border-radius: 16px; z-index: 90; display: none; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,0.35); font-size: 12px; font-weight: 600; width: 320px; max-width: 95vw; max-height: 70vh; overflow-y: auto; }
+        .bulk-action-menu.show { display: flex; }
+        .bulk-action-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .bulk-action-count { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+        .bulk-action-close { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+        .bulk-action-close:hover { color: white; background: rgba(255,255,255,0.1); }
+        .bulk-action-segment { padding: 6px 0; }
+        .bulk-action-segment:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .bulk-segment-title { padding: 6px 16px 4px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); }
+        /* Segment colors */
+        .bulk-action-segment.seg-general .bulk-segment-title { color: #94a3b8; }
+        .bulk-action-segment.seg-verify .bulk-segment-title { color: #facc15; }
+        .bulk-action-segment.seg-route .bulk-segment-title { color: #a78bfa; }
+        .bulk-action-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; transition: background 0.15s; border: none; background: none; color: white; width: 100%; font-family: inherit; font-size: 12px; font-weight: 600; text-align: left; }
+        .bulk-action-item:hover { background: rgba(255,255,255,0.08); }
+        .bulk-action-item:active { background: rgba(255,255,255,0.15); }
+        .bulk-action-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        /* General segment icon backgrounds */
+        .bulk-action-item.act-select-all .bulk-action-icon { background: rgba(255,255,255,0.12); }
+        .bulk-action-item.act-delete .bulk-action-icon { background: rgba(239,68,68,0.2); }
+        .bulk-action-item.act-archive .bulk-action-icon { background: rgba(107,114,128,0.2); }
+        /* Verify segment icon backgrounds */
+        .bulk-action-item.act-to-verify .bulk-action-icon { background: rgba(59,130,246,0.2); }
+        .bulk-action-item.act-to-ready .bulk-action-icon { background: rgba(16,185,129,0.2); }
+        .bulk-action-item.act-unknown .bulk-action-icon { background: rgba(245,158,11,0.2); }
+        /* Route segment icon backgrounds */
+        .bulk-action-item.act-to-route .bulk-action-icon { background: rgba(139,92,246,0.2); }
+        .bulk-action-item.act-remove-route .bulk-action-icon { background: rgba(239,68,68,0.15); }
+        .bulk-action-item.act-optimize .bulk-action-icon { background: rgba(14,165,233,0.2); }
+        .bulk-action-label { flex: 1; }
+        .bulk-action-sublabel { display: block; font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.45); margin-top: 1px; }
+
+        /* Verify bulk toolbar (legacy, kept for verify view) */
         .bulk-toolbar { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 10px 16px; border-radius: 12px; z-index: 90; display: none; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-size: 12px; font-weight: 600; max-width: 95vw; flex-direction: row; }
         .bulk-toolbar.show { display: flex; }
         .bulk-toolbar-count { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; }
@@ -643,6 +676,7 @@
         /* RESPONSIVE */
         @media (min-width: 901px) {
             .pc-sidebar-collapse-btn { display: flex; }
+            .bulk-action-menu { position: fixed; left: 0; top: 52px; bottom: 0; transform: none; width: 320px; max-width: 320px; border-radius: 0; max-height: none; height: calc(100vh - 52px); box-shadow: 4px 0 20px rgba(0,0,0,0.15); z-index: 160; }
             .bulk-toolbar { position: fixed; left: 0; top: 52px; bottom: auto; transform: none; width: 300px; max-width: 300px; border-radius: 0; flex-direction: column; align-items: stretch; padding: 16px; gap: 10px; height: calc(100vh - 52px); box-shadow: 4px 0 20px rgba(0,0,0,0.15); z-index: 160; }
             .bulk-toolbar-count { text-align: center; padding: 8px 12px; font-size: 13px; border-radius: 10px; }
             .bulk-toolbar-btn { padding: 12px 16px; font-size: 13px; border-radius: 10px; text-align: center; }
@@ -939,14 +973,63 @@
 
 <!-- FAB -->
 
-<!-- BULK TOOLBAR -->
-<div class="bulk-toolbar" id="bulkToolbar">
-    <span class="bulk-toolbar-count" id="bulkCount">0 обрано</span>
-    <button class="bulk-toolbar-btn select-all" onclick="toggleSelectAll()">&#9745; Вибрати всі</button>
-    <button class="bulk-toolbar-btn route" onclick="bulkRouteAssign()">&#128666; В маршрут</button>
-    <button class="bulk-toolbar-btn optimize" onclick="bulkOptimize()">&#9889; Оптимізація</button>
-    <button class="bulk-toolbar-btn archive" onclick="bulkArchive()">&#128230; Архів</button>
-    <button class="bulk-toolbar-btn cancel" onclick="clearSelection()">&#10005; Скасувати</button>
+<!-- BULK ACTION MENU (segmented) -->
+<div class="bulk-action-menu" id="bulkToolbar">
+    <div class="bulk-action-header">
+        <span class="bulk-action-count" id="bulkCount">0 обрано</span>
+        <button class="bulk-action-close" onclick="clearSelection()" title="Закрити">&#10005;</button>
+    </div>
+
+    <!-- SEGMENT: Загальні дії -->
+    <div class="bulk-action-segment seg-general">
+        <div class="bulk-segment-title">Загальні дії</div>
+        <button class="bulk-action-item act-select-all" onclick="toggleSelectAll()">
+            <span class="bulk-action-icon">&#9745;</span>
+            <span class="bulk-action-label">Виділити всі ліди<span class="bulk-action-sublabel">Обрати / зняти всі</span></span>
+        </button>
+        <button class="bulk-action-item act-delete" onclick="bulkDelete()">
+            <span class="bulk-action-icon">&#128465;</span>
+            <span class="bulk-action-label">Видалити<span class="bulk-action-sublabel">Видалити обрані посилки</span></span>
+        </button>
+        <button class="bulk-action-item act-archive" onclick="bulkArchive()">
+            <span class="bulk-action-icon">&#128230;</span>
+            <span class="bulk-action-label">Архівувати<span class="bulk-action-sublabel">Перемістити в архів</span></span>
+        </button>
+    </div>
+
+    <!-- SEGMENT: Перевірка -->
+    <div class="bulk-action-segment seg-verify">
+        <div class="bulk-segment-title">Перевірка</div>
+        <button class="bulk-action-item act-to-verify" onclick="bulkSetVerifyStatus('В перевірці')">
+            <span class="bulk-action-icon">&#128270;</span>
+            <span class="bulk-action-label">В перевірку<span class="bulk-action-sublabel">Повернути на перевірку</span></span>
+        </button>
+        <button class="bulk-action-item act-to-ready" onclick="bulkSetVerifyStatus('Готова до маршруту')">
+            <span class="bulk-action-icon">&#9989;</span>
+            <span class="bulk-action-label">В готові<span class="bulk-action-sublabel">Перевірено — готово</span></span>
+        </button>
+        <button class="bulk-action-item act-unknown" onclick="bulkSetVerifyStatus('Невідома')">
+            <span class="bulk-action-icon">&#10067;</span>
+            <span class="bulk-action-label">Невідомі<span class="bulk-action-sublabel">Статус невідомий</span></span>
+        </button>
+    </div>
+
+    <!-- SEGMENT: Маршрут -->
+    <div class="bulk-action-segment seg-route">
+        <div class="bulk-segment-title">Маршрут</div>
+        <button class="bulk-action-item act-to-route" onclick="bulkRouteAssign()">
+            <span class="bulk-action-icon">&#128666;</span>
+            <span class="bulk-action-label">В маршрут<span class="bulk-action-sublabel">Призначити маршрут</span></span>
+        </button>
+        <button class="bulk-action-item act-remove-route" onclick="bulkRemoveFromRoute()">
+            <span class="bulk-action-icon">&#10060;</span>
+            <span class="bulk-action-label">Видалити з маршруту<span class="bulk-action-sublabel">Зняти з маршруту</span></span>
+        </button>
+        <button class="bulk-action-item act-optimize" onclick="bulkOptimize()">
+            <span class="bulk-action-icon">&#9889;</span>
+            <span class="bulk-action-label">Оптимізація<span class="bulk-action-sublabel">Оптимізувати маршрут</span></span>
+        </button>
+    </div>
 </div>
 
 <!-- VERIFY BULK TOOLBAR -->
@@ -3487,6 +3570,71 @@ async function bulkArchive() {
     clearSelection();
     applyFilters();
     showToast(ids.length + ' посилок архівовано');
+}
+
+async function bulkDelete() {
+    const ids = getSelectedIds();
+    if (ids.length === 0) return;
+    if (!confirm('Видалити ' + ids.length + ' посилок? Цю дію неможливо скасувати!')) return;
+    showLoader('Видаляємо... 0/' + ids.length);
+    var ok = 0, fail = 0;
+    for (var i = 0; i < ids.length; i++) {
+        showLoader('Видаляємо... ' + (i + 1) + '/' + ids.length);
+        var res = await apiPost('deleteParcel', { pkg_id: ids[i] });
+        if (res.ok) {
+            allData = allData.filter(p => p['PKG_ID'] !== ids[i]);
+            ok++;
+        } else { fail++; }
+    }
+    hideLoader();
+    clearSelection();
+    openCardId = null;
+    applyFilters();
+    showToast(ok + ' посилок видалено' + (fail ? ', ' + fail + ' помилок' : ''));
+}
+
+async function bulkSetVerifyStatus(status) {
+    const ids = getSelectedIds();
+    if (ids.length === 0) return;
+    var labels = { 'В перевірці': 'В перевірку', 'Готова до маршруту': 'В готові', 'Невідома': 'Невідомі' };
+    var label = labels[status] || status;
+    if (!confirm('Перевести ' + ids.length + ' посилок у "' + label + '"?')) return;
+    showLoader('Оновлюємо... 0/' + ids.length);
+    var ok = 0, fail = 0;
+    for (var i = 0; i < ids.length; i++) {
+        showLoader('Оновлюємо... ' + (i + 1) + '/' + ids.length);
+        var res = await apiPost('updateField', { pkg_id: ids[i], col: 'Контроль перевірки', value: status });
+        if (res.ok) {
+            var p = allData.find(x => x['PKG_ID'] === ids[i]);
+            if (p) p['Контроль перевірки'] = status;
+            ok++;
+        } else { fail++; }
+    }
+    hideLoader();
+    clearSelection();
+    applyFilters();
+    showToast(ok + ' посилок переведено у "' + label + '"' + (fail ? ', ' + fail + ' помилок' : ''));
+}
+
+async function bulkRemoveFromRoute() {
+    const ids = getSelectedIds();
+    if (ids.length === 0) return;
+    if (!confirm('Видалити ' + ids.length + ' посилок з маршруту?')) return;
+    showLoader('Видаляємо з маршруту... 0/' + ids.length);
+    var ok = 0, fail = 0;
+    for (var i = 0; i < ids.length; i++) {
+        showLoader('Видаляємо з маршруту... ' + (i + 1) + '/' + ids.length);
+        var res = await apiPost('updateField', { pkg_id: ids[i], col: 'Маршрут', value: '' });
+        if (res.ok) {
+            var p = allData.find(x => x['PKG_ID'] === ids[i]);
+            if (p) p['Маршрут'] = '';
+            ok++;
+        } else { fail++; }
+    }
+    hideLoader();
+    clearSelection();
+    applyFilters();
+    showToast(ok + ' посилок видалено з маршруту' + (fail ? ', ' + fail + ' помилок' : ''));
 }
 
 // Add checkbox event delegation
